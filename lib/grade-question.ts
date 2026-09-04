@@ -15,6 +15,7 @@ export type GradableAnswer = {
 export function normalizeAnswer(value: string) {
   return value
     .replace(/□/g, "×")
+    .replace(/(\S)\s{2,}(\S)/g, "$1×$2")
     .toLowerCase()
     .replace(/\s+/g, "")
     .replace(/,/g, ".");
