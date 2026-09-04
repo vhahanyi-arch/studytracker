@@ -5773,15 +5773,30 @@ function AnswerWorkspace({
                   </button>
                 </div>
                 {handwrittenUploadMode === "whole_paper" ? (
+                  <>
                   <label className="handwritten-file-picker">
                     <b>Select complete paper or page scans</b>
-                    <small>One PDF or several JPG, PNG or WebP pages · up to 40 MB combined</small>
+                    <small>One PDF or several JPG, PNG or WebP pages · up to 40 MB combined · add photos one at a time or several at once, they'll all be kept</small>
                     <input type="file" multiple accept="application/pdf,image/jpeg,image/png,image/webp" onChange={(event) => {
-                      const files = Array.from(event.target.files || []);
-                      setWholePaperFiles(files);
-                      setHandwrittenAttached(files.map((file) => file.name).join(", "));
+                      const newFiles = Array.from(event.target.files || []);
+                      const merged = [...wholePaperFiles, ...newFiles];
+                      setWholePaperFiles(merged);
+                      setHandwrittenAttached(merged.map((file) => file.name).join(", "));
+                      event.currentTarget.value = "";
                     }}/>
                   </label>
+                  {!!wholePaperFiles.length && <div className="question-upload-list">{wholePaperFiles.map((file, index) => (
+                    <article key={`${file.name}-${index}`}>
+                      <span>Page {index + 1}</span>
+                      <b>{file.name}</b>
+                      <button type="button" onClick={() => {
+                        const next = wholePaperFiles.filter((_, i) => i !== index);
+                        setWholePaperFiles(next);
+                        setHandwrittenAttached(next.map((f) => f.name).join(", "));
+                      }}>Remove</button>
+                    </article>
+                  ))}</div>}
+                  </>
                 ) : (
                   <div className="question-specific-upload">
                     <label>
