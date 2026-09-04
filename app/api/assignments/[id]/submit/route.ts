@@ -2,6 +2,7 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
+import { gradeQuestion } from "@/lib/grade-question";
 
 export async function POST(
   request: Request,
@@ -201,67 +202,12 @@ export async function POST(
         normalize(String(row.question || "")) ===
         normalize(String(question.label)),
     );
-    const response = (
-      answer?.answers?.filter((value) => String(value).trim()).join(" | ") ||
-      String(answer?.answer || "")
-    ).trim();
-    const expected = String(question.expected_answer || "").trim();
-    const maximum = Number(question.marks || 0);
-    maximumTotal += maximum;
-    let proposed: number | null = null;
-    let confidence = "review";
-    let rationale = "Teacher review is required.";
-    if (answer?.handwrittenPageAssigned && !response) {
-      rationale = `Handwritten response assigned from submitted page ${Number(answer.handwrittenFileIndex || 0) + 1}; teacher marking is required.`;
-    } else if (question.response_type === "drawing") {
-      rationale = "Drawing response: inspect the submitted annotation.";
-    } else if (!expected) {
-      rationale = "No accepted answer has been configured for this question.";
-    } else {
-      const rawVariants = expected.split("|").map((variant) => variant.trim());
-      const accepted = rawVariants
-        .flatMap((variant) => {
-          const options = [variant];
-          const equalsParts = variant.split("=");
-          if (equalsParts.length > 1) {
-            options.push(equalsParts[equalsParts.length - 1].trim());
-          }
-          return options;
-        })
-        .map(normalize);
-      const normalizedResponse = normalize(response);
-      const parseNumber = (value: string) => {
-        const cleaned = value
-          .replace(/[−–—]/g, "-")
-          .replace(/[×x*]\s*10\s*\^?\s*([+-]?\d+)/i, "e$1")
-          .replace(/^(\s*[+-]?\d+(?:\.\d+)?)\s*\/\s*([+-]?\d+(?:\.\d+)?).*$/, (_all, top, bottom) => String(Number(top) / Number(bottom)));
-        const match = cleaned.match(/[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?/i);
-        return match ? Number(match[0]) : Number.NaN;
-      };
-      const matches = accepted.some((option) => {
-        if (option === normalizedResponse) return true;
-        const optionNumber = parseNumber(option);
-        const submittedNumber = parseNumber(normalizedResponse);
-        return (
-          Number.isFinite(submittedNumber) &&
-          Number.isFinite(optionNumber) &&
-          Math.abs(submittedNumber - optionNumber) <=
-            Math.max(1e-9, Math.abs(optionNumber) * 1e-6)
-        );
-      });
-      proposed = matches ? maximum : 0;
-      confidence = matches
-        ? "high"
-        : answer?.working?.trim()
-          ? "review"
-          : "medium";
-      rationale = matches
-        ? "The final answer matches an accepted answer exactly or is numerically equivalent."
-        : answer?.working?.trim()
-          ? "The final answer does not match; inspect the working for method marks."
-          : "The final answer does not match an accepted answer.";
+    const graded = gradeQuestion(question, answer);
+    const { proposed, confidence, rationale, maximum } = graded;
+    if (proposed !== null) {
       proposedTotal += proposed;
     }
+    maximumTotal += maximum;
     await sql`
       INSERT INTO submission_marks
       (submission_id, question_id, proposed_mark, final_mark, confidence, rationale)
