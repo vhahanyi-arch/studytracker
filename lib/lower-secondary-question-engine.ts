@@ -273,6 +273,149 @@ const structuredData = (difficulty:"foundational"|"application"|"reasoning") => 
   ];
 };
 
+const structuredFractions = (difficulty:"foundational"|"application"|"reasoning") => {
+  const gcd=(a:number,b:number):number=>b===0?a:gcd(b,a%b);
+  const frac=(n:number,d:number)=>{if(d<0){n=-n;d=-d;}const g=gcd(Math.abs(n),d)||1;return{n:n/g,d:d/g};};
+  const fadd=(a:{n:number,d:number},b:{n:number,d:number})=>frac(a.n*b.d+b.n*a.d,a.d*b.d);
+  const fsub=(a:{n:number,d:number},b:{n:number,d:number})=>frac(a.n*b.d-b.n*a.d,a.d*b.d);
+  const fmul=(a:{n:number,d:number},b:{n:number,d:number})=>frac(a.n*b.n,a.d*b.d);
+  const fdiv=(a:{n:number,d:number},b:{n:number,d:number})=>frac(a.n*b.d,a.d*b.n);
+  const fstr=(f:{n:number,d:number})=>f.d===1?String(f.n):`${f.n}/${f.d}`;
+  const fdec=(f:{n:number,d:number})=>Number((f.n/f.d).toFixed(10)).toString();
+  if (difficulty === "foundational") {
+    const baseD=r(2,6),mult=r(2,5),n1=r(1,baseD-1)*mult,d1=baseD*mult,simplified1=frac(n1,d1);
+    const d2a=r(2,6),d2b=r(2,6),a2=frac(r(1,d2a-1),d2a),b2=frac(r(1,d2b-1),d2b),sum2=fadd(a2,b2);
+    const d3=r(3,8),a3=frac(r(2,d3-1),d3),b3=frac(r(1,a3.n-1),d3),diff3=fsub(a3,b3);
+    const a4=frac(r(1,5),r(2,7)),b4=frac(r(1,5),r(2,7)),prod4=fmul(a4,b4);
+    const a5=frac(r(1,5),r(2,7)),b5=frac(r(1,5),r(2,7)),quot5=fdiv(a5,b5);
+    const decimals=[{text:"0.5",f:frac(1,2)},{text:"0.25",f:frac(1,4)},{text:"0.75",f:frac(3,4)},{text:"0.2",f:frac(1,5)},{text:"0.125",f:frac(1,8)},{text:"0.4",f:frac(2,5)}][r(0,5)];
+    return [
+      sq("s8-u7-f1","Simplify a fraction",difficulty,`Simplify ${n1}/${d1}.`,[fstr(simplified1),fdec(simplified1)],"Divide numerator and denominator by their highest common factor.",`${n1}/${d1} simplifies to ${fstr(simplified1)}.`),
+      sq("s8-u7-f2","Add fractions",difficulty,`Calculate ${fstr(a2)} + ${fstr(b2)}.`,[fstr(sum2),fdec(sum2)],"Find a common denominator first.",`${fstr(a2)}+${fstr(b2)}=${fstr(sum2)}.`),
+      sq("s8-u7-f3","Subtract fractions",difficulty,`Calculate ${fstr(a3)} − ${fstr(b3)}.`,[fstr(diff3),fdec(diff3)],"Write both fractions with the same denominator.",`${fstr(a3)}−${fstr(b3)}=${fstr(diff3)}.`),
+      sq("s8-u7-f4","Multiply fractions",difficulty,`Calculate ${fstr(a4)} × ${fstr(b4)}.`,[fstr(prod4),fdec(prod4)],"Multiply numerators together and denominators together.",`${fstr(a4)}×${fstr(b4)}=${fstr(prod4)}.`),
+      sq("s8-u7-f5","Divide fractions",difficulty,`Calculate ${fstr(a5)} ÷ ${fstr(b5)}.`,[fstr(quot5),fdec(quot5)],"Multiply by the reciprocal of the second fraction.",`${fstr(a5)}÷${fstr(b5)}=${fstr(quot5)}.`),
+      sq("s8-u7-f6","Convert a decimal to a fraction",difficulty,`Write ${decimals.text} as a fraction in simplest form.`,[fstr(decimals.f)],"Write the decimal over a power of 10, then simplify.",`${decimals.text} simplifies to ${fstr(decimals.f)}.`),
+    ];
+  }
+  if (difficulty === "application") {
+    const dQ=[2,3,4,5,6][r(0,4)],nQ=r(1,dQ-1),qty=dQ*r(3,10),portion=frac(nQ,dQ),portionValue=(qty*portion.n)/portion.d;
+    const recipeServe=r(2,6),scaleTo=r(8,20),ingredient=frac(r(1,3),[2,3,4][r(0,2)]),scaled=fmul(ingredient,frac(scaleTo,recipeServe));
+    const shareD=[2,3,4,5][r(0,3)],shareN=r(1,shareD-1),money=shareD*r(10,40),shareValue=(money*shareN)/shareD;
+    const hourFracD=[2,3,4,5,6][r(0,4)],hourFracN=r(1,hourFracD-1),minutes=(60*hourFracN)/hourFracD;
+    const usedD=[3,4,5,6][r(0,3)],usedN=r(1,usedD-2),remaining=fsub(frac(1,1),frac(usedN,usedD));
+    return [
+      sq("s8-u7-a1","Find a fraction of a quantity",difficulty,`A packet has ${qty} sweets. ${nQ}/${dQ} of them are red. How many are red?`,String(portionValue),"Divide by the denominator, then multiply by the numerator.",`${qty}÷${dQ}×${nQ}=${portionValue}.`),
+      sq("s8-u7-a2","Scale a recipe using fractions",difficulty,`A recipe for ${recipeServe} people needs ${fstr(ingredient)} cup of sugar. How much sugar is needed for ${scaleTo} people?`,[fstr(scaled),fdec(scaled)],"Multiply the amount by the scale factor.",`${fstr(ingredient)}×${scaleTo}/${recipeServe}=${fstr(scaled)}.`),
+      sq("s8-u7-a3","Find a fractional share of money",difficulty,`R${money} is shared so that one person gets ${shareN}/${shareD} of it. How much do they get?`,String(shareValue),"Divide by the denominator, then multiply by the numerator.",`R${money}÷${shareD}×${shareN}=R${shareValue}.`),
+      sq("s8-u7-a4","Convert a fraction of an hour to minutes",difficulty,`A lesson lasts ${hourFracN}/${hourFracD} of an hour. How many minutes is that?`,String(minutes),"Multiply the fraction by 60.",`60×${hourFracN}/${hourFracD}=${minutes} minutes.`),
+      sq("s8-u7-a5","Find the remaining fraction",difficulty,`A tank is ${usedN}/${usedD} empty after use. What fraction is still full?`,[fstr(remaining),fdec(remaining)],"Subtract the empty fraction from 1.",`1−${usedN}/${usedD}=${fstr(remaining)}.`),
+      sq("s8-u7-a6","Find the remaining amount after spending a fraction",difficulty,`A charity raised R${money}. They spent ${shareN}/${shareD} of it on costs. How much is left?`,String(money-shareValue),"Find the amount spent, then subtract it from the total.",`R${money}−R${shareValue}=R${money-shareValue}.`),
+    ];
+  }
+  const total=(()=>{const dR=[3,4,5,6][r(0,3)];return {dR,total:dR*r(4,20)};})();
+  const dR=total.dR,nR=r(1,dR-1),tot=total.total,part=(tot*nR)/dR;
+  return [
+    sq("s8-u7-r1","Reason backward from a fraction",difficulty,`${nR}/${dR} of a number is ${part}. Find the number.`,String(tot),"Divide by the numerator, then multiply by the denominator.",`${part}÷${nR}×${dR}=${tot}.`),
+    sq("s8-u7-r2","Correct a simplification error",difficulty,"A learner simplifies 8/12 to 2/6. Enter the fully simplified fraction.",["2/3","0.6666666667"],"2/6 can still be simplified further.","8/12 fully simplifies to 2/3."),
+    sq("s8-u7-r3","Find an equivalent fraction",difficulty,"Find the missing numerator: 3/4 = ?/20.","15","Find what 4 was multiplied by to get 20, then apply it to the numerator.","4×5=20, so 3×5=15."),
+    sq("s8-u7-r4","Compare fractions",difficulty,"Which is larger, 5/8 or 3/5? Enter the larger fraction.",["5/8","0.625"],"Convert both to decimals or a common denominator to compare.","5/8=0.625 and 3/5=0.6, so 5/8 is larger."),
+    sq("s8-u7-r5","Combine fractions in a multi-step problem",difficulty,"A tank is 1/3 full. Another 1/4 of the tank is then filled. What fraction of the tank is now full?",["7/12","0.5833333333"],"Add the two fractions using a common denominator.","1/3+1/4=4/12+3/12=7/12."),
+    sq("s8-u7-r6","Solve a two-step fraction word problem",difficulty,"A student answers 5/8 of the questions correctly on a 40-question test. How many questions did they get wrong?","15","Find how many were correct, then subtract from the total.","40×5/8=25 correct, so 40−25=15 wrong."),
+  ];
+};
+
+const structuredShapes = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const sidesPoly=[3,4,5,6,8][r(0,4)];
+    const nameMap:Record<number,string>={3:"triangle",4:"quadrilateral",5:"pentagon",6:"hexagon",8:"octagon"};
+    const angleSumMap:Record<number,number>={3:180,4:360,5:540,6:720,8:1080};
+    const facesShape=[{n:"cube",faces:6},{n:"cuboid",faces:6},{n:"triangular prism",faces:5},{n:"square-based pyramid",faces:5}][r(0,3)];
+    const symShapes=[{n:"square",lines:4},{n:"rectangle (non-square)",lines:2},{n:"equilateral triangle",lines:3},{n:"regular pentagon",lines:5},{n:"regular hexagon",lines:6}][r(0,4)];
+    const angleA=r(20,150),angleB=180-angleA;
+    const triA=r(30,100),triB=r(20,160-triA),triC=180-triA-triB;
+    const areaW=r(4,15),areaH=r(4,15);
+    return [
+      sq("s8-u8-f1","Find the sum of interior angles",difficulty,`Find the sum of interior angles of a ${nameMap[sidesPoly]} (${sidesPoly} sides).`,String(angleSumMap[sidesPoly]),"Use (n−2)×180° where n is the number of sides.",`(${sidesPoly}−2)×180=${angleSumMap[sidesPoly]}°.`),
+      sq("s8-u8-f2","Count faces of a 3D shape",difficulty,`How many faces does a ${facesShape.n} have?`,String(facesShape.faces),"Count each flat surface.",`A ${facesShape.n} has ${facesShape.faces} faces.`),
+      sq("s8-u8-f3","Count lines of symmetry",difficulty,`How many lines of symmetry does a ${symShapes.n} have?`,String(symShapes.lines),"Count how many ways the shape can be folded onto itself.",`A ${symShapes.n} has ${symShapes.lines} lines of symmetry.`),
+      sq("s8-u8-f4","Angles on a straight line",difficulty,`Two angles lie on a straight line. One is ${angleA}°. Find the other.`,String(angleB),"Angles on a straight line sum to 180°.",`180−${angleA}=${angleB}°.`),
+      sq("s8-u8-f5","Angles in a triangle",difficulty,`A triangle has angles of ${triA}° and ${triB}°. Find the third angle.`,String(triC),"Angles in a triangle sum to 180°.",`180−${triA}−${triB}=${triC}°.`),
+      sq("s8-u8-f6","Find the area of a rectangle",difficulty,`Find the area of a rectangle ${areaW} cm by ${areaH} cm.`,String(areaW*areaH),"Multiply length by width.",`${areaW}×${areaH}=${areaW*areaH} cm².`),
+    ];
+  }
+  if (difficulty === "application") {
+    const roomW=r(3,9),roomH=r(3,9);
+    const gardenW=r(4,20),gardenH=r(4,20);
+    const cubeSide=r(2,9);
+    const angleReflex=r(200,340),angleAroundPoint=360-angleReflex;
+    const baseAngle=r(30,60);
+    const fenceW=r(4,20),fenceH=r(4,20);
+    return [
+      sq("s8-u8-a1","Find the area of a room",difficulty,`A rectangular room is ${roomW} m by ${roomH} m. Find its area in square metres.`,String(roomW*roomH),"Multiply length by width.",`${roomW}×${roomH}=${roomW*roomH} m².`),
+      sq("s8-u8-a2","Find the perimeter of a garden",difficulty,`A rectangular garden is ${gardenW} m by ${gardenH} m. Find the perimeter needed to fence around it.`,String(2*(gardenW+gardenH)),"Add all four sides, or use 2×(length+width).",`2×(${gardenW}+${gardenH})=${2*(gardenW+gardenH)} m.`),
+      sq("s8-u8-a3","Find the volume of a cube",difficulty,`A cube-shaped box has side length ${cubeSide} cm. Find its volume.`,String(cubeSide**3),"Cube the side length.",`${cubeSide}³=${cubeSide**3} cm³.`),
+      sq("s8-u8-a4","Angles around a point",difficulty,`Two angles meet at a point. One is a reflex angle of ${angleReflex}°. Find the other angle needed to complete the full turn.`,String(angleAroundPoint),"Angles around a point sum to 360°.",`360−${angleReflex}=${angleAroundPoint}°.`),
+      sq("s8-u8-a5","Classify an angle in context",difficulty,`A ladder leans against a wall making a right angle with the ground and wall. If one angle at the base is ${baseAngle}°, is the angle at the top of the ladder acute, right or obtuse?`,"acute","The three angles in the triangle must sum to 180°, and one is already 90°.","90+" + baseAngle + " is less than 180, so the top angle is under 90° — acute."),
+      sq("s8-u8-a6","Find the perimeter of a field",difficulty,`A path fence is built around a rectangular field ${fenceW} m by ${fenceH} m. Find the total length of fencing.`,String(2*(fenceW+fenceH)),"Add all four sides, or use 2×(length+width).",`2×(${fenceW}+${fenceH})=${2*(fenceW+fenceH)} m.`),
+    ];
+  }
+  const p1=r(40,90),p2=r(20,160-p1),p3=180-p1-p2;
+  return [
+    sq("s8-u8-r1","Classify a missing triangle angle",difficulty,`A triangle has angles ${p1}° and ${p2}°. Is the third angle acute, right or obtuse?`,p3<90?"acute":p3===90?"right":"obtuse","Find the third angle first, then classify it.",`180−${p1}−${p2}=${p3}°, which is ${p3<90?"acute":p3===90?"right":"obtuse"}.`),
+    sq("s8-u8-r2","Name a shape from its properties",difficulty,"A shape has 4 equal sides and 4 right angles. What is the mathematical name for this shape?","square","Think about which quadrilateral has both equal sides and right angles.","This describes a square."),
+    sq("s8-u8-r3","Name a quadrilateral from its properties",difficulty,"A quadrilateral has exactly one pair of parallel sides and no right angles. What is it called?",["trapezium","trapezoid"],"Recall which quadrilateral has only one pair of parallel sides.","This describes a trapezium."),
+    sq("s8-u8-r4","Evaluate a geometric statement",difficulty,"A learner says a rhombus is always a square. Is this statement true or false?","false","Think about whether a rhombus must have right angles.","False — a rhombus only needs equal sides, not right angles."),
+    sq("s8-u8-r5","Reason backward from an angle sum",difficulty,"The interior angles of a polygon sum to 900°. How many sides does it have?","7","Use (n−2)×180=900 and solve for n.","900÷180=5, so n−2=5, meaning n=7."),
+    sq("s8-u8-r6","Solve a two-step angle problem",difficulty,"Two angles are supplementary. One is three times the other. Find the smaller angle.","45","Let the smaller angle be x; then x+3x=180.","4x=180, so x=45°."),
+  ];
+};
+
+const structuredSequences = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const start=r(2,9),d=r(3,7),terms=[start,start+d,start+2*d,start+3*d];
+    const mCoef=r(2,6),cConst=r(1,8),nthN=r(6,15);
+    const ntermA=r(2,7),ntermB=r(1,9);
+    const ratio=r(2,3),gStart=r(1,4);
+    const fx_m=r(2,6),fx_c=r(1,8),fx_x=r(2,9);
+    const ruleSub=r(2,6),ruleStart=r(30,60);
+    return [
+      sq("s8-u9-f1","Find the next term in a linear sequence",difficulty,`Find the next term: ${terms.join(", ")}, ...`,String(start+4*d),"Find the constant difference between terms.",`Add ${d}, giving ${start+4*d}.`),
+      sq("s8-u9-f2","Evaluate the nth term of a sequence",difficulty,`Find the ${nthN}th term of the sequence with nth term ${mCoef}n + ${cConst}.`,String(mCoef*nthN+cConst),"Substitute the term number for n.",`${mCoef}(${nthN})+${cConst}=${mCoef*nthN+cConst}.`),
+      sq("s8-u9-f3","Write the nth term of a sequence",difficulty,`Write the nth term of the sequence ${ntermA+ntermB}, ${ntermA*2+ntermB}, ${ntermA*3+ntermB}, ${ntermA*4+ntermB}, ...`,[`${ntermA}n+${ntermB}`,`${ntermB}+${ntermA}n`],"The common difference is the coefficient of n.",`The difference is ${ntermA}, and the nth term is ${ntermA}n+${ntermB}.`),
+      sq("s8-u9-f4","Find a term in a geometric sequence",difficulty,`A sequence starts at ${gStart} and each term is multiplied by ${ratio} to get the next. Find the 4th term.`,String(gStart*ratio**3),"Multiply by the ratio three times from the first term.",`${gStart}×${ratio}×${ratio}×${ratio}=${gStart*ratio**3}.`),
+      sq("s8-u9-f5","Evaluate a linear function",difficulty,`For f(x) = ${fx_m}x − ${fx_c}, find f(${fx_x}).`,String(fx_m*fx_x-fx_c),"Substitute the given value for x.",`${fx_m}(${fx_x})−${fx_c}=${fx_m*fx_x-fx_c}.`),
+      sq("s8-u9-f6","Apply a term-to-term rule",difficulty,`The term-to-term rule is subtract ${ruleSub}. The first term is ${ruleStart}. Find the third term.`,String(ruleStart-2*ruleSub),"Apply the rule twice from the first term.",`${ruleStart}−${ruleSub}−${ruleSub}=${ruleStart-2*ruleSub}.`),
+    ];
+  }
+  if (difficulty === "application") {
+    const rentBase=r(200,500),rentInc=r(20,60),yearN=r(3,8);
+    const savingsStart=r(50,200),savingsAdd=r(10,50),weekN=r(4,10);
+    const seatsRow1=r(10,20),seatsInc=r(2,6),rowN=r(5,12);
+    const priceStart=r(10,20),priceGrow=r(2,3);
+    const tempStart=r(-5,5),tempChange=r(2,5),dayN=r(3,7);
+    const clubStart=r(15,40),clubJoin=r(3,10),monthN=r(3,8);
+    return [
+      sq("s8-u9-a1","Apply a linear sequence to rent",difficulty,`Annual rent starts at R${rentBase} and increases by R${rentInc} each year. Find the rent in year ${yearN}.`,String(rentBase+(yearN-1)*rentInc),"The first year needs no increase; each year after adds one increase.",`R${rentBase}+${yearN-1}×R${rentInc}=R${rentBase+(yearN-1)*rentInc}.`),
+      sq("s8-u9-a2","Apply a linear sequence to savings",difficulty,`A savings account starts with R${savingsStart} and R${savingsAdd} is added each week. Find the balance after ${weekN} weeks.`,String(savingsStart+weekN*savingsAdd),"Multiply the weekly amount by the number of weeks, then add the start.",`R${savingsStart}+${weekN}×R${savingsAdd}=R${savingsStart+weekN*savingsAdd}.`),
+      sq("s8-u9-a3","Apply a linear sequence to seating",difficulty,`A theatre's front row has ${seatsRow1} seats. Each row behind has ${seatsInc} more seats than the row in front. Find the number of seats in row ${rowN}.`,String(seatsRow1+(rowN-1)*seatsInc),"Row 1 needs no increase; each row after adds one increase.",`${seatsRow1}+${rowN-1}×${seatsInc}=${seatsRow1+(rowN-1)*seatsInc}.`),
+      sq("s8-u9-a4","Apply a geometric sequence in context",difficulty,`A car's resale value is modelled as a geometric sequence: R${priceStart} thousand initially, multiplied by ${priceGrow} at each stage. Find the value at stage 3 (in thousands of rand).`,String(priceStart*priceGrow**2),"Multiply by the growth factor twice from the initial value.",`R${priceStart}×${priceGrow}×${priceGrow}=R${priceStart*priceGrow**2} thousand.`),
+      sq("s8-u9-a5","Apply a linear sequence to temperature",difficulty,`The temperature is ${tempStart}°C and rises by ${tempChange}°C each hour. Find the temperature after ${dayN} hours.`,String(tempStart+dayN*tempChange),"Multiply the hourly rise by the number of hours, then add the start.",`${tempStart}+${dayN}×${tempChange}=${tempStart+dayN*tempChange}°C.`),
+      sq("s8-u9-a6","Apply a linear sequence to membership growth",difficulty,`A club has ${clubStart} members. ${clubJoin} new members join each month. Find the number of members after ${monthN} months.`,String(clubStart+monthN*clubJoin),"Multiply the monthly joiners by the number of months, then add the start.",`${clubStart}+${monthN}×${clubJoin}=${clubStart+monthN*clubJoin}.`),
+    ];
+  }
+  const mCoef=r(3,7),cConst=r(1,9),target=mCoef*r(8,20)+cConst;
+  const a1=r(3,10),d1=r(2,6);
+  return [
+    sq("s8-u9-r1","Test membership in a sequence",difficulty,`Is ${target} a term of the sequence with nth term ${mCoef}n + ${cConst}? Answer yes or no.`,"yes","Solve for n and check it's a positive whole number.",`n=${(target-cConst)/mCoef}, a whole number, so yes.`),
+    sq("s8-u9-r2","Test non-membership in a sequence",difficulty,`Is ${target+1} a term of the sequence with nth term ${mCoef}n + ${cConst}? Answer yes or no.`,"no","Solve for n and check whether it's a whole number.","Solving for n gives a non-whole number, so no."),
+    sq("s8-u9-r3","Correct a substitution error",difficulty,"A sequence has nth term 5n − 3. A learner says the 100th term is 500. Enter the correct 100th term.","497","Substitute n=100 into the formula.","5(100)−3=497."),
+    sq("s8-u9-r4","Evaluate a quadratic sequence term",difficulty,"The nth term of a sequence is 2n² + 1. Find the 4th term.","33","Substitute n=4 and remember to square first.","2(4²)+1=2(16)+1=33."),
+    sq("s8-u9-r5","Reason about an increasing sequence",difficulty,`A sequence begins ${a1}, ${a1+d1}, ${a1+2*d1}, ... and increases forever. Will it ever contain a negative number? Answer yes or no.`,"no","Think about what happens to the terms as the sequence continues.","Since the sequence only increases from a positive start, it never becomes negative."),
+    sq("s8-u9-r6","Solve for where two sequences meet",difficulty,"Two sequences have nth terms 3n + 1 and 2n + 5. Find the value of n where they are equal.","4","Set the two expressions equal and solve for n.","3n+1=2n+5 gives n=4."),
+  ];
+};
+
 const integers=()=>{const a=r(18,65),b=r(7,24),x=r(-12,-3),y=r(5,17);return[
   q(`Calculate ${a} + (${x}).`,String(a+x),"Adding a negative is subtraction.",`${a}+(${x})=${a+x}`),
   q(`Calculate ${b} - (${x}).`,String(b-x),"Subtracting a negative becomes addition.",`${b}-(${x})=${b-x}`),
@@ -357,6 +500,9 @@ export function makeUnitQuestions(chapter:string,difficulty:string){
     "s8-u4": structuredDecimals,
     "s8-u5": structuredAngles,
     "s8-u6": structuredData,
+    "s8-u7": structuredFractions,
+    "s8-u8": structuredShapes,
+    "s8-u9": structuredSequences,
   };
   if (structuredPilot[chapter])
     return validateStructuredSet(structuredPilot[chapter](level), chapter, level);
