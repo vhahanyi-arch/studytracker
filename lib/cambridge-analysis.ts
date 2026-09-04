@@ -174,6 +174,7 @@ function inferMarks(inputPoints: SchemePoint[]): number | null {
 
 function cleanAnswer(value: string, paperMode: CambridgePaperMode) {
   let answer = value
+    .replace(/□/g, "×")
     .replace(/\s+/g, " ")
     .replace(/\b(?:cao|oe|isw|nfww|soi)\b.*$/i, "")
     .replace(/\b(?:M|A|B|C|P|SC|FT)\d\b.*$/i, "")

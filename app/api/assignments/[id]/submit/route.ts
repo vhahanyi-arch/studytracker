@@ -218,7 +218,17 @@ export async function POST(
     } else if (!expected) {
       rationale = "No accepted answer has been configured for this question.";
     } else {
-      const accepted = expected.split("|").map(normalize);
+      const rawVariants = expected.split("|").map((variant) => variant.trim());
+      const accepted = rawVariants
+        .flatMap((variant) => {
+          const options = [variant];
+          const equalsParts = variant.split("=");
+          if (equalsParts.length > 1) {
+            options.push(equalsParts[equalsParts.length - 1].trim());
+          }
+          return options;
+        })
+        .map(normalize);
       const normalizedResponse = normalize(response);
       const parseNumber = (value: string) => {
         const cleaned = value
