@@ -13,7 +13,11 @@ export type GradableAnswer = {
 } | undefined;
 
 export function normalizeAnswer(value: string) {
-  return value.toLowerCase().replace(/\s+/g, "").replace(/,/g, ".");
+  return value
+    .replace(/□/g, "×")
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .replace(/,/g, ".");
 }
 
 export function parseNumericAnswer(value: string): number {
