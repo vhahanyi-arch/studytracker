@@ -557,6 +557,178 @@ const structuredRatio = (difficulty:"foundational"|"application"|"reasoning") =>
   ];
 };
 
+const structuredProbability = (difficulty:"foundational"|"application"|"reasoning") => {
+  const gcdP=(a:number,b:number):number=>b===0?a:gcdP(b,a%b);
+  const fracP=(n:number,d:number)=>{const g=gcdP(Math.abs(n),d)||1;return{n:n/g,d:d/g};};
+  const fstrP=(f:{n:number,d:number})=>f.d===1?String(f.n):`${f.n}/${f.d}`;
+  const fdecP=(f:{n:number,d:number})=>Number((f.n/f.d).toFixed(10)).toString();
+  if (difficulty === "foundational") {
+    const redN=r(1,8),totalN=r(redN+2,15),pRed=fracP(redN,totalN);
+    const pRain=r(5,85)/100,pNoRain=Math.round((100-pRain*100))/100;
+    const trials6=r(2,20)*10,freq6=r(1,trials6-1),pExp6=fracP(freq6,trials6);
+    return [
+      sq("s8-u13-f1","Find a basic probability",difficulty,"A fair die is rolled. Find the probability of rolling a 6.",["1/6","0.1666666667"],"There is one favourable outcome out of six.","P(6)=1/6."),
+      sq("s8-u13-f2","Find probability from a ratio of outcomes",difficulty,`A bag has ${redN} red and ${totalN-redN} blue counters. Find P(red).`,[fstrP(pRed),fdecP(pRed)],"Divide favourable outcomes by total outcomes.",`${redN}÷${totalN}=${fstrP(pRed)}.`),
+      sq("s8-u13-f3","Find a complementary probability",difficulty,`If P(rain)=${pRain.toFixed(2)}, find P(no rain).`,pNoRain.toFixed(2),"Complementary probabilities sum to 1.",`1−${pRain.toFixed(2)}=${pNoRain.toFixed(2)}.`),
+      sq("s8-u13-f4","Find the probability of a combined event",difficulty,"Two fair coins are tossed. Find P(two heads).",["1/4","0.25"],"List all outcomes: HH, HT, TH, TT.","Only HH works, so P=1/4."),
+      sq("s8-u13-f5","Recall the probability scale",difficulty,"A certain event has what probability?","1","Use the probability scale from impossible to certain.","A certain event has probability 1."),
+      sq("s8-u13-f6","Find experimental probability",difficulty,`In ${trials6} trials, an event occurs ${freq6} times. Find its experimental probability.`,[fstrP(pExp6),fdecP(pExp6)],"Divide the frequency by the number of trials.",`${freq6}÷${trials6}=${fstrP(pExp6)}.`),
+    ];
+  }
+  if (difficulty === "application") {
+    const spinnerSections=r(4,8),redSections=r(1,spinnerSections-1),pSpin=fracP(redSections,spinnerSections);
+    const heartN=13,deckN=52,pHeart=fracP(heartN,deckN);
+    const pFrac4=fracP(r(1,5),[4,5,10][r(0,2)]),trialsA4=pFrac4.d*r(4,20),expectedA4=trialsA4*pFrac4.n/pFrac4.d;
+    const totalA5=r(2,9),failA5=r(1,totalA5-1),pFailA5=fracP(failA5,totalA5),pPassA5=fracP(totalA5-failA5,totalA5);
+    const tableTotalA6=r(2,20)*10,tableFreqA6=r(1,tableTotalA6-1),pTableA6=fracP(tableFreqA6,tableTotalA6);
+    return [
+      sq("s8-u13-a1","Find probability on a spinner",difficulty,`A spinner has ${spinnerSections} equal sections, ${redSections} of which are red. Find the probability of landing on red.`,[fstrP(pSpin),fdecP(pSpin)],"Divide the red sections by the total sections.",`${redSections}÷${spinnerSections}=${fstrP(pSpin)}.`),
+      sq("s8-u13-a2","Find probability from a deck of cards",difficulty,"A card is drawn from a standard 52-card deck. Find the probability it is a heart.",[fstrP(pHeart),fdecP(pHeart)],"A deck has 13 hearts out of 52 cards.",`13÷52=${fstrP(pHeart)}.`),
+      sq("s8-u13-a3","Find an expected frequency",difficulty,`The probability of winning a game is ${fstrP(pFrac4)}. In ${trialsA4} games, how many wins would you expect?`,String(expectedA4),"Multiply the probability by the number of trials.",`${fstrP(pFrac4)}×${trialsA4}=${expectedA4}.`),
+      sq("s8-u13-a4","Find a complementary probability in context",difficulty,`The probability a bus is late is ${fstrP(pFailA5)}. Find the probability it is on time.`,[fstrP(pPassA5),fdecP(pPassA5)],"Subtract from 1.",`1−${fstrP(pFailA5)}=${fstrP(pPassA5)}.`),
+      sq("s8-u13-a5","Find experimental probability from a survey",difficulty,`A survey of ${tableTotalA6} people found ${tableFreqA6} preferred tea. Find the experimental probability a person prefers tea.`,[fstrP(pTableA6),fdecP(pTableA6)],"Divide the frequency by the sample size.",`${tableFreqA6}÷${tableTotalA6}=${fstrP(pTableA6)}.`),
+      sq("s8-u13-a6","Convert a percentage to a probability fraction",difficulty,"A weather forecast gives a 30% chance of rain. Express this as a fraction in simplest form.",["3/10","0.3"],"Write the percentage over 100, then simplify.","30/100 simplifies to 3/10."),
+    ];
+  }
+  const pA=fracP(r(1,3),[2,3,4][r(0,2)]),pB=fracP(r(1,3),[2,3,4][r(0,2)]),pBoth=fracP(pA.n*pB.n,pA.d*pB.d);
+  return [
+    sq("s8-u13-r1","Combine independent probabilities",difficulty,`Two independent events have probabilities ${fstrP(pA)} and ${fstrP(pB)}. Find the probability both occur.`,[fstrP(pBoth),fdecP(pBoth)],"Multiply the two probabilities together.",`${fstrP(pA)}×${fstrP(pB)}=${fstrP(pBoth)}.`),
+    sq("s8-u13-r2","Correct a probability-sum error",difficulty,"A learner says the probabilities of an event's outcomes sum to 150%. Explain why this must be wrong, then enter the correct total probability (as a decimal).","1","All possible outcomes' probabilities must sum to exactly 1.","Probabilities always total 1 (100%), never more."),
+    sq("s8-u13-r3","Find the probability neither event occurs",difficulty,"An event has probability 0.7. Another mutually exclusive event has probability 0.2. Find the probability that neither occurs.","0.1","Subtract both probabilities from 1.","1−0.7−0.2=0.1."),
+    sq("s8-u13-r4","Evaluate a probability claim",difficulty,"A bag has more red counters than blue. A learner says P(blue) > P(red). Is this correct? Answer yes or no.","no","More red counters means a higher probability of drawing red.","No — more red counters means P(red) is higher."),
+    sq("s8-u13-r5","Simplify an experimental probability",difficulty,"An event occurred 18 times out of 60 trials. Find its experimental probability in simplest fraction form.",["3/10","0.3"],"Write as a fraction, then simplify.","18/60 simplifies to 3/10."),
+    sq("s8-u13-r6","Combine mutually exclusive probabilities",difficulty,"P(rain)=0.4 and P(snow)=0.15 are mutually exclusive. Find P(rain or snow).","0.55","Add the probabilities of mutually exclusive events.","0.4+0.15=0.55."),
+  ];
+};
+
+const structuredTransformations = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const px1=r(-8,8),py1=r(-8,8),vx1=r(-6,6),vy1=r(-6,6);
+    const px2=r(-8,8),py2=r(-8,8);
+    const px3=r(-8,8),py3=r(-8,8);
+    const px4=r(-6,6),py4=r(-6,6);
+    const scale5=r(2,5),side5=r(2,10);
+    return [
+      sq("s8-u14-f1","Apply a translation",difficulty,`Translate (${px1},${py1}) by the vector (${vx1},${vy1}). Give the new coordinate.`,[`(${px1+vx1},${py1+vy1})`,`${px1+vx1},${py1+vy1}`],"Add corresponding coordinates.",`(${px1}+${vx1},${py1}+${vy1})=(${px1+vx1},${py1+vy1}).`),
+      sq("s8-u14-f2","Reflect in the x-axis",difficulty,`Reflect (${px2},${py2}) in the x-axis.`,[`(${px2},${-py2})`,`${px2},${-py2}`],"The x-coordinate stays; the y-sign changes.",`(${px2},${py2}) maps to (${px2},${-py2}).`),
+      sq("s8-u14-f3","Reflect in the y-axis",difficulty,`Reflect (${px3},${py3}) in the y-axis.`,[`(${-px3},${py3})`,`${-px3},${py3}`],"The y-coordinate stays; the x-sign changes.",`(${px3},${py3}) maps to (${-px3},${py3}).`),
+      sq("s8-u14-f4","Rotate a point about the origin",difficulty,`Rotate (${px4},${py4}) 90° anticlockwise about the origin.`,[`(${-py4},${px4})`,`${-py4},${px4}`],"Use the rule (x,y) → (−y,x).",`(${px4},${py4}) maps to (${-py4},${px4}).`),
+      sq("s8-u14-f5","Apply an enlargement",difficulty,`An enlargement has scale factor ${scale5}. A side is ${side5} cm. Find the image side.`,String(scale5*side5),"Multiply the side by the scale factor.",`${side5}×${scale5}=${scale5*side5} cm.`),
+      sq("s8-u14-f6","Name a transformation",difficulty,"What single transformation turns a shape about a fixed centre?","rotation","Recall the four transformation types.","A rotation turns a shape about a centre."),
+    ];
+  }
+  if (difficulty === "application") {
+    const px1=r(-6,6),py1=r(-6,6),vx1=r(-5,5),vy1=r(-5,5);
+    const px2=r(-6,6),py2=r(-6,6);
+    const scale3=r(2,5),imageSide3=scale3*r(2,10),origSide3=imageSide3/scale3;
+    const px4=r(-6,6),py4=r(-6,6);
+    const origLen5=r(2,10),newLen5=origLen5*r(2,5);
+    const px6=r(-6,6),py6=r(-6,6),vx6=r(-4,4),vy6=r(-4,4);
+    return [
+      sq("s8-u14-a1","Apply a translation in context",difficulty,`A game piece at (${px1},${py1}) moves by the vector (${vx1},${vy1}). Find its new position.`,[`(${px1+vx1},${py1+vy1})`,`${px1+vx1},${py1+vy1}`],"Add corresponding coordinates.",`(${px1+vx1},${py1+vy1}).`),
+      sq("s8-u14-a2","Reflect a shape's corner",difficulty,`A shape's corner at (${px2},${py2}) is reflected in the x-axis. Find the new coordinate.`,[`(${px2},${-py2})`,`${px2},${-py2}`],"The y-sign changes; the x-coordinate stays.",`(${px2},${-py2}).`),
+      sq("s8-u14-a3","Reverse an enlargement",difficulty,`A photo is enlarged by scale factor ${scale3}. The image side is ${imageSide3} cm. Find the original side length.`,String(origSide3),"Divide the image length by the scale factor.",`${imageSide3}÷${scale3}=${origSide3} cm.`),
+      sq("s8-u14-a4","Apply a 180° rotation",difficulty,`A point at (${px4},${py4}) is rotated 180° about the origin. Find its new position.`,[`(${-px4},${-py4})`,`${-px4},${-py4}`],"Both coordinates change sign.",`(${-px4},${-py4}).`),
+      sq("s8-u14-a5","Find a scale factor from lengths",difficulty,`A model's length is scaled from ${origLen5} cm to ${newLen5} cm. Find the scale factor.`,String(newLen5/origLen5),"Divide the new length by the original.",`${newLen5}÷${origLen5}=${newLen5/origLen5}.`),
+      sq("s8-u14-a6","Apply a translation vector",difficulty,`A point at (${px6},${py6}) is translated by (${vx6},${vy6}). Find its new position.`,[`(${px6+vx6},${py6+vy6})`,`${px6+vx6},${py6+vy6}`],"Add corresponding coordinates.",`(${px6+vx6},${py6+vy6}).`),
+    ];
+  }
+  const imgX1=r(-6,6),imgY1=r(-6,6),vx1=r(-5,5),vy1=r(-5,5);
+  const scaleA=r(2,4),scaleB=r(2,4),combined=scaleA*scaleB;
+  const lenScale5=r(2,5);
+  return [
+    sq("s8-u14-r1","Reverse a translation",difficulty,`A point is translated by the vector (${vx1},${vy1}) to reach (${imgX1},${imgY1}). Find the original point.`,[`(${imgX1-vx1},${imgY1-vy1})`,`${imgX1-vx1},${imgY1-vy1}`],"Subtract the vector from the image point.",`(${imgX1-vx1},${imgY1-vy1}).`),
+    sq("s8-u14-r2","Combine two enlargements",difficulty,`A shape is enlarged by scale factor ${scaleA}, then enlarged again by scale factor ${scaleB}. Find the overall scale factor.`,String(combined),"Multiply the two scale factors together.",`${scaleA}×${scaleB}=${combined}.`),
+    sq("s8-u14-r3","Correct a reflection error",difficulty,"A learner reflects (5,-3) in the x-axis and writes (-5,-3). Enter the correct reflected point.",["(5,3)","5,3"],"Only the y-sign should change; the x-coordinate stays.","(5,-3) reflects to (5,3)."),
+    sq("s8-u14-r4","Identify a transformation from coordinate changes",difficulty,"A shape's coordinates all have their signs flipped (both x and y). What single transformation could cause this?",["rotation180","rotation of 180","180rotation"],"Think about which transformation reverses both coordinates.","A 180° rotation about the origin flips both signs."),
+    sq("s8-u14-r5","Reason about combined rotations",difficulty,"A shape is rotated 90° clockwise, then 90° anticlockwise, about the same centre. What is the overall effect?",["nochange","no change","none"],"The two rotations cancel each other out.","The shape ends up back where it started."),
+    sq("s8-u14-r6","Find the effect of enlargement on area",difficulty,`A shape is enlarged by scale factor ${lenScale5}. If the original area is 10 cm², find the new area.`,String(10*lenScale5*lenScale5),"Area scales by the square of the length scale factor.",`10×${lenScale5}²=${10*lenScale5*lenScale5} cm².`),
+  ];
+};
+
+const structuredMeasures = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const w1=r(4,20),h1=r(4,20);
+    const base2=r(4,20),height2=r(4,20),area2=(base2*height2)/2;
+    const radius3=[5,10,15,20][r(0,3)],area3=Math.round(3.14*radius3*radius3*100)/100;
+    const l4=r(2,10),w4=r(2,10),h4=r(2,10);
+    const m5=r(1,20)+r(1,9)/10;
+    const side6=r(2,12);
+    return [
+      sq("s8-u15-f1","Find the perimeter of a rectangle",difficulty,`Find the perimeter of a rectangle ${w1} cm by ${h1} cm.`,String(2*(w1+h1)),"Add all four sides.",`2×(${w1}+${h1})=${2*(w1+h1)} cm.`),
+      sq("s8-u15-f2","Find the area of a triangle",difficulty,`Find the area of a triangle with base ${base2} cm and height ${height2} cm.`,String(area2),"Use half × base × height.",`½×${base2}×${height2}=${area2} cm².`),
+      sq("s8-u15-f3","Find the area of a circle",difficulty,`Find the area of a circle of radius ${radius3} cm using π=3.14.`,String(area3),"Use A=πr².",`3.14×${radius3}²=${area3} cm².`),
+      sq("s8-u15-f4","Find the volume of a cuboid",difficulty,`Find the volume of a cuboid ${l4} cm by ${w4} cm by ${h4} cm.`,String(l4*w4*h4),"Multiply length, width and height.",`${l4}×${w4}×${h4}=${l4*w4*h4} cm³.`),
+      sq("s8-u15-f5","Convert metres to centimetres",difficulty,`Convert ${m5.toFixed(1)} m to centimetres.`,String(Math.round(m5*100)),"Multiply metres by 100.",`${m5.toFixed(1)}×100=${Math.round(m5*100)} cm.`),
+      sq("s8-u15-f6","Find the surface area of a cube",difficulty,`Find the surface area of a cube with side ${side6} cm.`,String(6*side6*side6),"A cube has six equal square faces.",`6×${side6}²=${6*side6*side6} cm².`),
+    ];
+  }
+  if (difficulty === "application") {
+    const fenceW=r(4,20),fenceH=r(4,20);
+    const wallW=r(2,10),wallH=r(2,10),coveragePerTin=r(2,5),tinsNeeded=Math.ceil((wallW*wallH)/coveragePerTin);
+    const tankL=r(2,8),tankW=r(2,8),tankH=r(2,8),volCm3=tankL*tankW*tankH,volLitres=volCm3/1000;
+    const km1=r(2,15);
+    const poolRadius=[5,10][r(0,1)],poolArea=Math.round(3.14*poolRadius*poolRadius*100)/100;
+    const rectL=r(4,10),rectW=r(4,10),rectL2=r(2,6),rectW2=r(2,6),compositeArea=rectL*rectW+rectL2*rectW2;
+    return [
+      sq("s8-u15-a1","Find fencing length for a garden",difficulty,`A rectangular garden ${fenceW} m by ${fenceH} m needs fencing all the way around. Find the total length of fencing.`,String(2*(fenceW+fenceH)),"Add all four sides.",`2×(${fenceW}+${fenceH})=${2*(fenceW+fenceH)} m.`),
+      sq("s8-u15-a2","Find how many tins of paint are needed",difficulty,`A wall is ${wallW} m by ${wallH} m. One tin of paint covers ${coveragePerTin} m². How many tins are needed (round up to a whole tin)?`,String(tinsNeeded),"Divide the wall area by the coverage, then round up.",`${wallW}×${wallH}÷${coveragePerTin}=${(wallW*wallH/coveragePerTin).toFixed(2)}, round up to ${tinsNeeded}.`),
+      sq("s8-u15-a3","Convert volume to capacity",difficulty,`A tank measures ${tankL} cm by ${tankW} cm by ${tankH} cm. Find its capacity in litres (1 litre = 1000 cm³).`,String(volLitres),"Find the volume, then divide by 1000.",`${tankL}×${tankW}×${tankH}÷1000=${volLitres} litres.`),
+      sq("s8-u15-a4","Convert kilometres to metres",difficulty,`Convert ${km1} km to metres.`,String(km1*1000),"Multiply kilometres by 1000.",`${km1}×1000=${km1*1000} m.`),
+      sq("s8-u15-a5","Find the area of a circular pool",difficulty,`A circular pool has radius ${poolRadius} m. Find its area using π=3.14.`,String(poolArea),"Use A=πr².",`3.14×${poolRadius}²=${poolArea} m².`),
+      sq("s8-u15-a6","Find the area of a composite shape",difficulty,`An L-shaped room is made of a ${rectL} m by ${rectW} m rectangle and a ${rectL2} m by ${rectW2} m rectangle. Find the total floor area.`,String(compositeArea),"Add the areas of both rectangles.",`${rectL}×${rectW}+${rectL2}×${rectW2}=${compositeArea} m².`),
+    ];
+  }
+  const widthR1=r(2,15),lengthR1=r(2,15)+widthR1+1,perimR1=2*(lengthR1+widthR1);
+  const radiusR2=[5,10,15][r(0,2)],areaR2=Math.round(3.14*radiusR2*radiusR2*100)/100;
+  const l1R3=r(2,8),w1R3=r(2,8),h1R3=r(2,8),vol1R3=l1R3*w1R3*h1R3;
+  const l2R3=r(2,8),w2R3=r(2,8),h2R3=r(2,8),vol2R3=l2R3*w2R3*h2R3;
+  const sideR4=r(2,8),doubledAreaR4=(sideR4*2)*(sideR4*2);
+  const volR6=r(2,10)*r(2,10)*r(2,10);
+  return [
+    sq("s8-u15-r1","Reverse a perimeter calculation",difficulty,`A rectangle has perimeter ${perimR1} cm and width ${widthR1} cm. Find its length.`,String(lengthR1),"Halve the perimeter, then subtract the width.",`${perimR1}÷2−${widthR1}=${lengthR1} cm.`),
+    sq("s8-u15-r2","Reverse a circle area calculation",difficulty,`A circle has area ${areaR2} cm² (using π=3.14). State its radius.`,String(radiusR2),"Divide by π, then find the square root.",`${areaR2}÷3.14=${radiusR2*radiusR2}, √${radiusR2*radiusR2}=${radiusR2}.`),
+    sq("s8-u15-r3","Compare two volumes",difficulty,`Cuboid A measures ${l1R3} by ${w1R3} by ${h1R3} cm. Cuboid B measures ${l2R3} by ${w2R3} by ${h2R3} cm. Which has the larger volume, A or B?`,[vol1R3>vol2R3?"a":"b",vol1R3>vol2R3?"cuboid a":"cuboid b"],"Calculate both volumes, then compare.",`Cuboid A=${vol1R3} cm³, Cuboid B=${vol2R3} cm³.`),
+    sq("s8-u15-r4","Reason about area scaling",difficulty,`A square has side ${sideR4} cm. If the side length is doubled, find the new area.`,String(doubledAreaR4),"Doubling the side means the area is multiplied by 4.",`(2×${sideR4})²=${doubledAreaR4} cm².`),
+    sq("s8-u15-r5","Correct a unit conversion error",difficulty,"A learner converts 3.5 m to 35 cm. Enter the correct value in cm.","350","Multiply metres by 100, not 10.","3.5×100=350 cm."),
+    sq("s8-u15-r6","Convert volume to litres",difficulty,`A cuboid has volume ${volR6} cm³. Convert this to litres.`,String(volR6/1000),"Divide by 1000.",`${volR6}÷1000=${volR6/1000} litres.`),
+  ];
+};
+
+const structuredInvestigations = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const meanA=r(50,90),meanB=r(50,90);
+    const rangeX=r(2,20),rangeY=r(2,20);
+    return [
+      sq("s8-u16-f1","Choose a graph for time-based data",difficulty,"Which graph is most suitable for showing change over time?",["linegraph","line"],"Time is continuous and ordered.","A line graph shows trends over time."),
+      sq("s8-u16-f2","Choose a graph for categorical data",difficulty,"Which graph is suitable for categorical frequency data?",["bargraph","barchart","bar"],"Categories need separate, unconnected bars.","A bar chart is suitable."),
+      sq("s8-u16-f3","Identify correlation direction",difficulty,"A scatter graph slopes upward from left to right. Name the correlation.",["positive","positivecorrelation"],"As one variable rises, the other tends to rise too.","This is positive correlation."),
+      sq("s8-u16-f4","Recall correlation vs causation",difficulty,"Does correlation always prove causation?",["no","n"],"Another variable may affect both quantities.","No — correlation alone does not prove cause."),
+      sq("s8-u16-f5","Compare two means",difficulty,`Class A has mean ${meanA} and Class B has mean ${meanB}. Which has the higher mean?`,[meanA>meanB?"classa":"classb",meanA>meanB?"a":"b"],"Compare the two mean values directly.",`${meanA>meanB?"Class A":"Class B"} has the higher mean.`),
+      sq("s8-u16-f6","Compare consistency using range",difficulty,`Two sets have the same median. Set X has range ${rangeX} and Set Y has range ${rangeY}. Which is more consistent?`,[rangeX<rangeY?"setx":"sety",rangeX<rangeY?"x":"y"],"A smaller range means the data is more tightly grouped.",`Set ${rangeX<rangeY?"X":"Y"} is more consistent because its range is smaller.`),
+    ];
+  }
+  if (difficulty === "application") {
+    return [
+      sq("s8-u16-a1","Identify sampling bias",difficulty,"A researcher only surveys people at a gym about exercise habits. Which sampling issue does this cause?",["bias","biased"],"Gym-goers don't represent the whole population.","This causes sampling bias."),
+      sq("s8-u16-a2","Identify a sampling method",difficulty,"A sample is chosen by picking every 10th name from an alphabetical list. What is this method called?",["systematic","systematicsampling"],"This method selects at a fixed, regular interval.","This is systematic sampling."),
+      sq("s8-u16-a3","Choose the best average for outlier data",difficulty,"A data set has one extremely high outlier. Which average is least affected by it: mean or median?","median","The mean is pulled toward extreme values; the median is not.","The median is least affected by outliers."),
+      sq("s8-u16-a4","Choose a diagram for proportions",difficulty,"Which diagram is best for showing how a budget is split into categories as proportions of a whole?",["piechart","pie"],"Think about which chart shows parts of a whole.","A pie chart is best for this."),
+      sq("s8-u16-a5","Describe a trend",difficulty,"A company's sales rise steadily each month for a year. What trend does this show?",["increasing","upward","positivetrend"],"Consider the overall direction of change.","This shows an increasing (upward) trend."),
+      sq("s8-u16-a6","Count categories in survey data",difficulty,"A survey has 5 possible responses: strongly agree, agree, neutral, disagree, strongly disagree. How many categories are there?","5","Count each distinct response option.","There are 5 categories."),
+    ];
+  }
+  const meanSame=r(40,80),rangeSmall=r(2,10),rangeLarge=rangeSmall+r(3,15);
+  return [
+    sq("s8-u16-r1","Evaluate whether a sample is representative",difficulty,"A school wants a representative sample of all students. Is surveying only the chess club members representative? Answer yes or no.","no","Consider whether chess club members represent all students.","No — chess club members are not representative of the whole school."),
+    sq("s8-u16-r2","Reason about the effect of an outlier",difficulty,"A data set gains one very large outlier. Explain in one word which average changes the most: mean or median.","mean","The mean is calculated using every value; the median is not.","The mean changes the most."),
+    sq("s8-u16-r3","Judge correlation strength",difficulty,"A scatter graph shows points loosely scattered near an upward line, with much variation. Is this a strong or weak positive correlation?","weak","Consider how closely the points follow the line.","This is a weak positive correlation."),
+    sq("s8-u16-r4","Reason about extrapolation",difficulty,"A trend is observed for x-values between 0 and 10. Is it reliable to extrapolate the trend to predict x=1000? Answer yes or no.","no","Trends observed within a range may not hold far outside it.","No — extrapolating far beyond the data is unreliable."),
+    sq("s8-u16-r5","Compare consistency with equal means",difficulty,`Two classes both have mean score ${meanSame}. Class P has range ${rangeSmall} and Class Q has range ${rangeLarge}. Which class is more consistent?`,["classp","p"],"A smaller range means more consistent results.","Class P is more consistent because its range is smaller."),
+    sq("s8-u16-r6","Reason about spurious correlation",difficulty,"A scatter graph for ice-cream sales vs temperature shows a positive correlation. Would you expect umbrella sales vs temperature to show a similar or different type of correlation?","different","Think about how umbrella sales relate to temperature.","Different — umbrella sales likely show a negative correlation with temperature."),
+  ];
+};
+
 const integers=()=>{const a=r(18,65),b=r(7,24),x=r(-12,-3),y=r(5,17);return[
   q(`Calculate ${a} + (${x}).`,String(a+x),"Adding a negative is subtraction.",`${a}+(${x})=${a+x}`),
   q(`Calculate ${b} - (${x}).`,String(b-x),"Subtracting a negative becomes addition.",`${b}-(${x})=${b-x}`),
@@ -647,15 +819,24 @@ export function makeUnitQuestions(chapter:string,difficulty:string){
     "s8-u10": structuredPercentages,
     "s8-u11": structuredGraphs,
     "s8-u12": structuredRatio,
+    "s8-u13": structuredProbability,
+    "s8-u14": structuredTransformations,
+    "s8-u15": structuredMeasures,
+    "s8-u16": structuredInvestigations,
     "s9-u1": structuredIntegers,
     "s9-u2": structuredExpressions,
     "s9-u3": structuredRounding,
     "s9-u5": structuredAngles,
+    "s9-u6": structuredInvestigations,
     "s9-u7": structuredShapes,
     "s9-u8": structuredFractions,
     "s9-u9": structuredSequences,
     "s9-u10": structuredGraphs,
     "s9-u11": structuredRatio,
+    "s9-u12": structuredProbability,
+    "s9-u13": structuredTransformations,
+    "s9-u14": structuredMeasures,
+    "s9-u15": structuredInvestigations,
   };
   if (structuredPilot[chapter])
     return validateStructuredSet(structuredPilot[chapter](level), chapter, level);
