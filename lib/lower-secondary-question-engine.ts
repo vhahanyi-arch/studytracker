@@ -878,6 +878,155 @@ const structuredRoundingS9 = (difficulty:"foundational"|"application"|"reasoning
   ];
 };
 
+const gcdS9 = (a:number,b:number):number => b===0?a:gcdS9(b,a%b);
+
+const structuredAnglesS9 = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const a1=r(20,160);
+    const a2=r(20,160);
+    const a3=r(20,160),co3=180-a3;
+    const a4=r(20,160);
+    const a6=r(20,80),straight6=180-a6;
+    return [
+      sq("s9-u5-f1","Apply corresponding angles",difficulty,`Two parallel lines are cut by a transversal. One angle is ${a1}°. Find the corresponding angle.`,String(a1),"Corresponding angles are equal.",`Corresponding angle = ${a1}°.`),
+      sq("s9-u5-f2","Apply alternate angles",difficulty,`Two parallel lines are cut by a transversal. One angle is ${a2}°. Find the alternate angle.`,String(a2),"Alternate angles are equal.",`Alternate angle = ${a2}°.`),
+      sq("s9-u5-f3","Apply co-interior angles",difficulty,`Two parallel lines are cut by a transversal. One co-interior angle is ${a3}°. Find the other co-interior angle.`,String(co3),"Co-interior angles sum to 180°.",`180−${a3}=${co3}°.`),
+      sq("s9-u5-f4","Apply vertically opposite angles",difficulty,`Two straight lines cross. One angle is ${a4}°. Find the vertically opposite angle.`,String(a4),"Vertically opposite angles are equal.",`Vertically opposite angle = ${a4}°.`),
+      sq("s9-u5-f5","Name an angle relationship",difficulty,"Name the angle relationship where two angles are on the same side of a transversal, between two parallel lines, and sum to 180°.",["cointerior","co-interior","allied"],"This pair sits between the parallel lines on the same side.","This is the co-interior (allied) angle relationship."),
+      sq("s9-u5-f6","Combine corresponding angles with a straight line",difficulty,`A transversal crosses parallel lines. One angle is ${a6}°, and its corresponding angle lies on a straight line with angle x. Find x.`,String(straight6),"The corresponding angle equals the original; then use angles on a straight line.",`180−${a6}=${straight6}°.`),
+    ];
+  }
+  if (difficulty === "application") {
+    const a1=r(20,160);
+    const a2=r(20,160),co2=180-a2;
+    const a3=r(20,160);
+    const bearing4=r(10,170),back4=bearing4+180>360?bearing4-180:bearing4+180;
+    const a5=r(30,120),b5=r(20,180-a5-1),c5=180-a5-b5;
+    const a6=r(20,160);
+    return [
+      sq("s9-u5-a1","Apply corresponding angles in context",difficulty,`Two railway tracks are parallel. A signal post makes a corresponding angle of ${a1}° with each track. Find the angle on the other track.`,String(a1),"Corresponding angles are equal.",`Corresponding angle = ${a1}°.`),
+      sq("s9-u5-a2","Apply co-interior angles in context",difficulty,`A roof truss has two parallel beams. One co-interior angle between them is ${a2}°. Find the other.`,String(co2),"Co-interior angles sum to 180°.",`180−${a2}=${co2}°.`),
+      sq("s9-u5-a3","Apply alternate angles in context",difficulty,`Two parallel roads are crossed by a footpath. One alternate angle is ${a3}°. Find the other.`,String(a3),"Alternate angles are equal.",`Alternate angle = ${a3}°.`),
+      sq("s9-u5-a4","Find a back bearing",difficulty,`A ship sails on a bearing of ${bearing4}°. Find the back bearing (the bearing to return along the same path).`,String(back4),"Add or subtract 180° from the original bearing.",`Back bearing = ${back4}°.`),
+      sq("s9-u5-a5","Apply parallel line facts in a triangle",difficulty,`A triangle is formed where two of its angles are ${a5}° and ${b5}°, using facts from parallel lines. Find the third angle.`,String(c5),"Angles in a triangle sum to 180°.",`180−${a5}−${b5}=${c5}°.`),
+      sq("s9-u5-a6","Apply corresponding angles across parallel lines",difficulty,`A transversal crosses two parallel lines, forming an angle of ${a6}° on one line. Find the corresponding angle on the other line.`,String(a6),"Corresponding angles are equal.",`Corresponding angle = ${a6}°.`),
+    ];
+  }
+  const a1=r(20,160);
+  const xCoef3=r(2,5),totalCoef3=1+xCoef3,q3=r(5,Math.floor(170/totalCoef3)),p3=180-q3*totalCoef3;
+  const bearing4=r(10,170),back4=bearing4+180>360?bearing4-180:bearing4+180;
+  const a5=r(30,80),b5=r(20,180-a5-30),c5=180-a5-b5;
+  const co6=r(20,160);
+  return [
+    sq("s9-u5-r1","Determine if lines are parallel",difficulty,`A transversal crosses two lines. Corresponding angles are both ${a1}°. Are the two lines parallel? Answer yes or no.`,"yes","Equal corresponding angles indicate parallel lines.","Yes — equal corresponding angles confirm the lines are parallel."),
+    sq("s9-u5-r2","Distinguish alternate from co-interior angles",difficulty,"A learner says alternate angles and co-interior angles are always equal to each other. Are alternate angles the same as co-interior angles? Answer yes or no.","no","Alternate angles are equal; co-interior angles sum to 180°.","No — they follow different rules."),
+    sq("s9-u5-r3","Solve an algebraic co-interior angle problem",difficulty,`Two co-interior angles between parallel lines are x° and (${xCoef3}x + ${p3})°. Find x.`,String(q3),"Set the sum of the two expressions equal to 180° and solve.",`x+${xCoef3}x+${p3}=180, so x=${q3}.`),
+    sq("s9-u5-r4","Find a bearing after a return journey",difficulty,`A ship sails on a bearing of ${bearing4}°, then returns along the reverse path. Find the bearing of the return journey.`,String(back4),"Add or subtract 180° from the outward bearing.",`Return bearing = ${back4}°.`),
+    sq("s9-u5-r5","Combine multiple parallel-line facts in a triangle",difficulty,`A triangle has one angle of ${a5}° found using alternate angles, and another of ${b5}° found using co-interior angles with a parallel line. Find the third angle.`,String(c5),"Angles in a triangle sum to 180°.",`180−${a5}−${b5}=${c5}°.`),
+    sq("s9-u5-r6","Correct a co-interior angle misconception",difficulty,`Two co-interior angles are ${co6}° and ${180-co6}°. A learner claims they should be equal instead. Enter the correct sum of co-interior angles.`,"180","Co-interior angles always sum to 180°, they are not equal in general.","Co-interior angles sum to 180°."),
+  ];
+};
+
+const structuredFractionsS9 = (difficulty:"foundational"|"application"|"reasoning") => {
+  const recurToFrac = (digit:number) => { const g=gcdS9(digit,9); const d=9/g; return d===1?String(digit/g):`${digit/g}/${d}`; };
+  if (difficulty === "foundational") {
+    const commonFactor1=r(2,6),numMult1=r(2,5),denomMult1=r(2,5);
+    const numTerm2a=r(1,8),numTerm2b=r(1,8),denom2=r(2,9);
+    const wholeNum3=r(2,6),numer3=r(1,7),denom3=r(2,8);
+    const recurDigit4=r(1,9);
+    const wholePart5=r(0,3),recurDigit5=r(1,9);
+    const numRecur5=wholePart5*9+recurDigit5,gRecur5=gcdS9(numRecur5,9),dRecur5=9/gRecur5;
+    const commonFactor6=r(2,6),num6=r(1,8);
+    return [
+      sq("s9-u8-f1","Simplify an algebraic fraction",difficulty,`Simplify fully: (${commonFactor1*numMult1}x) / ${commonFactor1*denomMult1}.`,`${numMult1}x/${denomMult1}`,"Divide both numerator and denominator by their common factor.",`(${commonFactor1*numMult1}x)/${commonFactor1*denomMult1}=${numMult1}x/${denomMult1}.`),
+      sq("s9-u8-f2","Add fractions with the same denominator",difficulty,`Simplify: ${numTerm2a}/${denom2} + ${numTerm2b}/${denom2}.`,`${numTerm2a+numTerm2b}/${denom2}`,"Add the numerators; the denominator stays the same.",`(${numTerm2a}+${numTerm2b})/${denom2}=${numTerm2a+numTerm2b}/${denom2}.`),
+      sq("s9-u8-f3","Multiply a whole number by a fraction",difficulty,`Multiply: ${wholeNum3} × (${numer3}/${denom3}). Give your answer as a fraction (do not simplify).`,`${wholeNum3*numer3}/${denom3}`,"Multiply the whole number by the numerator only.",`${wholeNum3}×${numer3}=${wholeNum3*numer3}, over ${denom3}.`),
+      sq("s9-u8-f4","Convert a recurring decimal to a fraction",difficulty,`Write 0.${recurDigit4}${recurDigit4}${recurDigit4}... (recurring) as a fraction in simplest form.`,recurToFrac(recurDigit4),"A single repeating digit d equals d/9.",`0.${recurDigit4} recurring = ${recurDigit4}/9, simplified.`),
+      sq("s9-u8-f5","Convert a mixed recurring decimal to a fraction",difficulty,`Write ${wholePart5}.${recurDigit5}${recurDigit5}${recurDigit5}... (recurring) as a fraction.`,dRecur5===1?String(numRecur5/gRecur5):`${numRecur5/gRecur5}/${dRecur5}`,"Write the whole number and recurring part over 9, then simplify.",`${wholePart5}.${recurDigit5} recurring = (${wholePart5}×9+${recurDigit5})/9, simplified.`),
+      sq("s9-u8-f6","Simplify a numeric fraction",difficulty,`Simplify fully: ${commonFactor6*num6} / ${commonFactor6}.`,String(num6),"Divide both terms by their common factor.",`${commonFactor6*num6}÷${commonFactor6}=${num6}.`),
+    ];
+  }
+  if (difficulty === "application") {
+    const speedDenom=r(2,6),hoursNum=r(1,8);
+    const partsA=r(1,8),partsB=r(1,8),denomShared=r(2,9);
+    const wholeMult=r(2,6),numer=r(1,7),denom=r(2,8);
+    const recurDigit4=r(1,9);
+    const totalPop=r(20,90),fracPart=r(2,6);
+    const recurDigit6=r(1,9);
+    return [
+      sq("s9-u8-a1","Write a distance as an algebraic fraction",difficulty,`A car travels at (x/${speedDenom}) km per minute for ${hoursNum} minutes. Write an expression for the distance travelled (do not simplify).`,`${hoursNum}x/${speedDenom}`,"Multiply the speed expression by the time.",`(x/${speedDenom})×${hoursNum}=${hoursNum}x/${speedDenom}.`),
+      sq("s9-u8-a2","Combine fraction parts of a recipe",difficulty,`Two ingredients make up ${partsA}/${denomShared} and ${partsB}/${denomShared} of a recipe. Find the combined fraction.`,`${partsA+partsB}/${denomShared}`,"Add the numerators; the denominator stays the same.",`${partsA}/${denomShared}+${partsB}/${denomShared}=${partsA+partsB}/${denomShared}.`),
+      sq("s9-u8-a3","Scale a fraction quantity",difficulty,`A recipe requires ${wholeMult} batches of ${numer}/${denom} cup of sugar each. Write the total amount needed as a fraction (do not simplify).`,`${wholeMult*numer}/${denom}`,"Multiply the number of batches by the fraction.",`${wholeMult}×${numer}/${denom}=${wholeMult*numer}/${denom}.`),
+      sq("s9-u8-a4","Convert a recurring measurement to a fraction",difficulty,`A repeating decimal reading of 0.${recurDigit4}${recurDigit4}${recurDigit4}... litres is recorded on a gauge. Write this as a fraction in simplest form.`,recurToFrac(recurDigit4),"A single repeating digit d equals d/9.",`0.${recurDigit4} recurring = ${recurDigit4}/9, simplified.`),
+      sq("s9-u8-a5","Write a quantity as an algebraic fraction",difficulty,`x/${fracPart} of a population of ${totalPop*fracPart} are children. Write an expression for the number of children (do not simplify).`,`${totalPop*fracPart}x/${fracPart}`,"Multiply the population by the fraction.",`(x/${fracPart})×${totalPop*fracPart}=${totalPop*fracPart}x/${fracPart}.`),
+      sq("s9-u8-a6","Convert a recurring probability to a fraction",difficulty,`A probability is calculated as 0.${recurDigit6}${recurDigit6}${recurDigit6}... recurring. Write this probability as a fraction.`,recurToFrac(recurDigit6),"A single repeating digit d equals d/9.",`0.${recurDigit6} recurring = ${recurDigit6}/9, simplified.`),
+    ];
+  }
+  const commonFactor1=r(2,6),numMult1=r(2,6),denomMult1=r(2,6),wrongDenom1=commonFactor1*denomMult1+r(1,3);
+  const digitA2=r(1,4),digitB2=r(5,9);
+  let numer3=r(1,7),denom3=r(2,8); while(gcdS9(numer3,denom3)!==1){numer3=r(1,7);denom3=r(2,8);}
+  const commonFactor3=r(2,6);
+  const partsA4=r(1,8),partsB4=r(1,8),denomShared4=r(2,9);
+  const recurDigit5=r(1,9);
+  const numer6=r(2,7),denom6=numer6*r(2,4);
+  return [
+    sq("s9-u8-r1","Correct a simplification error",difficulty,`A learner simplifies (${commonFactor1*numMult1}x)/${commonFactor1*denomMult1} and writes ${numMult1}x/${wrongDenom1}. Enter the correct simplified fraction.`,`${numMult1}x/${denomMult1}`,"Divide both terms by their common factor.",`(${commonFactor1*numMult1}x)/${commonFactor1*denomMult1}=${numMult1}x/${denomMult1}.`),
+    sq("s9-u8-r2","Compare recurring decimals",difficulty,`Compare 0.${digitA2}${digitA2}${digitA2}... recurring and 0.${digitB2}${digitB2}${digitB2}... recurring. Which is larger? Enter the recurring decimal's first digit only.`,String(digitB2),"A larger repeating digit gives a larger recurring decimal.",`0.${digitB2} recurring > 0.${digitA2} recurring.`),
+    sq("s9-u8-r3","Factorise then fully simplify",difficulty,`Factorise then simplify: (${commonFactor3*numer3}) / (${commonFactor3*denom3}). Give the fraction in simplest form (as numerator/denominator, using the original variable-free numbers).`,`${numer3}/${denom3}`,"Divide both terms by their highest common factor.",`(${commonFactor3*numer3})/(${commonFactor3*denom3})=${numer3}/${denom3}.`),
+    sq("s9-u8-r4","Reason about a sum compared to 1",difficulty,`Add ${partsA4}/${denomShared4} and ${partsB4}/${denomShared4}, then state whether the result is greater than, less than, or equal to 1. Enter 'greater', 'less', or 'equal'.`,(partsA4+partsB4)>denomShared4?"greater":(partsA4+partsB4)<denomShared4?"less":"equal","Add the numerators, then compare to the denominator.",`(${partsA4}+${partsB4})/${denomShared4} compared to 1.`),
+    sq("s9-u8-r5","Reason about recurring decimals as rational numbers",difficulty,`Is 0.${recurDigit5}${recurDigit5}${recurDigit5}... recurring a rational number? Answer yes or no.`,"yes","Any recurring decimal can be written as a fraction of integers.","Yes — recurring decimals are always rational."),
+    sq("s9-u8-r6","Evaluate an equivalent-fractions claim",difficulty,`Are ${numer6}/${denom6} and 1/${denom6/numer6} equivalent fractions? Answer yes or no.`,Number.isInteger(denom6/numer6)?"yes":"no","Simplify the first fraction and compare to the second.",`${numer6}/${denom6} simplifies to 1/${denom6/numer6}.`),
+  ];
+};
+
+const PYTH_TRIPLES: [number,number,number][] = [[3,4,5],[6,8,10],[5,12,13],[9,12,15],[8,15,17],[7,24,25],[20,21,29],[12,16,20]];
+const structuredShapesS9 = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const [a1,b1,c1]=PYTH_TRIPLES[r(0,PYTH_TRIPLES.length-1)],scale1=r(1,3);
+    const [a2,b2,c2]=PYTH_TRIPLES[r(0,PYTH_TRIPLES.length-1)],scale2=r(1,3);
+    const hyp3=r(2,10)*10;
+    const hyp4=r(2,10)*10;
+    const adj5=r(2,20);
+    const [a6,b6,c6]=PYTH_TRIPLES[r(0,PYTH_TRIPLES.length-1)],scale6=r(1,2),wrongC6=c6*scale6+r(1,3);
+    return [
+      sq("s9-u7-f1","Find the hypotenuse using Pythagoras",difficulty,`A right-angled triangle has legs ${a1*scale1} cm and ${b1*scale1} cm. Find the hypotenuse.`,String(c1*scale1),"Use a²+b²=c².",`${a1*scale1}²+${b1*scale1}²=${c1*scale1}².`),
+      sq("s9-u7-f2","Find a missing leg using Pythagoras",difficulty,`A right-angled triangle has hypotenuse ${c2*scale2} cm and one leg ${a2*scale2} cm. Find the other leg.`,String(b2*scale2),"Rearrange a²+b²=c² to find the missing leg.",`√(${c2*scale2}²−${a2*scale2}²)=${b2*scale2}.`),
+      sq("s9-u7-f3","Use sine to find a side",difficulty,`A right-angled triangle has hypotenuse ${hyp3} cm and one angle of 30°. Using sin(30°)=0.5, find the side opposite the 30° angle.`,String(hyp3*0.5),"Opposite = hypotenuse × sin(angle).",`${hyp3}×0.5=${hyp3*0.5}.`),
+      sq("s9-u7-f4","Use cosine to find a side",difficulty,`A right-angled triangle has hypotenuse ${hyp4} cm and one angle of 60°. Using cos(60°)=0.5, find the side adjacent to the 60° angle.`,String(hyp4*0.5),"Adjacent = hypotenuse × cos(angle).",`${hyp4}×0.5=${hyp4*0.5}.`),
+      sq("s9-u7-f5","Use tangent to find a side",difficulty,`A right-angled triangle has one angle of 45° with an adjacent side of ${adj5} cm. Using tan(45°)=1, find the opposite side.`,String(adj5),"Opposite = adjacent × tan(angle).",`${adj5}×1=${adj5}.`),
+      sq("s9-u7-f6","Test whether a triangle is right-angled",difficulty,`Could a triangle with sides ${a6*scale6}, ${b6*scale6}, ${wrongC6} be right-angled? Answer yes or no.`,"no","Check whether the two smaller sides squared sum to the largest side squared.","The sides do not satisfy Pythagoras' theorem."),
+    ];
+  }
+  if (difficulty === "application") {
+    const scale1=r(2,8),wall1=3*scale1,base1=4*scale1,ladder1=5*scale1;
+    const scale2=r(2,8),w2=3*scale2,h2=4*scale2,diag2=5*scale2;
+    const oppSide3=r(2,10)*10;
+    const hyp4=r(2,10)*10;
+    const scale5=r(2,8),legA5=3*scale5,legB5=4*scale5,hyp5=5*scale5;
+    const [a6,b6,c6]=PYTH_TRIPLES[r(0,PYTH_TRIPLES.length-1)],scale6=r(1,3);
+    return [
+      sq("s9-u7-a1","Apply Pythagoras to a ladder problem",difficulty,`A ladder leans against a wall. The base of the ladder is ${base1} m from the wall, and the wall height reached is ${wall1} m. Find the length of the ladder.`,String(ladder1),"Use Pythagoras' theorem with the base and height as the two legs.",`√(${base1}²+${wall1}²)=${ladder1} m.`),
+      sq("s9-u7-a2","Find the diagonal of a rectangle",difficulty,`A rectangular screen is ${w2} cm wide and ${h2} cm tall. Find the length of its diagonal.`,String(diag2),"Use Pythagoras' theorem with width and height as the two legs.",`√(${w2}²+${h2}²)=${diag2} cm.`),
+      sq("s9-u7-a3","Use trigonometry to find a height",difficulty,`From a point on the ground, the angle of elevation to the top of a tower is 30°. The direct line of sight to the top of the tower is ${oppSide3} m. Using sin(30°)=0.5, find the height of the tower.`,String(oppSide3*0.5),"Height = line of sight × sin(30°).",`${oppSide3}×0.5=${oppSide3*0.5} m.`),
+      sq("s9-u7-a4","Use trigonometry to find a horizontal distance",difficulty,`A kite string is ${hyp4} m long and makes a 60° angle with the ground. Using cos(60°)=0.5, find the horizontal distance from the person holding the string to the point directly below the kite.`,String(hyp4*0.5),"Horizontal distance = string length × cos(60°).",`${hyp4}×0.5=${hyp4*0.5} m.`),
+      sq("s9-u7-a5","Find a diagonal brace length",difficulty,`A right-angled triangular support has legs ${legA5} cm and ${legB5} cm. Find the length of the diagonal brace needed.`,String(hyp5),"Use Pythagoras' theorem.",`√(${legA5}²+${legB5}²)=${hyp5} cm.`),
+      sq("s9-u7-a6","Verify a right angle using a Pythagorean triple",difficulty,`A builder checks a corner using sides ${a6*scale6}, ${b6*scale6}, and ${c6*scale6} cm. Is this a right angle?`,"yes","Check whether the two smaller sides squared sum to the largest side squared.","The sides satisfy Pythagoras' theorem, confirming a right angle."),
+    ];
+  }
+  const scale1=r(2,6),legA1=3*scale1,legB1=4*scale1,hyp1=5*scale1,wrongSum1=legA1+legB1;
+  const [a2,b2,c2]=PYTH_TRIPLES[r(0,PYTH_TRIPLES.length-1)],scale2=r(1,3);
+  const scale5=r(2,6),hyp5=5*scale5,extraLeg5=12*scale5,newHyp5=13*scale5,legA5=3*scale5,legB5=4*scale5;
+  const scale6=r(2,6),legA6=3*scale6,legB6=4*scale6;
+  return [
+    sq("s9-u7-r1","Correct a Pythagoras error",difficulty,`A learner finds the hypotenuse of a right triangle with legs ${legA1} cm and ${legB1} cm by adding the legs, getting ${wrongSum1}. Enter the correct hypotenuse.`,String(hyp1),"Use a²+b²=c², not simple addition.",`√(${legA1}²+${legB1}²)=${hyp1}.`),
+    sq("s9-u7-r2","Confirm a right angle from side lengths",difficulty,`A triangle has sides ${a2*scale2}, ${b2*scale2}, ${c2*scale2}. Confirm it is right-angled by checking Pythagoras' theorem. Answer yes or no.`,"yes","Check whether the two smaller sides squared sum to the largest side squared.","The sides satisfy Pythagoras' theorem."),
+    sq("s9-u7-r3","Find an angle from a sine ratio",difficulty,"In a right-angled triangle, the side opposite an unknown angle is half the length of the hypotenuse. Find the angle (using sin=0.5 at 30°).","30","Recall that sin(30°)=0.5.","The angle is 30°."),
+    sq("s9-u7-r4","Find an angle from a tangent ratio",difficulty,"In a right-angled triangle, the opposite and adjacent sides are equal in length. Find the angle between the adjacent side and the hypotenuse.","45","Recall that tan(45°)=1.","The angle is 45°."),
+    sq("s9-u7-r5","Chain two Pythagoras calculations",difficulty,`A right-angled triangle has legs ${legA5} cm and ${legB5} cm, giving hypotenuse ${hyp5} cm. A second right triangle is attached to this hypotenuse, with the hypotenuse as one leg and another leg of ${extraLeg5} cm. Find the new hypotenuse.`,String(newHyp5),"Use Pythagoras' theorem again with the new pair of legs.",`√(${hyp5}²+${extraLeg5}²)=${newHyp5}.`),
+    sq("s9-u7-r6","Name the rule for finding a hypotenuse",difficulty,`A right-angled triangle has legs ${legA6} cm and ${legB6} cm. Which trigonometric or geometric rule would you use to find the hypotenuse directly?`,["pythagoras","pythagorastheorem","pythagoreantheorem"],"This rule relates the squares of the two legs to the square of the hypotenuse.","Pythagoras' theorem."),
+  ];
+};
+
 const integers=()=>{const a=r(18,65),b=r(7,24),x=r(-12,-3),y=r(5,17);return[
   q(`Calculate ${a} + (${x}).`,String(a+x),"Adding a negative is subtraction.",`${a}+(${x})=${a+x}`),
   q(`Calculate ${b} - (${x}).`,String(b-x),"Subtracting a negative becomes addition.",`${b}-(${x})=${b-x}`),
@@ -975,10 +1124,10 @@ export function makeUnitQuestions(chapter:string,difficulty:string){
     "s9-u1": structuredIntegersS9,
     "s9-u2": structuredExpressionsS9,
     "s9-u3": structuredRoundingS9,
-    "s9-u5": structuredAngles,
+    "s9-u5": structuredAnglesS9,
     "s9-u6": structuredInvestigations,
-    "s9-u7": structuredShapes,
-    "s9-u8": structuredFractions,
+    "s9-u7": structuredShapesS9,
+    "s9-u8": structuredFractionsS9,
     "s9-u9": structuredSequences,
     "s9-u10": structuredGraphs,
     "s9-u11": structuredRatio,
