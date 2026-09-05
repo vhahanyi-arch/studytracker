@@ -416,6 +416,147 @@ const structuredSequences = (difficulty:"foundational"|"application"|"reasoning"
   ];
 };
 
+const PCT_OPTIONS = [{p:5,m:20},{p:10,m:10},{p:15,m:20},{p:20,m:5},{p:25,m:4},{p:50,m:2},{p:75,m:4}];
+const structuredPercentages = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const o1=PCT_OPTIONS[r(0,PCT_OPTIONS.length-1)],base1=o1.m*r(2,15),val1=base1*o1.p/100;
+    const o2=PCT_OPTIONS[r(0,PCT_OPTIONS.length-1)],base2=o2.m*r(2,15),inc2=base2*o2.p/100,result2=base2+inc2;
+    const o3=PCT_OPTIONS[r(0,PCT_OPTIONS.length-1)],base3=o3.m*r(2,15),dec3=base3*o3.p/100,result3=base3-dec3;
+    const o4=PCT_OPTIONS[r(0,PCT_OPTIONS.length-1)],base4=o4.m*r(2,15),part4=base4*o4.p/100;
+    const o5=PCT_OPTIONS[r(0,PCT_OPTIONS.length-1)],base5=o5.m*r(2,15),newVal5=base5+base5*o5.p/100;
+    const o6=PCT_OPTIONS[r(0,PCT_OPTIONS.length-1)],orig6=o6.m*r(2,15),final6=orig6-orig6*o6.p/100;
+    return [
+      sq("s8-u10-f1","Find a percentage of an amount",difficulty,`Find ${o1.p}% of ${base1}.`,String(val1),"Find 10% or 1% first, then scale up.",`${o1.p}% of ${base1}=${val1}.`),
+      sq("s8-u10-f2","Increase by a percentage",difficulty,`Increase ${base2} by ${o2.p}%.`,String(result2),"Find the increase, then add it to the original.",`${base2}+${o2.p}% of ${base2}=${result2}.`),
+      sq("s8-u10-f3","Decrease by a percentage",difficulty,`Decrease ${base3} by ${o3.p}%.`,String(result3),"Find the decrease, then subtract it from the original.",`${base3}−${o3.p}% of ${base3}=${result3}.`),
+      sq("s8-u10-f4","Express one quantity as a percentage of another",difficulty,`Express ${part4} as a percentage of ${base4}.`,[String(o4.p),`${o4.p}%`],"Divide, then multiply by 100.",`${part4}÷${base4}×100=${o4.p}%.`),
+      sq("s8-u10-f5","Apply a percentage increase",difficulty,`A quantity of ${base5} increases by ${o5.p}%. Find the new value.`,String(newVal5),"Add the percentage increase to the original.",`${base5}+${o5.p}% of ${base5}=${newVal5}.`),
+      sq("s8-u10-f6","Reverse a percentage decrease",difficulty,`After a ${o6.p}% decrease, a value is ${final6}. Find the original value.`,String(orig6),"The final value represents (100−p)% of the original.",`${final6}÷${(100-o6.p)/100}=${orig6}.`),
+    ];
+  }
+  if (difficulty === "application") {
+    const o1=PCT_OPTIONS[r(0,PCT_OPTIONS.length-1)],price1=o1.m*r(3,20),newPrice1=price1+price1*o1.p/100;
+    const o2=PCT_OPTIONS[r(0,PCT_OPTIONS.length-1)],price2=o2.m*r(3,20),discounted2=price2-price2*o2.p/100;
+    const vatBase=[4,25][r(0,1)]===4?{p:25,m:4}:{p:15,m:20},price3=vatBase.m*r(3,20),withVat3=price3+price3*vatBase.p/100;
+    const o4=PCT_OPTIONS[r(0,PCT_OPTIONS.length-1)],bill4=o4.m*r(3,20),tip4=bill4*o4.p/100;
+    const popBase=[4,5,20][r(0,2)],o5=PCT_OPTIONS.find(x=>x.m===popBase)||PCT_OPTIONS[3],pop5=o5.m*r(10,60),growth5=pop5+pop5*o5.p/100;
+    const score6=r(30,95);
+    return [
+      sq("s8-u10-a1","Apply a percentage price increase",difficulty,`A shop increases the price of an item from R${price1} by ${o1.p}%. Find the new price.`,String(newPrice1),"Add the percentage increase to the price.",`R${price1}+${o1.p}%=R${newPrice1}.`),
+      sq("s8-u10-a2","Apply a percentage discount",difficulty,`An item priced R${price2} is discounted by ${o2.p}%. Find the sale price.`,String(discounted2),"Subtract the percentage discount from the price.",`R${price2}−${o2.p}%=R${discounted2}.`),
+      sq("s8-u10-a3","Apply VAT",difficulty,`A service costs R${price3} before VAT. VAT is charged at ${vatBase.p}%. Find the total cost including VAT.`,String(withVat3),"Add the VAT amount to the original price.",`R${price3}+${vatBase.p}%=R${withVat3}.`),
+      sq("s8-u10-a4","Calculate a tip",difficulty,`A restaurant bill is R${bill4}. Find a ${o4.p}% tip.`,String(tip4),"Find the given percentage of the bill.",`${o4.p}% of R${bill4}=R${tip4}.`),
+      sq("s8-u10-a5","Apply percentage population growth",difficulty,`A town's population of ${pop5} grows by ${o5.p}%. Find the new population.`,String(growth5),"Add the percentage growth to the original population.",`${pop5}+${o5.p}%=${growth5}.`),
+      sq("s8-u10-a6","Find a percentage test score",difficulty,`A student scores ${score6} out of 100 on a test. Find their percentage score.`,String(score6),"A score out of 100 is already a percentage.",`${score6}/100=${score6}%.`),
+    ];
+  }
+  const o1=PCT_OPTIONS[r(0,PCT_OPTIONS.length-1)],orig1=o1.m*r(3,20),final1=orig1*(100+o1.p)/100;
+  const afterInc2=30*r(2,10),origX2=afterInc2*5/6,afterDec2=afterInc2*4/5;
+  const X3=100*r(2,10),priceA3=X3*4/5,priceB3=X3*81/100;
+  const orig4=100*r(1,5),final4=orig4*11/10,wrongGuess4=final4*9/10;
+  const o5=PCT_OPTIONS[r(0,PCT_OPTIONS.length-1)],totalA5=o5.m*r(2,8),scoreA5=totalA5*o5.p/100,totalB5=o5.m*r(2,8),scoreB5=totalB5*o5.p/100;
+  return [
+    sq("s8-u10-r1","Reverse a percentage increase",difficulty,`After a ${o1.p}% increase, an item costs R${final1}. Find the original price.`,String(orig1),"Divide by (100+p)% expressed as a decimal.",`R${final1}÷${(100+o1.p)/100}=R${orig1}.`),
+    sq("s8-u10-r2","Reason about successive percentage changes",difficulty,`A price of R${origX2} increases by 20%, then the new price decreases by 20%. Find the final price.`,String(afterDec2),"Apply each percentage change in turn to the running total.",`R${origX2}→R${afterInc2}→R${afterDec2}.`),
+    sq("s8-u10-r3","Compare successive vs single percentage changes",difficulty,`Shop A discounts R${X3} by 20% in one step. Shop B applies two 10% discounts in a row. Which shop gives the cheaper final price, A or B?`,["a","shopa","shop a"],"Work out both final prices and compare.",`Shop A: R${priceA3}. Shop B: R${priceB3}. Shop A is cheaper.`),
+    sq("s8-u10-r4","Correct a reverse-percentage error",difficulty,`A price of R${orig4} increases by 10% to R${final4}. A learner then says the original price must be R${wrongGuess4} (by decreasing the new price by 10%). Enter the actual original price.`,String(orig4),"Reversing a percentage increase is not the same as applying the opposite decrease.",`R${final4}÷1.1=R${orig4}, not R${wrongGuess4}.`),
+    sq("s8-u10-r5","Reason about equivalent percentages",difficulty,`A student scores ${scoreA5} out of ${totalA5} on one test. On another test worth ${totalB5} marks, they score the same percentage. How many marks did they score?`,String(scoreB5),"Find the percentage from the first test, then apply it to the second total.",`${scoreA5}/${totalA5}=${o5.p}%; ${o5.p}% of ${totalB5}=${scoreB5}.`),
+    sq("s8-u10-r6","Reason about combined percentage change",difficulty,"A price increases by 50% then is halved. Is the final price higher than, lower than, or equal to the original?",["lower","lower than"],"Apply each change to a sample value and compare to the start.","Increasing by 50% then halving gives 75% of the original — lower."),
+  ];
+};
+
+const structuredGraphs = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const x1=r(-8,8),y1=r(-8,8);
+    const gradSlope2=r(-3,3)||1,x2a=r(-5,5),y2a=r(-5,5),deltaX2=r(1,6),x2b=x2a+deltaX2,y2b=y2a+gradSlope2*deltaX2;
+    const mCoef=r(2,6),cConst=r(-8,8),xVal=r(2,8);
+    const cLine=r(-10,10);
+    const x5=r(-6,6),y5=r(-6,6);
+    const mCoef6=r(2,5),cConst6=r(1,8),xTest6=r(2,7),yTest6=mCoef6*xTest6+cConst6;
+    return [
+      sq("s8-u11-f1","Read a coordinate",difficulty,`A point has coordinates (${x1}, ${y1}). What is its x-coordinate?`,String(x1),"The x-coordinate is written first.",`The x-coordinate is ${x1}.`),
+      sq("s8-u11-f2","Find the gradient between two points",difficulty,`Find the gradient between (${x2a},${y2a}) and (${x2b},${y2b}).`,String(gradSlope2),"Divide the change in y by the change in x.",`(${y2b}−${y2a})÷(${x2b}−${x2a})=${gradSlope2}.`),
+      sq("s8-u11-f3","Evaluate a linear equation",difficulty,`For y=${mCoef}x${cConst>=0?'+':''}${cConst}, find y when x=${xVal}.`,String(mCoef*xVal+cConst),"Substitute the given x value.",`${mCoef}(${xVal})${cConst>=0?'+':''}${cConst}=${mCoef*xVal+cConst}.`),
+      sq("s8-u11-f4","Find the y-intercept",difficulty,`What is the y-intercept of y=${mCoef}x${cLine>=0?'+':''}${cLine}?`,String(cLine),"Compare with y=mx+c.",`c=${cLine}, so the y-intercept is ${cLine}.`),
+      sq("s8-u11-f5","Identify the gradient of a horizontal line",difficulty,`A horizontal line passes through (${x5},${y5}). What is its gradient?`,"0","A horizontal line has no vertical change.","Rise=0, so gradient=0."),
+      sq("s8-u11-f6","Check if a point lies on a line",difficulty,`Does the point (${xTest6},${yTest6}) lie on y=${mCoef6}x+${cConst6}?`,["yes","y"],"Substitute the x-coordinate and check the result.",`${mCoef6}(${xTest6})+${cConst6}=${yTest6}, so yes.`),
+    ];
+  }
+  if (difficulty === "application") {
+    const rate1=r(2,8),fixed1=r(5,30),hours1=r(2,10);
+    const rate2=r(3,10),fixed2=r(10,50),targetY2=fixed2+rate2*r(2,8);
+    const gradSpeed3=r(2,15),x3a=r(0,5),deltaX3=r(2,8),x3b=x3a+deltaX3,y3a=r(10,50),y3b=y3a+gradSpeed3*deltaX3;
+    const speed4=r(40,120),time4=r(1,6);
+    const startTemp5=r(-5,15),coolRate5=r(1,4),timeH5=r(1,8);
+    const conv6=r(2,5),dist6=r(3,12);
+    return [
+      sq("s8-u11-a1","Apply a linear cost model",difficulty,`A taxi charges a fixed R${fixed1} plus R${rate1} per hour. Find the cost for ${hours1} hours.`,String(fixed1+rate1*hours1),"Multiply the rate by the hours, then add the fixed charge.",`R${fixed1}+${hours1}×R${rate1}=R${fixed1+rate1*hours1}.`),
+      sq("s8-u11-a2","Reverse a linear cost model",difficulty,`A phone plan costs R${fixed2} plus R${rate2} per GB used. If the bill is R${targetY2}, how many GB were used?`,String((targetY2-fixed2)/rate2),"Subtract the fixed charge, then divide by the rate.",`(R${targetY2}−R${fixed2})÷R${rate2}=${(targetY2-fixed2)/rate2} GB.`),
+      sq("s8-u11-a3","Find speed from a distance-time graph",difficulty,`A graph shows distance (km) over time (hours). At (${x3a},${y3a}) and (${x3b},${y3b}), find the gradient (in km/h).`,String(gradSpeed3),"Divide the change in distance by the change in time.",`(${y3b}−${y3a})÷(${x3b}−${x3a})=${gradSpeed3} km/h.`),
+      sq("s8-u11-a4","Apply constant speed",difficulty,`A car travels at a constant ${speed4} km/h for ${time4} hours. Find the distance travelled.`,String(speed4*time4),"Multiply speed by time.",`${speed4}×${time4}=${speed4*time4} km.`),
+      sq("s8-u11-a5","Apply a linear cooling model",difficulty,`A drink starts at ${startTemp5}°C and cools by ${coolRate5}°C per hour. Find its temperature after ${timeH5} hours.`,String(startTemp5-coolRate5*timeH5),"Multiply the cooling rate by the hours, then subtract from the start.",`${startTemp5}−${timeH5}×${coolRate5}=${startTemp5-coolRate5*timeH5}°C.`),
+      sq("s8-u11-a6","Find speed from a graph through the origin",difficulty,`A distance-time graph has a straight line through the origin. After ${dist6} hours, the distance is ${dist6*conv6} km. Find the speed in km/h.`,String(conv6),"Divide distance by time.",`${dist6*conv6}÷${dist6}=${conv6} km/h.`),
+    ];
+  }
+  const m1=r(2,6),pt1x=r(2,8),pt1y=m1*pt1x+r(1,9),c1=pt1y-m1*pt1x;
+  const x2a=r(1,4),y2a=r(1,10),y2b=y2a+r(2,8);
+  return [
+    sq("s8-u11-r1","Find the y-intercept from a gradient and point",difficulty,`A line has gradient ${m1} and passes through (${pt1x},${pt1y}). Find its y-intercept.`,String(c1),"Substitute the point into y=mx+c and solve for c.",`${pt1y}=${m1}(${pt1x})+c, so c=${c1}.`),
+    sq("s8-u11-r2","Reason about a vertical line's gradient",difficulty,`Two points (${x2a},${y2a}) and (${x2a},${y2b}) have the same x-coordinate. What is the gradient of the line through them?`,["undefined","infinite"],"The change in x is zero, and division by zero is undefined.","The gradient is undefined, since the line is vertical."),
+    sq("s8-u11-r3","Reason about gradient magnitude",difficulty,"Line A passes through (2,7) and (15,33). A learner claims a steeper-looking line always has a larger gradient than a flatter one. Is this generally true? Answer yes or no.","yes","Compare the magnitude of the gradients directly.","Yes — a steeper line always has a gradient of greater magnitude."),
+    sq("s8-u11-r4","Find a parallel line's equation",difficulty,"A line has equation y=4x-3. A parallel line passes through (0,5). Write the equation of the parallel line.",["y=4x+5","4x+5"],"Parallel lines share the same gradient.","The new line has gradient 4 and y-intercept 5: y=4x+5."),
+    sq("s8-u11-r5","Reason about parallel lines",difficulty,"Two lines y=2x+1 and y=2x-3 are drawn. Will they ever intersect? Answer yes or no.","no","Compare the gradients of the two lines.","No — parallel lines with different intercepts never meet."),
+    sq("s8-u11-r6","Write the equation of a horizontal line",difficulty,"A line has gradient 0 and passes through (3,7). Write its equation.",["y=7"],"A gradient of 0 means y never changes.","The line is y=7."),
+  ];
+};
+
+const structuredRatio = (difficulty:"foundational"|"application"|"reasoning") => {
+  const gcdR=(a:number,b:number):number=>b===0?a:gcdR(b,a%b);
+  if (difficulty === "foundational") {
+    let aPart=r(2,6),bPart=r(2,6); while(gcdR(aPart,bPart)!==1){aPart=r(2,6);bPart=r(2,6);}
+    const mult=r(2,7),a1=aPart*mult,b1=bPart*mult;
+    const totalParts2=r(3,10),share2=r(2,5),total2=totalParts2*r(4,20),larger2=(total2/totalParts2)*(totalParts2-share2>share2?totalParts2-share2:share2);
+    const unitQty3=r(2,6),unitCost3=r(5,20),newQty3=r(2,10);
+    const cm4=[2,4,5,8,10][r(0,4)],kmResult4=r(1,20),scale4=(kmResult4*100000)/cm4;
+    const ratioK5=r(2,6),xVal5=r(2,10);
+    const msVal6=5*r(1,6),kmh6=msVal6*3.6;
+    return [
+      sq("s8-u12-f1","Simplify a ratio",difficulty,`Simplify the ratio ${a1}:${b1}.`,`${aPart}:${bPart}`,"Divide both parts by their highest common factor.",`${a1}:${b1} simplifies to ${aPart}:${bPart}.`),
+      sq("s8-u12-f2","Share an amount in a ratio",difficulty,`Share ${total2} in the ratio ${share2}:${totalParts2-share2}. Give the larger share.`,String(larger2),"Divide by the total number of parts, then multiply by the larger share.",`${total2}÷${totalParts2}×${totalParts2-share2>share2?totalParts2-share2:share2}=${larger2}.`),
+      sq("s8-u12-f3","Scale a quantity using a unit rate",difficulty,`If ${unitQty3} items cost R${unitQty3*unitCost3}, find the cost of ${newQty3} items.`,String(newQty3*unitCost3),"Find the cost of one item first.",`R${unitQty3*unitCost3}÷${unitQty3}×${newQty3}=R${newQty3*unitCost3}.`),
+      sq("s8-u12-f4","Use a map scale",difficulty,`A map scale is 1:${scale4}. What real distance in km is represented by ${cm4} cm?`,String(kmResult4),"Multiply by the scale factor, then convert to km.",`${cm4}×${scale4}÷100000=${kmResult4} km.`),
+      sq("s8-u12-f5","Apply direct proportion",difficulty,`y is directly proportional to x. If y=${ratioK5*3} when x=3, find y when x=${xVal5}.`,String(ratioK5*xVal5),"Find the constant of proportionality first.",`k=${ratioK5}, so y=${ratioK5}×${xVal5}=${ratioK5*xVal5}.`),
+      sq("s8-u12-f6","Convert units of speed",difficulty,`Convert ${kmh6} km/h to m/s.`,String(msVal6),"Divide by 3.6.",`${kmh6}÷3.6=${msVal6} m/s.`),
+    ];
+  }
+  if (difficulty === "application") {
+    const paintBlue=r(2,5),paintWhite=r(2,5),totalPaint=r(3,10)*(paintBlue+paintWhite),bluePart=totalPaint*paintBlue/(paintBlue+paintWhite);
+    const recipeA=r(2,4),recipeB=r(3,6),scaleFactor=r(2,5);
+    const speed2=r(40,100),time2h=r(1,6);
+    const examP=r(2,5),examQ=r(3,7),examTotal=r(2,8)*(examP+examQ),largerExam=examTotal*(examP>examQ?examP:examQ)/(examP+examQ);
+    const modelScale=r(20,100),realLen=r(2,15);
+    const costUnit=r(3,15),qty=r(2,10);
+    return [
+      sq("s8-u12-a1","Find a part of a mixture ratio",difficulty,`Paint is mixed in the ratio ${paintBlue}:${paintWhite} (blue:white). For ${totalPaint} litres total, how many litres are blue?`,String(bluePart),"Divide by the total parts, then multiply by the blue part.",`${totalPaint}÷${paintBlue+paintWhite}×${paintBlue}=${bluePart} litres.`),
+      sq("s8-u12-a2","Scale a recipe ratio",difficulty,`A recipe uses flour and sugar in the ratio ${recipeA}:${recipeB}. If the recipe is scaled up by a factor of ${scaleFactor}, find the new amount of flour (in the original units).`,String(recipeA*scaleFactor),"Multiply the original amount by the scale factor.",`${recipeA}×${scaleFactor}=${recipeA*scaleFactor}.`),
+      sq("s8-u12-a3","Apply constant speed",difficulty,`A car travels at ${speed2} km/h for ${time2h} hours. Find the distance travelled.`,String(speed2*time2h),"Multiply speed by time.",`${speed2}×${time2h}=${speed2*time2h} km.`),
+      sq("s8-u12-a4","Find the larger share in a ratio",difficulty,`In an exam, the ratio of pass to fail is ${examP}:${examQ}, out of ${examTotal} students total. Find the number in the larger group.`,String(largerExam),"Divide by the total parts, then multiply by the larger part.",`${examTotal}÷${examP+examQ}×${examP>examQ?examP:examQ}=${largerExam}.`),
+      sq("s8-u12-a5","Use a model scale",difficulty,`A model is built at a scale of 1:${modelScale}. Find the model length (in cm) for a real length of ${realLen*modelScale} cm.`,String(realLen),"Divide the real length by the scale factor.",`${realLen*modelScale}÷${modelScale}=${realLen} cm.`),
+      sq("s8-u12-a6","Find a unit cost",difficulty,`If ${qty} items cost R${qty*costUnit}, find the cost of 1 item.`,String(costUnit),"Divide the total cost by the number of items.",`R${qty*costUnit}÷${qty}=R${costUnit}.`),
+    ];
+  }
+  const totalR1=(()=>{const dR=[3,4,5,6][r(0,3)];return dR*r(3,15);})(),partsA1=r(2,5),partsB1=r(2,5);
+  const kR2=r(2,6),xR2=r(2,8),yR2=kR2*xR2;
+  return [
+    sq("s8-u12-r1","Find the smaller share in a ratio",difficulty,`A total of ${totalR1} is shared in the ratio ${partsA1}:${partsB1}. Find the smaller share.`,String(Math.min(totalR1*partsA1/(partsA1+partsB1),totalR1*partsB1/(partsA1+partsB1))),"Find both shares, then pick the smaller.",`Divide by the total parts, multiply by each part, and compare.`),
+    sq("s8-u12-r2","Reason about doubling in direct proportion",difficulty,`y is directly proportional to x. When x=${xR2}, y=${yR2}. Find y when x is doubled.`,String(yR2*2),"In direct proportion, doubling x doubles y.",`Doubling x doubles y: ${yR2}×2=${yR2*2}.`),
+    sq("s8-u12-r3","Evaluate a ratio claim",difficulty,"A recipe ratio of flour to butter is 3:1. A learner uses 12 cups of flour and 3 cups of butter. Is this in the correct ratio? Answer yes or no.","no","Simplify the learner's amounts to a ratio and compare.","12:3 simplifies to 4:1, not 3:1, so no."),
+    sq("s8-u12-r4","Solve for a share given a ratio and a sum",difficulty,"Two numbers are in the ratio 2:3. Their sum is 45. Find the larger number.","27","Divide the sum by the total parts, then multiply by the larger part.","45÷5×3=27."),
+    sq("s8-u12-r5","Scale a rate proportionally",difficulty,"A car uses 8 litres of fuel to travel 100 km. At the same rate, how many litres are needed for 250 km?","20","Find the fuel used per km, then scale up.","8÷100×250=20 litres."),
+    sq("s8-u12-r6","Convert a map scale to real distance",difficulty,"A map has scale 1:25000. Two towns are 20 cm apart on the map. Find the real distance in km.","5","Multiply by the scale factor, then convert to km.","20×25000÷100000=5 km."),
+  ];
+};
+
 const integers=()=>{const a=r(18,65),b=r(7,24),x=r(-12,-3),y=r(5,17);return[
   q(`Calculate ${a} + (${x}).`,String(a+x),"Adding a negative is subtraction.",`${a}+(${x})=${a+x}`),
   q(`Calculate ${b} - (${x}).`,String(b-x),"Subtracting a negative becomes addition.",`${b}-(${x})=${b-x}`),
@@ -503,6 +644,18 @@ export function makeUnitQuestions(chapter:string,difficulty:string){
     "s8-u7": structuredFractions,
     "s8-u8": structuredShapes,
     "s8-u9": structuredSequences,
+    "s8-u10": structuredPercentages,
+    "s8-u11": structuredGraphs,
+    "s8-u12": structuredRatio,
+    "s9-u1": structuredIntegers,
+    "s9-u2": structuredExpressions,
+    "s9-u3": structuredRounding,
+    "s9-u5": structuredAngles,
+    "s9-u7": structuredShapes,
+    "s9-u8": structuredFractions,
+    "s9-u9": structuredSequences,
+    "s9-u10": structuredGraphs,
+    "s9-u11": structuredRatio,
   };
   if (structuredPilot[chapter])
     return validateStructuredSet(structuredPilot[chapter](level), chapter, level);
