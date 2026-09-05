@@ -1178,6 +1178,202 @@ const structuredRatioS9 = (difficulty:"foundational"|"application"|"reasoning") 
   ];
 };
 
+const structuredProbabilityS9 = (difficulty:"foundational"|"application"|"reasoning") => {
+  const gcdPS9=(a:number,b:number):number=>b===0?a:gcdPS9(b,a%b);
+  const fracPS9=(n:number,d:number)=>{const g=gcdPS9(Math.abs(n),d)||1;return{n:n/g,d:d/g};};
+  const fstrPS9=(f:{n:number,d:number})=>f.d===1?String(f.n):`${f.n}/${f.d}`;
+  const fdecPS9=(f:{n:number,d:number})=>Number((f.n/f.d).toFixed(10)).toString();
+  if (difficulty === "foundational") {
+    const pA1=fracPS9(r(1,3),[3,4,5][r(0,2)]),pB1=fracPS9(r(1,3),[3,4,5][r(0,2)]),pBoth1=fracPS9(pA1.n*pB1.n,pA1.d*pB1.d);
+    const pFail2a=fracPS9(r(1,3),[3,4][r(0,1)]),pFail2b=fracPS9(r(1,3),[3,4][r(0,1)]),pNoneFail2=fracPS9(pFail2a.n*pFail2b.n,pFail2a.d*pFail2b.d),pAtLeastOne2=fracPS9(pNoneFail2.d-pNoneFail2.n,pNoneFail2.d);
+    const redN3=r(2,5),blueN3=r(2,5),totalN3=redN3+blueN3,pBothRed3=fracPS9(redN3*(redN3-1),totalN3*(totalN3-1));
+    const denomA5=[4,5][r(0,1)],pA5=fracPS9(r(1,denomA5-1),denomA5),denomB5=[4,5][r(0,1)],pB5=fracPS9(r(1,denomB5-1),denomB5);
+    const pKnown6a=fracPS9(r(1,3),[4,5][r(0,1)]);
+    return [
+      sq("s9-u12-f1","Combine independent probabilities with a tree diagram",difficulty,`Two independent events have probabilities ${fstrPS9(pA1)} and ${fstrPS9(pB1)}. Using a tree diagram, find P(both occur).`,[fstrPS9(pBoth1),fdecPS9(pBoth1)],"Multiply along the branches of the tree.",`${fstrPS9(pA1)}×${fstrPS9(pB1)}=${fstrPS9(pBoth1)}.`),
+      sq("s9-u12-f2","Find P(at least one) using the complement",difficulty,`Two independent tasks each have a failure probability of ${fstrPS9(pFail2a)} and ${fstrPS9(pFail2b)}. Find the probability at least one fails.`,[fstrPS9(pAtLeastOne2),fdecPS9(pAtLeastOne2)],"Find P(neither fails) first, then subtract from 1.",`1−(${fstrPS9(pFail2a)}×${fstrPS9(pFail2b)} success chance)=${fstrPS9(pAtLeastOne2)}.`),
+      sq("s9-u12-f3","Find probability without replacement",difficulty,`A bag has ${redN3} red and ${blueN3} blue counters. Two are drawn without replacement. Find P(both red).`,[fstrPS9(pBothRed3),fdecPS9(pBothRed3)],"The second draw's probability changes since a counter is removed.",`(${redN3}/${totalN3})×(${redN3-1}/${totalN3-1})=${fstrPS9(pBothRed3)}.`),
+      sq("s9-u12-f4","Find P(exactly one) from two events",difficulty,"Two fair coins are tossed. Find P(exactly one head).",["1/2","0.5"],"List the outcomes: HH, HT, TH, TT.","HT and TH both give exactly one head, so P=2/4=1/2."),
+      sq("s9-u12-f5","Combine three independent probabilities",difficulty,`Event A has probability ${fstrPS9(pA5)}, event B has probability ${fstrPS9(pB5)}, and event C is certain. Find P(A and B and C), assuming independence.`,[fstrPS9(fracPS9(pA5.n*pB5.n,pA5.d*pB5.d)),fdecPS9(fracPS9(pA5.n*pB5.n,pA5.d*pB5.d))],"Multiply all three probabilities; a certain event has probability 1.",`${fstrPS9(pA5)}×${fstrPS9(pB5)}×1=${fstrPS9(fracPS9(pA5.n*pB5.n,pA5.d*pB5.d))}.`),
+      sq("s9-u12-f6","Find a complementary branch probability",difficulty,`In a tree diagram, one branch has probability ${fstrPS9(pKnown6a)}. Find the probability of the complementary branch.`,[fstrPS9(fracPS9(pKnown6a.d-pKnown6a.n,pKnown6a.d)),fdecPS9(fracPS9(pKnown6a.d-pKnown6a.n,pKnown6a.d))],"Complementary branches sum to 1.",`1−${fstrPS9(pKnown6a)}=${fstrPS9(fracPS9(pKnown6a.d-pKnown6a.n,pKnown6a.d))}.`),
+    ];
+  }
+  if (difficulty === "application") {
+    const pRain1=fracPS9(r(1,3),[4,5][r(0,1)]),pRainBoth1=fracPS9(pRain1.n*pRain1.n,pRain1.d*pRain1.d);
+    const pDefect2=fracPS9(1,r(8,12)),pNoDefect2Sq=fracPS9((pDefect2.d-pDefect2.n)*(pDefect2.d-pDefect2.n),pDefect2.d*pDefect2.d),pAtLeastOneDefect2=fracPS9(pNoDefect2Sq.d-pNoDefect2Sq.n,pNoDefect2Sq.d);
+    const totalBalls3=r(6,12),redBalls3=r(2,4),pBothRed3=fracPS9(redBalls3*(redBalls3-1),totalBalls3*(totalBalls3-1));
+    const pPass4=fracPS9(r(2,4),5),pFailBoth4=fracPS9((5-pPass4.n)*(5-pPass4.n),25);
+    const totalCards5=52,heartCards5=13,pBothHearts5=fracPS9(heartCards5*(heartCards5-1),totalCards5*(totalCards5-1));
+    const outcomes6:[{n:number,d:number},{n:number,d:number},{n:number,d:number}]=[fracPS9(1,4),fracPS9(1,4),fracPS9(1,2)];
+    return [
+      sq("s9-u12-a1","Apply independent-event probability in context",difficulty,`The probability of rain on any given day is ${fstrPS9(pRain1)}. Find the probability it rains on both of the next two days (assume independence).`,[fstrPS9(pRainBoth1),fdecPS9(pRainBoth1)],"Multiply the daily probability by itself.",`${fstrPS9(pRain1)}×${fstrPS9(pRain1)}=${fstrPS9(pRainBoth1)}.`),
+      sq("s9-u12-a2","Apply the at-least-one rule in context",difficulty,`A factory finds ${fstrPS9(pDefect2)} of items are defective. Two items are tested independently. Find the probability at least one is defective.`,[fstrPS9(pAtLeastOneDefect2),fdecPS9(pAtLeastOneDefect2)],"Find P(neither defective) first, then subtract from 1.",`1−P(neither defective)=${fstrPS9(pAtLeastOneDefect2)}.`),
+      sq("s9-u12-a3","Apply without-replacement probability in context",difficulty,`A box has ${totalBalls3} balls, ${redBalls3} of which are red. Two balls are drawn without replacement. Find P(both red).`,[fstrPS9(pBothRed3),fdecPS9(pBothRed3)],"The second draw's probability changes after the first ball is removed.",`(${redBalls3}/${totalBalls3})×(${redBalls3-1}/${totalBalls3-1})=${fstrPS9(pBothRed3)}.`),
+      sq("s9-u12-a4","Apply combined-failure probability",difficulty,`The probability of passing a test is ${fstrPS9(pPass4)}. Two students take the test independently. Find the probability both fail.`,[fstrPS9(pFailBoth4),fdecPS9(pFailBoth4)],"Find the failure probability first, then square it.",`(1−${fstrPS9(pPass4)})²=${fstrPS9(pFailBoth4)}.`),
+      sq("s9-u12-a5","Apply without-replacement probability with cards",difficulty,"Two cards are drawn without replacement from a standard 52-card deck. Find P(both are hearts).",[fstrPS9(pBothHearts5),fdecPS9(pBothHearts5)],"The second draw's probability changes after the first card is removed.",`(13/52)×(12/51)=${fstrPS9(pBothHearts5)}.`),
+      sq("s9-u12-a6","Verify probabilities sum to 1",difficulty,`A spinner has three outcomes with probabilities ${fstrPS9(outcomes6[0])}, ${fstrPS9(outcomes6[1])} and ${fstrPS9(outcomes6[2])}. Do these probabilities sum to 1? Answer yes or no.`,"yes","Add all the probabilities together.","1/4+1/4+1/2=1, so yes."),
+    ];
+  }
+  const pBoth1=fracPS9(1,r(8,20)),pA1=fracPS9(1,[3,4][r(0,1)]),pB1=fracPS9(pBoth1.n*pA1.d,pBoth1.d*pA1.n);
+  const denomA2=[4,5][r(0,1)],pA2=fracPS9(r(1,denomA2-1),denomA2);
+  const totalBalls3=r(6,10),redBalls3=r(2,4);
+  const pFail4=fracPS9(r(1,3),[4,5][r(0,1)]);
+  const pA5=fracPS9(r(1,3),[3,4][r(0,1)]),pB5=fracPS9(r(1,3),[3,4][r(0,1)]);
+  const totalCards6=52,heartCards6=13;
+  return [
+    sq("s9-u12-r1","Reverse a combined-probability calculation",difficulty,`Two independent events A and B have P(A and B) = ${fstrPS9(pBoth1)}. If P(A) = ${fstrPS9(pA1)}, find P(B).`,[fstrPS9(pB1),fdecPS9(pB1)],"Divide P(A and B) by P(A).",`${fstrPS9(pBoth1)}÷${fstrPS9(pA1)}=${fstrPS9(pB1)}.`),
+    sq("s9-u12-r2","Distinguish with and without replacement",difficulty,`A learner says drawing two balls "without replacement" gives the same probability as drawing "with replacement". Is this correct? Answer yes or no.`,"no","Without replacement changes the total and favourable counts for the second draw.","No — without replacement changes the probabilities."),
+    sq("s9-u12-r3","Reason about changing probabilities without replacement",difficulty,`A bag has ${totalBalls3} balls, ${redBalls3} red. State whether drawing two balls without replacement changes the probability of the second draw compared to the first. Answer yes or no.`,"yes","Removing a ball changes both the favourable and total counts.","Yes — the second draw's probability depends on the first."),
+    sq("s9-u12-r4","Distinguish at-least-one from both",difficulty,`An event has failure probability ${fstrPS9(pFail4)}. A learner claims "at least one fails in two trials" has the same probability as "both fail". Is this correct? Answer yes or no.`,"no","At least one includes cases where only one fails, not just both.","No — 'at least one' includes more outcomes than 'both'."),
+    sq("s9-u12-r5","Reason about order in independent events",difficulty,`Two independent events have probabilities ${fstrPS9(pA5)} and ${fstrPS9(pB5)}. Does the order in which they occur affect P(A and B)? Answer yes or no.`,"no","Multiplication is commutative, so order doesn't matter for independent events.","No — P(A and B) is the same regardless of order."),
+    sq("s9-u12-r6","Reason about dependence without replacement",difficulty,`Two cards are drawn without replacement from a ${totalCards6}-card deck containing ${heartCards6} hearts. Does the probability of the second card being a heart depend on the result of the first draw? Answer yes or no.`,"yes","Removing the first card changes the counts for the second draw.","Yes — the outcome of the first draw affects the second."),
+  ];
+};
+
+const structuredTransformationsS9 = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const px1=r(-6,6),py1=r(-6,6),v1x=r(-4,4),v1y=r(-4,4),v2x=r(-4,4),v2y=r(-4,4);
+    const px2=r(-6,6),py2=r(-6,6);
+    const negScale3=-1*r(1,3),side3=r(2,10);
+    const fracScaleDenom4=[2,3,4][r(0,2)],side4=fracScaleDenom4*r(2,5);
+    const vx5=r(-5,5),vy5=r(-5,5);
+    const px6=r(-6,6),py6=r(-6,6);
+    return [
+      sq("s9-u13-f1","Combine two translations",difficulty,`Translate (${px1},${py1}) by (${v1x},${v1y}), then by (${v2x},${v2y}). Find the final coordinate.`,[`(${px1+v1x+v2x},${py1+v1y+v2y})`,`${px1+v1x+v2x},${py1+v1y+v2y}`],"Add all the vector components together.",`(${px1}+${v1x}+${v2x}, ${py1}+${v1y}+${v2y}).`),
+      sq("s9-u13-f2","Combine two reflections",difficulty,`Reflect (${px2},${py2}) in the x-axis, then in the y-axis. Find the final coordinate.`,[`(${-px2},${-py2})`,`${-px2},${-py2}`],"Apply each reflection in turn.",`(${px2},${py2})→(${px2},${-py2})→(${-px2},${-py2}).`),
+      sq("s9-u13-f3","Apply a negative scale factor",difficulty,`An enlargement has scale factor ${negScale3} (centre the origin). A side of length ${side3} cm maps to what length?`,String(Math.abs(negScale3)*side3),"Use the absolute value of the scale factor for length.",`|${negScale3}|×${side3}=${Math.abs(negScale3)*side3}.`),
+      sq("s9-u13-f4","Apply a fractional scale factor",difficulty,`An enlargement has scale factor 1/${fracScaleDenom4}. A side of length ${side4} cm maps to what length?`,String(side4/fracScaleDenom4),"Multiply (or divide) by the fractional scale factor.",`${side4}÷${fracScaleDenom4}=${side4/fracScaleDenom4}.`),
+      sq("s9-u13-f5","Describe a translation vector",difficulty,`Describe the vector for a translation that moves a point ${vx5} units in x and ${vy5} units in y.`,[`(${vx5},${vy5})`,`${vx5},${vy5}`],"Write the x and y movements as a column or coordinate pair.",`The vector is (${vx5},${vy5}).`),
+      sq("s9-u13-f6","Combine a rotation and a reflection",difficulty,`Rotate (${px6},${py6}) 180° about the origin, then reflect the result in the x-axis. Find the final coordinate.`,[`(${-px6},${py6})`,`${-px6},${py6}`],"Apply the rotation first, then the reflection.",`(${px6},${py6})→(${-px6},${-py6})→(${-px6},${py6}).`),
+    ];
+  }
+  if (difficulty === "application") {
+    const px1=r(-6,6),py1=r(-6,6),v1x=r(-4,4),v1y=r(-4,4);
+    const negScale2=-1*r(1,3),side2=r(2,10);
+    const fracScaleDenom3=[2,3,4][r(0,2)],side3=fracScaleDenom3*r(2,6);
+    const px4=r(-6,6),py4=r(-6,6);
+    const origLen5=r(2,4)*r(2,3),newLen5=origLen5*[2,3][r(0,1)];
+    const px6=r(-6,6),py6=r(-6,6),vx6=r(-4,4),vy6=r(-4,4);
+    return [
+      sq("s9-u13-a1","Apply a combined translation and reflection",difficulty,`A game piece at (${px1},${py1}) moves by (${v1x},${v1y}), then is reflected in the x-axis. Find the final position.`,[`(${px1+v1x},${-(py1+v1y)})`,`${px1+v1x},${-(py1+v1y)}`],"Apply the translation first, then the reflection.",`(${px1+v1x},${py1+v1y})→(${px1+v1x},${-(py1+v1y)}).`),
+      sq("s9-u13-a2","Apply a negative scale factor in context",difficulty,`A logo is enlarged by scale factor ${negScale2} through its centre point. A feature of length ${side2} cm maps to what length (the image is inverted but find the size)?`,String(Math.abs(negScale2)*side2),"Use the absolute value of the scale factor for the size.",`|${negScale2}|×${side2}=${Math.abs(negScale2)*side2}.`),
+      sq("s9-u13-a3","Apply a fractional scale factor in context",difficulty,`A model is built at scale factor 1/${fracScaleDenom3} of the real object. A real feature of length ${side3} cm appears at what length in the model?`,String(side3/fracScaleDenom3),"Divide by the scale factor's denominator.",`${side3}÷${fracScaleDenom3}=${side3/fracScaleDenom3}.`),
+      sq("s9-u13-a4","Combine a reflection and a rotation in context",difficulty,`A shape's corner at (${px4},${py4}) is reflected in the y-axis, then rotated 180° about the origin. Find the final coordinate.`,[`(${px4},${-py4})`,`${px4},${-py4}`],"Apply the reflection first, then the rotation.",`(${px4},${py4})→(${-px4},${py4})→(${px4},${-py4}).`),
+      sq("s9-u13-a5","Find a scale factor from lengths",difficulty,`A photo enlarged from ${origLen5} cm to ${newLen5} cm. Find the scale factor.`,String(newLen5/origLen5),"Divide the new length by the original.",`${newLen5}÷${origLen5}=${newLen5/origLen5}.`),
+      sq("s9-u13-a6","Combine a translation and a reflection",difficulty,`A point at (${px6},${py6}) is translated by (${vx6},${vy6}), then reflected in the y-axis. Find the final position.`,[`(${-(px6+vx6)},${py6+vy6})`,`${-(px6+vx6)},${py6+vy6}`],"Apply the translation first, then the reflection.",`(${px6+vx6},${py6+vy6})→(${-(px6+vx6)},${py6+vy6}).`),
+    ];
+  }
+  const finalX1=r(-6,6),finalY1=r(-6,6),v1x=r(-4,4),v1y=r(-4,4),v2x=r(-4,4),v2y=r(-4,4);
+  const negScale2=-1*r(1,4);
+  const posScale3=r(2,4),wrongLen3=r(2,10);
+  const px4=r(-6,6),py4=r(-6,6);
+  const origSide5=r(2,4),scale5=r(2,3);
+  const px6=r(-6,6),py6=r(-6,6);
+  return [
+    sq("s9-u13-r1","Reverse two combined translations",difficulty,`A point is translated by (${v1x},${v1y}) then by (${v2x},${v2y}), ending at (${finalX1},${finalY1}). Find the original point.`,[`(${finalX1-v1x-v2x},${finalY1-v1y-v2y})`,`${finalX1-v1x-v2x},${finalY1-v1y-v2y}`],"Subtract both vectors from the final point.",`(${finalX1}−${v1x}−${v2x}, ${finalY1}−${v1y}−${v2y}).`),
+    sq("s9-u13-r2","Reason about negative scale factors",difficulty,`An enlargement has scale factor ${negScale2}. Does the image get larger, smaller, or stay the same size compared to the original?`,[Math.abs(negScale2)>1?"larger":Math.abs(negScale2)<1?"smaller":"same"],"Compare the absolute value of the scale factor to 1.",`|${negScale2}| compared to 1 determines the size change.`),
+    sq("s9-u13-r3","Correct an enlargement error",difficulty,`A learner enlarges a side of length ${wrongLen3} cm by scale factor ${posScale3} and gets ${wrongLen3+posScale3} cm by adding instead of multiplying. Enter the correct length.`,String(wrongLen3*posScale3),"Enlargement means multiplying by the scale factor, not adding.",`${wrongLen3}×${posScale3}=${wrongLen3*posScale3}.`),
+    sq("s9-u13-r4","Reason about the order of transformations",difficulty,`A point at (${px4},${py4}) is reflected in the x-axis then translated by (2,3). A second point undergoes the same translation first, then the same reflection. Would both methods give the same final point in general? Answer yes or no.`,"no","Reflections and translations do not generally commute.","No — the order of transformations generally matters."),
+    sq("s9-u13-r5","Reverse an enlargement with its inverse",difficulty,`A shape is enlarged by scale factor ${scale5} from a side of ${origSide5} cm, then reduced by scale factor 1/${scale5}. Find the final side length.`,String(origSide5),"Enlarging then reducing by the reciprocal scale factor returns to the original.",`${origSide5}×${scale5}÷${scale5}=${origSide5}.`),
+    sq("s9-u13-r6","Identify a combination as a single transformation",difficulty,`A point at (${px6},${py6}) undergoes two reflections: first in the x-axis, then in the y-axis. Name the single transformation this combination is equivalent to.`,["rotation180","rotation of 180","180rotation"],"Reflecting in both axes in turn flips both coordinates' signs.","This combination is equivalent to a 180° rotation about the origin."),
+  ];
+};
+
+const CLEAN_ANGLES_S9 = [90,180,60,120,45,30];
+const structuredMeasuresS9 = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const radius1=r(2,15),angle1=CLEAN_ANGLES_S9[r(0,CLEAN_ANGLES_S9.length-1)],arcLen1=Math.round(2*3.14*radius1*(angle1/360)*100)/100;
+    const radius2=r(2,15),angle2=CLEAN_ANGLES_S9[r(0,CLEAN_ANGLES_S9.length-1)],sectorArea2=Math.round(3.14*radius2*radius2*(angle2/360)*100)/100;
+    const rectW3=r(3,15),rectH3=r(3,15),triBase3=r(3,15),triHeight3=r(3,15),area3=rectW3*rectH3+(triBase3*triHeight3)/2;
+    const rectW4=r(3,15),rectH4=r(3,15),semiRadius4=rectH4/2,area4=Math.round((rectW4*rectH4+3.14*semiRadius4*semiRadius4/2)*100)/100;
+    const boxL5=r(2,8),boxW5=r(2,8),boxH1_5=r(2,8),boxH2_5=r(2,8),vol5=boxL5*boxW5*boxH1_5+boxL5*boxW5*boxH2_5;
+    const radius6=r(2,15),circumference6=Math.round(2*3.14*radius6*100)/100;
+    return [
+      sq("s9-u14-f1","Find arc length",difficulty,`Find the arc length of a sector with radius ${radius1} cm and angle ${angle1}°, using π=3.14.`,String(arcLen1),"Arc length = 2πr × (angle/360).",`2×3.14×${radius1}×(${angle1}/360)=${arcLen1}.`),
+      sq("s9-u14-f2","Find sector area",difficulty,`Find the area of a sector with radius ${radius2} cm and angle ${angle2}°, using π=3.14.`,String(sectorArea2),"Sector area = πr² × (angle/360).",`3.14×${radius2}²×(${angle2}/360)=${sectorArea2}.`),
+      sq("s9-u14-f3","Find the area of a rectangle-triangle compound shape",difficulty,`A compound shape is made of a rectangle ${rectW3} cm by ${rectH3} cm, with a triangle of base ${triBase3} cm and height ${triHeight3} cm attached. Find the total area.`,String(area3),"Find each area separately, then add them.",`${rectW3}×${rectH3}+½×${triBase3}×${triHeight3}=${area3}.`),
+      sq("s9-u14-f4","Find the area of a rectangle-semicircle compound shape",difficulty,`A compound shape is a rectangle ${rectW4} cm by ${rectH4} cm with a semicircle of diameter ${rectH4} cm attached to one side. Using π=3.14, find the total area.`,String(area4),"Find each area separately, then add them.",`${rectW4}×${rectH4}+½×3.14×${semiRadius4}²=${area4}.`),
+      sq("s9-u14-f5","Find the volume of a compound solid",difficulty,`A compound solid is made of two cuboids stacked: one ${boxL5} by ${boxW5} by ${boxH1_5} cm, the other ${boxL5} by ${boxW5} by ${boxH2_5} cm. Find the total volume.`,String(vol5),"Find each volume separately, then add them.",`${boxL5}×${boxW5}×${boxH1_5}+${boxL5}×${boxW5}×${boxH2_5}=${vol5}.`),
+      sq("s9-u14-f6","Find circumference",difficulty,`Find the circumference of a circle with radius ${radius6} cm, using π=3.14.`,String(circumference6),"Circumference = 2πr.",`2×3.14×${radius6}=${circumference6}.`),
+    ];
+  }
+  if (difficulty === "application") {
+    const trackRadius1=r(20,60),trackAngle1=CLEAN_ANGLES_S9[r(0,CLEAN_ANGLES_S9.length-1)],arcLen1=Math.round(2*3.14*trackRadius1*(trackAngle1/360)*100)/100;
+    const pizzaRadius2=r(8,20),pizzaAngle2=CLEAN_ANGLES_S9[r(0,CLEAN_ANGLES_S9.length-1)],sliceArea2=Math.round(3.14*pizzaRadius2*pizzaRadius2*(pizzaAngle2/360)*100)/100;
+    const roomL3=r(3,10),roomW3=r(3,10),extL3=r(2,6),extW3=r(2,6),totalArea3=roomL3*roomW3+extL3*extW3;
+    const windowW4=r(4,12),windowH4=r(4,12),semiR4=windowW4/2,windowArea4=Math.round((windowW4*windowH4+3.14*semiR4*semiR4/2)*100)/100;
+    const boxL5=r(2,6),boxW5=r(2,6),boxH5=r(2,6),solidVol5=boxL5*boxW5*boxH5;
+    const semicircleRadius6=r(3,10),straightSide6=r(4,15),perim6=Math.round((3.14*semicircleRadius6+straightSide6)*100)/100;
+    return [
+      sq("s9-u14-a1","Apply arc length in a real context",difficulty,`A running track curve has radius ${trackRadius1} m and sweeps through ${trackAngle1}°. Using π=3.14, find the arc length of the curve.`,String(arcLen1),"Arc length = 2πr × (angle/360).",`2×3.14×${trackRadius1}×(${trackAngle1}/360)=${arcLen1}.`),
+      sq("s9-u14-a2","Apply sector area in a real context",difficulty,`A pizza has radius ${pizzaRadius2} cm. A slice is cut with angle ${pizzaAngle2}°. Using π=3.14, find the area of the slice.`,String(sliceArea2),"Sector area = πr² × (angle/360).",`3.14×${pizzaRadius2}²×(${pizzaAngle2}/360)=${sliceArea2}.`),
+      sq("s9-u14-a3","Find the area of an L-shaped room",difficulty,`An L-shaped room is made of a ${roomL3} m by ${roomW3} m rectangle and a ${extL3} m by ${extW3} m extension. Find the total floor area.`,String(totalArea3),"Find each rectangle's area, then add them.",`${roomL3}×${roomW3}+${extL3}×${extW3}=${totalArea3}.`),
+      sq("s9-u14-a4","Find the area of a window with a semicircular top",difficulty,`A window is a rectangle ${windowW4} cm by ${windowH4} cm with a semicircle of diameter ${windowW4} cm on top. Using π=3.14, find the total area.`,String(windowArea4),"Find each area separately, then add them.",`${windowW4}×${windowH4}+½×3.14×${semiR4}²=${windowArea4}.`),
+      sq("s9-u14-a5","Find the volume of a storage box",difficulty,`A storage box measures ${boxL5} by ${boxW5} by ${boxH5} cm. Find its volume.`,String(solidVol5),"Multiply length, width, and height.",`${boxL5}×${boxW5}×${boxH5}=${solidVol5}.`),
+      sq("s9-u14-a6","Find the perimeter of a shape with a curved edge",difficulty,`A shape has a straight edge of ${straightSide6} cm and a semicircular edge with radius ${semicircleRadius6} cm. Using π=3.14, find the total perimeter (straight edge plus curved edge, not the diameter).`,String(perim6),"Add the straight edge to the semicircular arc length.",`${straightSide6}+3.14×${semicircleRadius6}=${perim6}.`),
+    ];
+  }
+  const radius1=r(2,15),arcLenGiven1=Math.round(2*3.14*radius1*(90/360)*100)/100;
+  const radius2=r(2,15),sectorAreaGiven2=Math.round(3.14*radius2*radius2*(90/360)*100)/100;
+  const rectArea3=r(10,50)*4,triArea3=r(5,20)*2,extraAdded3=r(5,20),wrongTotal3=rectArea3+triArea3+extraAdded3;
+  const shapeA4=r(20,60),shapeB4=r(20,80);
+  const sectorRadius5=r(2,10),sectorArea5=Math.round(3.14*sectorRadius5*sectorRadius5*(90/360)*100)/100,extraRect5=r(5,20);
+  return [
+    sq("s9-u14-r1","Reverse an arc-length calculation",difficulty,`A sector has arc length ${arcLenGiven1} cm (using π=3.14) and angle 90°. Find the radius.`,String(radius1),"Divide the arc length by 2π×(angle/360).",`${arcLenGiven1}÷(2×3.14×90/360)=${radius1}.`),
+    sq("s9-u14-r2","Reverse a sector-area calculation",difficulty,`A sector has area ${sectorAreaGiven2} cm² (using π=3.14) and angle 90°. Find the radius.`,String(radius2),"Divide the area by π×(angle/360), then take the square root.",`√(${sectorAreaGiven2}÷(3.14×90/360))=${radius2}.`),
+    sq("s9-u14-r3","Correct a compound-area error",difficulty,`A compound shape's area is calculated as a rectangle (${rectArea3} cm²) plus a triangle (${triArea3} cm²). A learner adds an extra ${extraAdded3} cm² by mistake, getting ${wrongTotal3} cm². Enter the correct total area.`,String(rectArea3+triArea3),"Only add the areas of the actual shapes, nothing extra.",`${rectArea3}+${triArea3}=${rectArea3+triArea3}.`),
+    sq("s9-u14-r4","Compare two shape areas",difficulty,`Shape A has area ${shapeA4} cm² and Shape B has area ${shapeB4} cm². Which has the larger area, A or B?`,[shapeA4>shapeB4?"a":"b","shape "+(shapeA4>shapeB4?"a":"b")],"Compare the two areas directly.",`${shapeA4>shapeB4?"Shape A":"Shape B"} has the larger area.`),
+    sq("s9-u14-r5","Combine a sector and a rectangle area",difficulty,`A compound shape is a sector (radius ${sectorRadius5} cm, angle 90°, area ${sectorArea5} cm² using π=3.14) attached to a rectangle of area ${extraRect5} cm². Find the total area.`,String(sectorArea5+extraRect5),"Add the sector area and the rectangle area.",`${sectorArea5}+${extraRect5}=${sectorArea5+extraRect5}.`),
+    sq("s9-u14-r6","Reason about scaling a circle's radius",difficulty,"If the radius of a circle is doubled, does the circumference double, quadruple, or stay the same?","double","Circumference is directly proportional to radius.","Doubling the radius doubles the circumference."),
+  ];
+};
+
+const structuredInvestigationsS9 = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const mSlope2=r(2,6),cInt2=r(1,20),xVal2=r(2,8);
+    const sorted3=Array.from({length:7},()=>r(2,30)).sort((a,b)=>a-b);
+    const sorted4=Array.from({length:7},()=>r(2,30)).sort((a,b)=>a-b);
+    const sorted5=Array.from({length:7},()=>r(2,30)).sort((a,b)=>a-b);
+    const sorted6=Array.from({length:7},()=>r(2,30)).sort((a,b)=>a-b);
+    return [
+      sq("s9-u15-f1","Understand a line of best fit",difficulty,"What does a line of best fit represent on a scatter graph?",["trend","generaltrend","overalltrend"],"It's a single line summarising the pattern in scattered data.","It represents the general trend of the data."),
+      sq("s9-u15-f2","Use a line of best fit to predict a value",difficulty,`A line of best fit has equation y = ${mSlope2}x + ${cInt2}. Predict y when x = ${xVal2}.`,String(mSlope2*xVal2+cInt2),"Substitute the x-value into the equation.",`${mSlope2}(${xVal2})+${cInt2}=${mSlope2*xVal2+cInt2}.`),
+      sq("s9-u15-f3","Find the median",difficulty,`Find the median of ${sorted3.join(", ")}.`,String(sorted3[3]),"The data is already in order; choose the middle value.",`The middle value is ${sorted3[3]}.`),
+      sq("s9-u15-f4","Find the lower quartile",difficulty,`Find the lower quartile (Q1) of ${sorted4.join(", ")}.`,String(sorted4[1]),"Q1 is the median of the lower half of the data.",`Q1=${sorted4[1]}.`),
+      sq("s9-u15-f5","Find the upper quartile",difficulty,`Find the upper quartile (Q3) of ${sorted5.join(", ")}.`,String(sorted5[5]),"Q3 is the median of the upper half of the data.",`Q3=${sorted5[5]}.`),
+      sq("s9-u15-f6","Find the interquartile range",difficulty,`For the data ${sorted6.join(", ")}, Q1 = ${sorted6[1]} and Q3 = ${sorted6[5]}. Find the interquartile range.`,String(sorted6[5]-sorted6[1]),"IQR = Q3 − Q1.",`${sorted6[5]}−${sorted6[1]}=${sorted6[5]-sorted6[1]}.`),
+    ];
+  }
+  if (difficulty === "application") {
+    const mSlope1=r(2,5),cInt1=r(5,20),xInterp1=r(3,7);
+    const mSlope2=r(2,5),cInt2=r(5,20),xExtrap2=r(50,100);
+    const sortedA3=Array.from({length:7},()=>r(10,40)*2).sort((a,b)=>a-b);
+    const sortedB4=Array.from({length:7},()=>r(2,15)).sort((a,b)=>a-b);
+    const sortedC4=Array.from({length:7},()=>r(2,60)).sort((a,b)=>a-b);
+    const sortedD5=Array.from({length:7},()=>r(2,20)).sort((a,b)=>a-b);
+    return [
+      sq("s9-u15-a1","Interpolate using a line of best fit",difficulty,`A line of best fit for exam scores is y = ${mSlope1}x + ${cInt1}, where x is hours studied (within the data range 1-10). Predict the score for ${xInterp1} hours studied.`,String(mSlope1*xInterp1+cInt1),"Substitute the x-value into the equation.",`${mSlope1}(${xInterp1})+${cInt1}=${mSlope1*xInterp1+cInt1}.`),
+      sq("s9-u15-a2","Evaluate the reliability of extrapolation",difficulty,`A line of best fit is y = ${mSlope2}x + ${cInt2}, based on data where x ranged from 1 to 10. A learner extrapolates to predict y at x = ${xExtrap2}. Is this prediction reliable? Answer yes or no.`,"no","Predicting far outside the data range is unreliable.","No — extrapolating this far beyond the data isn't reliable."),
+      sq("s9-u15-a3","Find the IQR of real data",difficulty,`A shop's daily sales (in rand) are: ${sortedA3.join(", ")}. Find the interquartile range.`,String(sortedA3[5]-sortedA3[1]),"IQR = Q3 − Q1.",`${sortedA3[5]}−${sortedA3[1]}=${sortedA3[5]-sortedA3[1]}.`),
+      sq("s9-u15-a4","Compare consistency using IQR",difficulty,`Class X test scores: ${sortedB4.join(", ")}. Class Y test scores: ${sortedC4.join(", ")}. Which class has more consistent scores (smaller IQR), X or Y?`,[(sortedB4[5]-sortedB4[1])<(sortedC4[5]-sortedC4[1])?"x":"y","class "+((sortedB4[5]-sortedB4[1])<(sortedC4[5]-sortedC4[1])?"x":"y")],"Find each class's IQR, then compare.","The class with the smaller IQR has more consistent scores."),
+      sq("s9-u15-a5","Identify quartiles for outlier detection",difficulty,`A data set is: ${sortedD5.join(", ")}. A value below Q1 - 1.5×IQR or above Q3 + 1.5×IQR is an outlier. Find Q1 and Q3 for this data (state as Q1,Q3).`,[`${sortedD5[1]},${sortedD5[5]}`,`${sortedD5[1]}, ${sortedD5[5]}`],"Find the median of each half of the data.",`Q1=${sortedD5[1]}, Q3=${sortedD5[5]}.`),
+      sq("s9-u15-a6","Choose an appropriate spread statistic",difficulty,"A data set is heavily skewed with some extreme values. Which is more appropriate to summarise its spread: range or interquartile range?",["interquartilerange","iqr"],"Consider which statistic resists the influence of extreme values.","The interquartile range, since it isn't distorted by extremes."),
+    ];
+  }
+  const mSlope1=r(2,5),cInt1=r(5,20),xNear1=r(3,7),xFar1=r(80,150);
+  const sortedQ2=Array.from({length:7},()=>r(2,20)).sort((a,b)=>a-b);
+  const q1_4=r(2,10),q3_4=q1_4+r(3,15),median_4=r(q1_4,q3_4);
+  const mSlope5=r(-5,-2);
+  return [
+    sq("s9-u15-r1","Reason about interpolation vs extrapolation reliability",difficulty,`A line of best fit y = ${mSlope1}x + ${cInt1} is based on data with x between 1 and 10. Is a prediction at x = ${xNear1} more reliable than one at x = ${xFar1}? Answer yes or no.`,"yes","Predictions within the data range are more reliable than those far outside it.","Yes — interpolation is generally more reliable than extrapolation."),
+    sq("s9-u15-r2","Correct a quartile identification error",difficulty,`For the data ${sortedQ2.join(", ")}, a learner says Q1 is the smallest value (${sortedQ2[0]}). Enter the correct Q1.`,String(sortedQ2[1]),"Q1 is the median of the lower half, not the minimum.",`Q1=${sortedQ2[1]}.`),
+    sq("s9-u15-r3","Compare the sensitivity of range and IQR",difficulty,"Is the interquartile range or the range more affected by an extreme outlier?","range","The range uses only the two extreme values.","The range is more affected, since it depends directly on the extremes."),
+    sq("s9-u15-r4","Calculate IQR from a five-number summary",difficulty,`A data set has Q1 = ${q1_4}, median = ${median_4}, and Q3 = ${q3_4}. Find the interquartile range.`,String(q3_4-q1_4),"IQR = Q3 − Q1.",`${q3_4}−${q1_4}=${q3_4-q1_4}.`),
+    sq("s9-u15-r5","Reason about negative gradients",difficulty,`A line of best fit has a negative gradient of ${mSlope5}. As x increases, does y increase or decrease?`,"decrease","A negative gradient means y falls as x rises.","A negative gradient means y decreases as x increases."),
+    sq("s9-u15-r6","Reason about the limits of a linear model",difficulty,"A scatter graph shows a curved (non-linear) pattern. Is a straight line of best fit appropriate for making predictions? Answer yes or no.","no","A straight line poorly models a clearly curved relationship.","No — a straight line isn't appropriate for a non-linear pattern."),
+  ];
+};
+
 const integers=()=>{const a=r(18,65),b=r(7,24),x=r(-12,-3),y=r(5,17);return[
   q(`Calculate ${a} + (${x}).`,String(a+x),"Adding a negative is subtraction.",`${a}+(${x})=${a+x}`),
   q(`Calculate ${b} - (${x}).`,String(b-x),"Subtracting a negative becomes addition.",`${b}-(${x})=${b-x}`),
@@ -1276,16 +1472,16 @@ export function makeUnitQuestions(chapter:string,difficulty:string){
     "s9-u2": structuredExpressionsS9,
     "s9-u3": structuredRoundingS9,
     "s9-u5": structuredAnglesS9,
-    "s9-u6": structuredInvestigations,
+    "s9-u6": structuredInvestigationsS9,
     "s9-u7": structuredShapesS9,
     "s9-u8": structuredFractionsS9,
     "s9-u9": structuredSequencesS9,
     "s9-u10": structuredGraphsS9,
     "s9-u11": structuredRatioS9,
-    "s9-u12": structuredProbability,
-    "s9-u13": structuredTransformations,
-    "s9-u14": structuredMeasures,
-    "s9-u15": structuredInvestigations,
+    "s9-u12": structuredProbabilityS9,
+    "s9-u13": structuredTransformationsS9,
+    "s9-u14": structuredMeasuresS9,
+    "s9-u15": structuredInvestigationsS9,
   };
   if (structuredPilot[chapter])
     return validateStructuredSet(structuredPilot[chapter](level), chapter, level);
