@@ -3984,7 +3984,6 @@ function Submissions() {
     "attention" | "ready" | "published" | "all"
   >("attention");
   const [markCursor, setMarkCursor] = useState(0);
-  const [remarking, setRemarking] = useState(false);
   const [handwrittenPage, setHandwrittenPage] = useState(0);
   const [queueAction, setQueueAction] = useState("");
   const [message, setMessage] = useState("Loading submissions…");
@@ -4203,33 +4202,6 @@ function Submissions() {
             <h2>{active.title}</h2>
           </div>
           <button onClick={() => setActive(null)}>← Marking queue</button>
-          <button
-            className="remark-submission"
-            disabled={remarking}
-            onClick={async () => {
-              setRemarking(true);
-              setMessage("Re-running automatic marking…");
-              try {
-                const response = await fetch(`/api/submissions/${active.id}/remark`, { method: "POST" });
-                if (!response.ok) {
-                  const data = await response.json().catch(() => ({}));
-                  setMessage(data.error || "Re-marking failed.");
-                  return;
-                }
-                await load();
-                const refreshed = await fetch("/api/submissions").then((r) => r.json()).catch(() => []);
-                const updated = Array.isArray(refreshed) ? refreshed.find((item: any) => item.id === active.id) : null;
-                if (updated) openReview(updated);
-                setMessage("Automatic marking updated. Any marks you've already confirmed were left untouched.");
-              } catch {
-                setMessage("Re-marking failed. Check your connection and try again.");
-              } finally {
-                setRemarking(false);
-              }
-            }}
-          >
-            {remarking ? "Re-marking…" : "↻ Re-run automatic marking"}
-          </button>
         </div>
         <section className="moderation-toolbar panel">
           <div>
