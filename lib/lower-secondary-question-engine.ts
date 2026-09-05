@@ -729,6 +729,155 @@ const structuredInvestigations = (difficulty:"foundational"|"application"|"reaso
   ];
 };
 
+const termStr = (coef:number, suffix:string) => coef===1?suffix:coef===-1?`-${suffix}`:`${coef}${suffix}`;
+
+const structuredIntegersS9 = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const base1=r(-9,9)||2,pow1=[2,3][r(0,1)],val1=base1**pow1;
+    const a2=r(-6,6)||1,b2=r(-6,6)||1,val2=a2*a2+b2;
+    const base3=r(2,9);
+    const a4=r(-9,9)||1,b4=r(1,9),c4=r(-9,-1),val4=a4+b4*c4;
+    const base5=r(2,5),m5=r(2,4),n5=r(1,3),val5=base5**(m5+n5);
+    const base6=r(2,6),m6=r(3,6),n6=r(1,m6-1),val6=base6**(m6-n6);
+    return [
+      sq("s9-u1-f1","Evaluate a power",difficulty,`Evaluate ${base1}^${pow1}.`,String(val1),"Multiply the base by itself the given number of times.",`${base1}^${pow1}=${val1}.`),
+      sq("s9-u1-f2","Combine indices with other operations",difficulty,`Evaluate ${a2}^2 + ${b2}.`,String(val2),"Evaluate the power first, then add.",`${a2}^2+${b2}=${val2}.`),
+      sq("s9-u1-f3","Reason about squaring a negative number",difficulty,`Is (${-base3})^2 positive or negative?`,"positive","A negative number squared is always positive.","Squaring removes the negative sign."),
+      sq("s9-u1-f4","Apply order of operations",difficulty,`Evaluate ${a4} + ${b4} × ${c4}.`,String(val4),"Multiply before adding.",`${a4}+(${b4}×${c4})=${val4}.`),
+      sq("s9-u1-f5","Apply the multiplication index law",difficulty,`Using the index law, evaluate ${base5}^${m5} × ${base5}^${n5} by writing it as a single power, then evaluating.`,String(val5),"Add the powers when multiplying the same base.",`${base5}^${m5+n5}=${val5}.`),
+      sq("s9-u1-f6","Apply the division index law",difficulty,`Using the index law, evaluate ${base6}^${m6} ÷ ${base6}^${n6} by writing it as a single power, then evaluating.`,String(val6),"Subtract the powers when dividing the same base.",`${base6}^${m6-n6}=${val6}.`),
+    ];
+  }
+  if (difficulty === "application") {
+    const side1=r(2,15),area1=side1*side1;
+    const startTemp2=r(-10,20),drop2=r(2,8),rises2=r(1,3),val2=startTemp2-drop2*rises2;
+    const repeatBase3=r(2,6),repeatCount3=r(2,4);
+    const cost4=r(5,20),qty4=r(2,9),discount4=r(2,10),total4=cost4*qty4-discount4;
+    const cubeSide5=r(2,10),volume5=cubeSide5**3;
+    const scaleBase6=r(2,4),scalePow6=r(2,3),scaleVal6=scaleBase6**scalePow6;
+    return [
+      sq("s9-u1-a1","Apply squaring in context",difficulty,`A square has side length ${side1} cm. Find its area.`,String(area1),"Square the side length.",`${side1}^2=${area1} cm².`),
+      sq("s9-u1-a2","Apply repeated operations in context",difficulty,`The temperature starts at ${startTemp2}°C. It then drops by ${drop2}°C, ${rises2} times in a row. Find the final temperature.`,String(val2),"Multiply the drop by the number of times, then subtract.",`${startTemp2}−(${drop2}×${rises2})=${val2}°C.`),
+      sq("s9-u1-a3","Write repeated multiplication as a power",difficulty,`Write ${Array(repeatCount3).fill(repeatBase3).join(" × ")} as a single power (${repeatBase3}^n form). State n.`,String(repeatCount3),"Count how many times the base is multiplied by itself.",`There are ${repeatCount3} factors of ${repeatBase3}.`),
+      sq("s9-u1-a4","Apply order of operations in context",difficulty,`${qty4} items cost R${cost4} each. A discount of R${discount4} is then applied to the total. Find the final cost.`,String(total4),"Multiply first, then subtract the discount.",`(${qty4}×R${cost4})−R${discount4}=R${total4}.`),
+      sq("s9-u1-a5","Apply cubing in context",difficulty,`A cube has side length ${cubeSide5} cm. Find its volume.`,String(volume5),"Cube the side length.",`${cubeSide5}^3=${volume5} cm³.`),
+      sq("s9-u1-a6","Apply exponential growth",difficulty,`A pattern grows by a factor of ${scaleBase6} each stage, starting from stage 0 at value 1. Find the value at stage ${scalePow6}.`,String(scaleVal6),"Raise the growth factor to the power of the stage number.",`${scaleBase6}^${scalePow6}=${scaleVal6}.`),
+    ];
+  }
+  const base1=r(2,9);
+  const base2=r(-9,-2);
+  const m3=r(2,4),n3=r(1,3),base3=r(2,4),correctVal3=base3**(m3+n3);
+  const base4=r(-6,-2),oddPow4=[3,5][r(0,1)];
+  const a5=r(-9,-1),b5=r(1,9),c5=r(-9,-1),val5=a5+b5*c5;
+  const base6=r(2,4),m6=r(3,5),n6=r(1,2);
+  return [
+    sq("s9-u1-r1","Distinguish (-a)² from -a²",difficulty,`Which is larger: (-${base1})^2 or -${base1}^2?`,[`(-${base1})^2`,`(-${base1})^2 is larger`],"(-a)² squares the negative first; -a² negates after squaring.",`(-${base1})^2=${base1*base1}, but -${base1}^2=${-(base1*base1)}.`),
+    sq("s9-u1-r2","Reason about squaring vs doubling",difficulty,`Is (${base2})^2 the same value as ${base2}×2? Answer yes or no.`,"no","Squaring multiplies a number by itself; doubling multiplies by 2.",`(${base2})^2=${base2*base2}, but ${base2}×2=${base2*2}.`),
+    sq("s9-u1-r3","Correct an index-law error",difficulty,`A learner evaluates ${base3}^${m3} × ${base3}^${n3} by multiplying the two results together but forgets to combine the powers first. Enter the correct answer using the index law ${base3}^${m3+n3}.`,String(correctVal3),"Add the powers, then evaluate the single resulting power.",`${base3}^${m3+n3}=${correctVal3}.`),
+    sq("s9-u1-r4","Reason about odd powers of negatives",difficulty,`Is (${base4})^${oddPow4} positive or negative?`,"negative","An odd power of a negative number stays negative.",`An odd number of negative factors gives a negative result.`),
+    sq("s9-u1-r5","Apply order of operations with negatives",difficulty,`Evaluate ${a5} + ${b5} × ${c5}, applying the correct order of operations.`,String(val5),"Multiply before adding.",`${a5}+(${b5}×${c5})=${val5}.`),
+    sq("s9-u1-r6","Simplify using the division index law",difficulty,`Simplify ${base6}^${m6} ÷ ${base6}^${n6} as a single power, then evaluate it.`,String(base6**(m6-n6)),"Subtract the powers, then evaluate.",`${base6}^${m6-n6}=${base6**(m6-n6)}.`),
+  ];
+};
+
+const structuredExpressionsS9 = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const a1=r(2,7),b1=r(1,9);
+    const a2=r(2,7),b2=r(1,9),c2=r(1,9);
+    const p3=r(1,6),q3=r(1,6);
+    const commonF4=r(2,6),y4=r(1,8);
+    const commonF5=r(2,9),term5a=r(1,9),term5b=r(1,9);
+    const a6=r(2,5),b6=r(1,6),xVal6=r(2,6);
+    return [
+      sq("s9-u2-f1","Expand a single bracket",difficulty,`Expand ${a1}(x + ${b1}).`,[`${a1}x+${a1*b1}`,`${a1}x + ${a1*b1}`],"Multiply everything inside the bracket by the term outside.",`${a1}×x=${a1}x, ${a1}×${b1}=${a1*b1}.`),
+      sq("s9-u2-f2","Expand and simplify",difficulty,`Expand and simplify ${a2}(x + ${b2}) + ${c2}.`,[`${a2}x+${a2*b2+c2}`,`${a2}x + ${a2*b2+c2}`],"Expand first, then combine the constant terms.",`${a2}x+${a2*b2}+${c2}=${a2}x+${a2*b2+c2}.`),
+      sq("s9-u2-f3","Expand double brackets",difficulty,`Expand (x + ${p3})(x + ${q3}).`,[`x^2+${p3+q3}x+${p3*q3}`,`x^2 + ${p3+q3}x + ${p3*q3}`],"Multiply each term in the first bracket by each term in the second.",`x²+${p3}x+${q3}x+${p3*q3}=x²+${p3+q3}x+${p3*q3}.`),
+      sq("s9-u2-f4","Factorise using a common factor",difficulty,`Factorise fully: ${commonF4}x + ${commonF4*y4}.`,[`${commonF4}(x+${y4})`,`${commonF4}(x + ${y4})`],"Find the highest common factor of both terms.",`${commonF4}x+${commonF4*y4}=${commonF4}(x+${y4}).`),
+      sq("s9-u2-f5","Factorise fully",difficulty,`Factor out the highest common factor from ${commonF5*term5a}x + ${commonF5*term5b}.`,[`${commonF5}(${termStr(term5a,"x")}+${term5b})`,`${commonF5}(${termStr(term5a,"x")} + ${term5b})`],"Find the highest common factor of both terms.",`${commonF5*term5a}x+${commonF5*term5b}=${commonF5}(${termStr(term5a,"x")}+${term5b}).`),
+      sq("s9-u2-f6","Expand then substitute",difficulty,`Expand ${a6}(x + ${b6}), then evaluate the result when x = ${xVal6}.`,String(a6*(xVal6+b6)),"Expand first, then substitute the given value.",`${a6}(${xVal6}+${b6})=${a6*(xVal6+b6)}.`),
+    ];
+  }
+  if (difficulty === "application") {
+    const a1=r(2,8),b1=r(1,9);
+    const len2=r(3,10),wA2=r(1,9),wB2=r(1,9);
+    const areaA3=r(2,6),areaB3=r(1,9);
+    const p4=r(2,8),cost4=r(1,9);
+    const commonF5=r(2,6),partA5=r(1,8),partB5=r(1,8);
+    const a6=r(2,5),b6=r(1,7),xVal6=r(1,6);
+    return [
+      sq("s9-u2-a1","Write an area as an expanded expression",difficulty,`A rectangle has width ${a1} and length (x + ${b1}). Write an expanded expression for its area.`,[`${a1}x+${a1*b1}`,`${a1}x + ${a1*b1}`],"Multiply the width by the full length expression.",`${a1}(x+${b1})=${a1}x+${a1*b1}.`),
+      sq("s9-u2-a2","Simplify a perimeter expression",difficulty,`A garden's perimeter is made of two widths ${wA2} and ${wB2}, plus two lengths of (${len2} + x). Write the simplified total perimeter expression.`,[`2x+${2*len2+wA2+wB2}`,`2x + ${2*len2+wA2+wB2}`],"Add all four sides and collect like terms.",`2(${len2}+x)+${wA2}+${wB2}=2x+${2*len2+wA2+wB2}.`),
+      sq("s9-u2-a3","Find a missing factor from an area expression",difficulty,`A rectangle has area ${areaA3}x + ${areaA3*areaB3}. If one side is ${areaA3}, write an expression for the other side.`,[`x+${areaB3}`,`x + ${areaB3}`],"Divide the area expression by the known side.",`(${areaA3}x+${areaA3*areaB3})÷${areaA3}=x+${areaB3}.`),
+      sq("s9-u2-a4","Write a total cost as an expanded expression",difficulty,`${p4} friends each pay (x + ${cost4}) rand for a trip. Write the total cost as an expanded expression.`,[`${p4}x+${p4*cost4}`,`${p4}x + ${p4*cost4}`],"Multiply the number of friends by the cost expression.",`${p4}(x+${cost4})=${p4}x+${p4*cost4}.`),
+      sq("s9-u2-a5","Factorise a cost expression",difficulty,`A total cost is modelled as ${commonF5*partA5}x + ${commonF5*partB5}. Factorise this expression fully.`,[`${commonF5}(${termStr(partA5,"x")}+${partB5})`,`${commonF5}(${termStr(partA5,"x")} + ${partB5})`],"Find the highest common factor of both terms.",`${commonF5*partA5}x+${commonF5*partB5}=${commonF5}(${termStr(partA5,"x")}+${partB5}).`),
+      sq("s9-u2-a6","Evaluate a cost expression",difficulty,`The cost of a trip is ${a6}(x + ${b6}) rand, where x is the number of extra people. Find the cost when x = ${xVal6}.`,String(a6*(xVal6+b6)),"Substitute the given value of x.",`${a6}(${xVal6}+${b6})=R${a6*(xVal6+b6)}.`),
+    ];
+  }
+  const a1=r(2,6),b1=r(1,8),wrongB1=b1+r(1,3);
+  const p2=r(1,6),q2=r(1,6);
+  const commonF3=r(2,6),partA3=r(1,7),partB3=r(1,7);
+  const a4=r(2,5),b4=r(1,7);
+  const p5a=r(1,5),q5a=r(1,5),p5b=r(1,5),q5b=r(1,5);
+  const commonF6=r(-6,-2),innerA6=r(1,8),innerB6=r(1,8);
+  const secondTerm6=commonF6*innerB6;
+  return [
+    sq("s9-u2-r1","Correct an expansion error",difficulty,`A learner expands ${a1}(x + ${b1}) and writes ${a1}x + ${a1*wrongB1}. Enter the correct expanded expression.`,[`${a1}x+${a1*b1}`,`${a1}x + ${a1*b1}`],"Multiply the outside term by each term inside the bracket separately.",`${a1}(x+${b1})=${a1}x+${a1*b1}.`),
+    sq("s9-u2-r2","Find a constant term from a double expansion",difficulty,`Expand (x + ${p2})(x + ${q2}), then state the constant term only.`,String(p2*q2),"The constant term comes from multiplying the two constants together.",`${p2}×${q2}=${p2*q2}.`),
+    sq("s9-u2-r3","Factorise and verify by expanding back",difficulty,`Factorise ${commonF3*partA3}x + ${commonF3*partB3} fully, then expand your answer back out to check it matches the original.`,[`${commonF3}(${termStr(partA3,"x")}+${partB3})`,`${commonF3}(${termStr(partA3,"x")} + ${partB3})`],"Divide both terms by their highest common factor.",`${commonF3*partA3}x+${commonF3*partB3}=${commonF3}(${termStr(partA3,"x")}+${partB3}).`),
+    sq("s9-u2-r4","Evaluate an equivalence claim",difficulty,`Is ${a4}x + ${a4*b4} the same as ${a4}(x + ${b4})? Answer yes or no.`,"yes","Expand the factorised form and compare.",`${a4}(x+${b4})=${a4}x+${a4*b4}, which matches.`),
+    sq("s9-u2-r5","Combine two expanded double brackets",difficulty,`Expand (x + ${p5a})(x + ${q5a}), then add it to the expansion of (x + ${p5b})(x + ${q5b}). State the constant term of the combined result.`,String(p5a*q5a+p5b*q5b),"Find each constant term separately, then add them.",`${p5a}×${q5a}=${p5a*q5a}; ${p5b}×${q5b}=${p5b*q5b}; total=${p5a*q5a+p5b*q5b}.`),
+    sq("s9-u2-r6","Factorise with a negative common factor",difficulty,`Factorise ${commonF6*innerA6}x ${secondTerm6<0?"- "+Math.abs(secondTerm6):"+ "+secondTerm6}, taking out the common factor ${commonF6}.`,[`${commonF6}(${termStr(innerA6,"x")}+${innerB6})`,`${commonF6}(${termStr(innerA6,"x")} + ${innerB6})`],"Divide both terms by the negative common factor.",`${commonF6*innerA6}x${secondTerm6<0?"−":"+"}${Math.abs(secondTerm6)}=${commonF6}(${termStr(innerA6,"x")}+${innerB6}).`),
+  ];
+};
+
+const structuredRoundingS9 = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const mant1=r(1,9)+r(0,9)/10,exp1=r(3,8),num1=Math.round(mant1*(10**exp1));
+    const mant2=r(1,9)+r(0,9)/10,exp2=r(2,6);
+    const mant3=r(1,9),exp3=r(2,5),numSmall3=mant3/(10**exp3);
+    const roundedTo4=r(2,90),boundUpper4=roundedTo4+0.5;
+    const roundedTo5=r(2,90),boundLower5=roundedTo5-0.5;
+    const mant6a=r(1,9),exp6a=r(1,4),mant6b=r(1,9),exp6b=r(1,4);
+    return [
+      sq("s9-u3-f1","Write a number in standard form",difficulty,`Write ${num1} in standard form.`,[`${mant1}×10^${exp1}`,`${mant1}x10^${exp1}`,`${mant1}*10^${exp1}`],"Write it as a number between 1 and 10, multiplied by a power of 10.",`${num1}=${mant1}×10^${exp1}.`),
+      sq("s9-u3-f2","Convert standard form to an ordinary number",difficulty,`Write ${mant2}×10^${exp2} as an ordinary number.`,String(mant2*(10**exp2)),"Multiply the mantissa by the power of 10.",`${mant2}×10^${exp2}=${mant2*(10**exp2)}.`),
+      sq("s9-u3-f3","Write a small number in standard form",difficulty,`Write ${numSmall3} in standard form.`,[`${mant3}×10^-${exp3}`,`${mant3}x10^-${exp3}`,`${mant3}*10^-${exp3}`],"Small numbers use a negative power of 10.",`${numSmall3}=${mant3}×10^-${exp3}.`),
+      sq("s9-u3-f4","Find the upper bound",difficulty,`A length is measured as ${roundedTo4} cm, rounded to the nearest cm. Find the upper bound.`,String(boundUpper4),"Add half of the rounding interval.",`${roundedTo4}+0.5=${boundUpper4}.`),
+      sq("s9-u3-f5","Find the lower bound",difficulty,`A length is measured as ${roundedTo5} cm, rounded to the nearest cm. Find the lower bound.`,String(boundLower5),"Subtract half of the rounding interval.",`${roundedTo5}−0.5=${boundLower5}.`),
+      sq("s9-u3-f6","Multiply numbers in standard form",difficulty,`Calculate (${mant6a}×10^${exp6a}) × (${mant6b}×10^${exp6b}). Give your answer as an ordinary number.`,String(mant6a*mant6b*(10**(exp6a+exp6b))),"Multiply the mantissas and add the powers.",`${mant6a}×${mant6b}=${mant6a*mant6b}; 10^${exp6a}×10^${exp6b}=10^${exp6a+exp6b}.`),
+    ];
+  }
+  if (difficulty === "application") {
+    const popMant=r(1,9)+r(0,9)/10,popExp=r(6,9),popNum=Math.round(popMant*(10**popExp));
+    const microMant=r(1,9),microExp=r(3,7),microNum=microMant/(10**microExp);
+    const measured3=r(5,95),lower3=measured3-0.5,upper3=measured3+0.5;
+    const lenA4=r(10,50),lenB4=r(10,50),minPerim4=2*(lenA4-0.5+lenB4-0.5);
+    const resultMant5=[2,3][r(0,1)],mantB5=[2,3][r(0,1)],mantA5=resultMant5*mantB5,expB5=r(1,3),resultExp5=r(1,3),expA5=expB5+resultExp5;
+    const measured6=r(10,90);
+    return [
+      sq("s9-u3-a1","Write a large real-world number in standard form",difficulty,`A country's population is approximately ${popNum}. Write this in standard form.`,[`${popMant}×10^${popExp}`,`${popMant}x10^${popExp}`,`${popMant}*10^${popExp}`],"Write it as a number between 1 and 10, multiplied by a power of 10.",`${popNum}=${popMant}×10^${popExp}.`),
+      sq("s9-u3-a2","Write a small real-world measurement in standard form",difficulty,`A bacterium measures ${microNum} mm across. Write this in standard form.`,[`${microMant}×10^-${microExp}`,`${microMant}x10^-${microExp}`,`${microMant}*10^-${microExp}`],"Small measurements use a negative power of 10.",`${microNum}=${microMant}×10^-${microExp}.`),
+      sq("s9-u3-a3","Write an error interval",difficulty,`A rod is measured as ${measured3} cm, rounded to the nearest cm. Write the error interval as two bounds (lower, upper).`,[`${lower3},${upper3}`,`${lower3}, ${upper3}`],"Subtract and add half the rounding interval.",`${measured3}−0.5=${lower3}; ${measured3}+0.5=${upper3}.`),
+      sq("s9-u3-a4","Use bounds to find a minimum perimeter",difficulty,`Two lengths are measured as ${lenA4} cm and ${lenB4} cm, each rounded to the nearest cm. Find the smallest possible perimeter of a rectangle with these side lengths.`,String(minPerim4),"Use the lower bound of each length.",`2×((${lenA4}−0.5)+(${lenB4}−0.5))=${minPerim4}.`),
+      sq("s9-u3-a5","Divide numbers in standard form",difficulty,`Calculate (${mantA5}×10^${expA5}) ÷ (${mantB5}×10^${expB5}). Give your answer in standard form.`,[`${resultMant5}×10^${resultExp5}`,`${resultMant5}x10^${resultExp5}`,`${resultMant5}*10^${resultExp5}`],"Divide the mantissas and subtract the powers.",`${mantA5}÷${mantB5}=${resultMant5}; 10^${expA5}÷10^${expB5}=10^${resultExp5}.`),
+      sq("s9-u3-a6","Find the width of an error interval",difficulty,`A mass is recorded as ${measured6} kg, rounded to the nearest kg. Find the difference between the upper and lower bounds.`,"1","The bounds are always 1 unit apart when rounding to the nearest whole number.","Upper bound − lower bound = 1."),
+    ];
+  }
+  const roundedTo1=r(2,90),lower1=roundedTo1-0.5,upper1=roundedTo1+0.5;
+  const lenA2=r(10,50),lenB2=r(10,50),maxArea2=(lenA2+0.5)*(lenB2+0.5);
+  const wrongMant3=r(10,99),correctExp3=r(2,6),correctMantissa3=Number((wrongMant3/10).toFixed(1)).toString();
+  const mantA4=r(2,9),expA4=r(3,8),mantB4=r(2,9),expB4=r(3,8);
+  const roundedTo5=r(2,90);
+  return [
+    sq("s9-u3-r1","Write an error interval from a rounded value",difficulty,`A value rounds to ${roundedTo1} to the nearest whole number. Write the error interval as (lower, upper) bounds.`,[`${lower1},${upper1}`,`${lower1}, ${upper1}`],"Subtract and add half the rounding interval.",`${roundedTo1}−0.5=${lower1}; ${roundedTo1}+0.5=${upper1}.`),
+    sq("s9-u3-r2","Find a maximum area from bounds",difficulty,`Two lengths ${lenA2} cm and ${lenB2} cm are each rounded to the nearest cm. Find the largest possible area of a rectangle with these sides.`,String(maxArea2),"Use the upper bound of each length.",`(${lenA2}+0.5)×(${lenB2}+0.5)=${maxArea2}.`),
+    sq("s9-u3-r3","Correct an invalid standard-form mantissa",difficulty,`A learner writes a number in standard form as ${wrongMant3}×10^${correctExp3}, but the mantissa must be between 1 and 10. Rewrite this correctly in standard form.`,[`${correctMantissa3}×10^${correctExp3+1}`,`${correctMantissa3}x10^${correctExp3+1}`,`${correctMantissa3}*10^${correctExp3+1}`],"Divide the mantissa by 10 and increase the power by 1.",`${wrongMant3}×10^${correctExp3}=${correctMantissa3}×10^${correctExp3+1}.`),
+    sq("s9-u3-r4","Compare numbers in standard form",difficulty,`Which is larger: ${mantA4}×10^${expA4} or ${mantB4}×10^${expB4}?`,[expA4!==expB4?(expA4>expB4?`${mantA4}×10^${expA4}`:`${mantB4}×10^${expB4}`):(mantA4>=mantB4?`${mantA4}×10^${expA4}`:`${mantB4}×10^${expB4}`)],"Compare the powers of 10 first; only compare mantissas if the powers are equal.",`A larger power of 10 always means a larger number, regardless of mantissa.`),
+    sq("s9-u3-r5","Find the maximum rounding error",difficulty,`A value of ${roundedTo5} was obtained by rounding to the nearest whole number. What is the maximum possible error between this value and the true value?`,"0.5","The true value can differ by up to half the rounding interval.","The maximum possible error is 0.5."),
+    sq("s9-u3-r6","Reason about rounding precision",difficulty,"A measurement of 6.83 cm is to be stated to 2 significant figures. What is the resulting value?","6.8","Round to 2 significant figures, looking at the third digit to decide.","6.83 rounds to 6.8 (2 s.f.)."),
+  ];
+};
+
 const integers=()=>{const a=r(18,65),b=r(7,24),x=r(-12,-3),y=r(5,17);return[
   q(`Calculate ${a} + (${x}).`,String(a+x),"Adding a negative is subtraction.",`${a}+(${x})=${a+x}`),
   q(`Calculate ${b} - (${x}).`,String(b-x),"Subtracting a negative becomes addition.",`${b}-(${x})=${b-x}`),
@@ -823,9 +972,9 @@ export function makeUnitQuestions(chapter:string,difficulty:string){
     "s8-u14": structuredTransformations,
     "s8-u15": structuredMeasures,
     "s8-u16": structuredInvestigations,
-    "s9-u1": structuredIntegers,
-    "s9-u2": structuredExpressions,
-    "s9-u3": structuredRounding,
+    "s9-u1": structuredIntegersS9,
+    "s9-u2": structuredExpressionsS9,
+    "s9-u3": structuredRoundingS9,
     "s9-u5": structuredAngles,
     "s9-u6": structuredInvestigations,
     "s9-u7": structuredShapes,
