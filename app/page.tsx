@@ -113,6 +113,39 @@ const stage9Units: LowerSecondaryUnit[] = [
   { id:"s9-u15", strand:"Statistics", title:"15. Interpreting and discussing results", summary:"Evaluate evidence and communicate conclusions", icon:"▤" },
 ];
 
+type PhysicsUnit = { id: string; title: string; summary: string; icon: string; available: boolean };
+const igcsePhysicsUnits: PhysicsUnit[] = [
+  { id:"igcse-u1", title:"1. Physical quantities & measurement", summary:"SI units, conversions, precision and error types", icon:"⚖", available:true },
+  { id:"igcse-u2", title:"2. Motion", summary:"Speed, velocity, acceleration and motion graphs", icon:"→", available:false },
+  { id:"igcse-u3", title:"3. Mass, weight & density", summary:"Mass, weight, gravity and density calculations", icon:"◆", available:false },
+  { id:"igcse-u4", title:"4. Forces & their effects", summary:"Hooke's law, turning effects and equilibrium", icon:"↕", available:false },
+  { id:"igcse-u5", title:"5. Momentum", summary:"Momentum and conservation of momentum", icon:"⇒", available:false },
+  { id:"igcse-u6", title:"6. Energy, work & power", summary:"Energy transfers, work done and power", icon:"⚡", available:false },
+  { id:"igcse-u7", title:"7. Pressure", summary:"Pressure in solids, liquids and gases", icon:"▼", available:false },
+  { id:"igcse-u8", title:"8. Kinetic model of matter", summary:"States of matter and particle behaviour", icon:"◌", available:false },
+  { id:"igcse-u9", title:"9. Thermal properties & temperature", summary:"Thermal expansion, specific heat and temperature", icon:"🌡", available:false },
+  { id:"igcse-u10", title:"10. Thermal energy transfer", summary:"Conduction, convection and radiation", icon:"↺", available:false },
+  { id:"igcse-u11", title:"11. General wave properties", summary:"Wave terminology, speed, frequency and wavelength", icon:"∿", available:false },
+  { id:"igcse-u12", title:"12. Light", summary:"Reflection, refraction and lenses", icon:"☀", available:false },
+  { id:"igcse-u13", title:"13. Electromagnetic spectrum & sound", summary:"EM spectrum properties and sound waves", icon:"📡", available:false },
+  { id:"igcse-u14", title:"14. Magnetism", summary:"Magnetic fields, materials and electromagnets", icon:"🧲", available:false },
+  { id:"igcse-u15", title:"15. Electrical quantities & circuits", summary:"Current, voltage, resistance and circuits", icon:"⏚", available:false },
+  { id:"igcse-u16", title:"16. Electromagnetic effects & atomic physics", summary:"Induction, motors, generators and radioactivity", icon:"☢", available:false },
+];
+const asPhysicsUnits: PhysicsUnit[] = [
+  { id:"as-u1", title:"1. Physical quantities & units", summary:"SI units, errors and dimensional analysis", icon:"⚖", available:false },
+  { id:"as-u2", title:"2. Kinematics", summary:"Motion graphs, equations of motion and projectiles", icon:"→", available:false },
+  { id:"as-u3", title:"3. Dynamics", summary:"Newton's laws, momentum and collisions", icon:"⇒", available:false },
+  { id:"as-u4", title:"4. Forces, density & pressure", summary:"Equilibrium, moments, density and pressure", icon:"↕", available:false },
+  { id:"as-u5", title:"5. Work, energy & power", summary:"Work done, energy conservation and efficiency", icon:"⚡", available:false },
+  { id:"as-u6", title:"6. Deformation of solids", summary:"Hooke's law, stress, strain and the Young modulus", icon:"◆", available:false },
+  { id:"as-u7", title:"7. Waves", summary:"Wave properties, the Doppler effect and EM waves", icon:"∿", available:false },
+  { id:"as-u8", title:"8. Superposition", summary:"Interference, diffraction and stationary waves", icon:"≈", available:false },
+  { id:"as-u9", title:"9. Electricity", summary:"Current, resistance, resistivity and power", icon:"⏚", available:false },
+  { id:"as-u10", title:"10. D.C. circuits", summary:"Circuit analysis, EMF and internal resistance", icon:"⎋", available:false },
+  { id:"as-u11", title:"11. Particle physics", summary:"Atomic structure, particles and radiation", icon:"☢", available:false },
+];
+
 export default function Home() {
   return (
     <main className="portal-app">
@@ -779,6 +812,111 @@ function PastPaperPracticeCrop({source}:{source:PastPaperPracticeSource}){
 }
 
 type CrossStagePracticeUnit = LowerSecondaryUnit & { sourceStage: 7 | 8 | 9 };
+
+function PhysicsStudent({ back }:{ back:()=>void }) {
+  const [level, setLevel] = useState<"igcse"|"as">("igcse");
+  const [progress,setProgress]=useState<Record<string,{attempts:number;average:number;strong_sets:number;mastered:boolean}>>({});
+  const [practice,setPractice]=useState<PhysicsUnit|null>(null);
+  const [session,setSession]=useState<{id:string;level:string;chapter:string;difficulty:string;questions:Array<{templateId?:string;objective?:string;difficulty?:string;answerFormat?:string;prompt:string;hint:string}>}|null>(null);
+  const [answers,setAnswers]=useState<string[]>([]),[hints,setHints]=useState<boolean[]>([]),[cursor,setCursor]=useState(0),[result,setResult]=useState<any>(null),[message,setMessage]=useState("");
+  const units = level==="as" ? asPhysicsUnits : igcsePhysicsUnits;
+
+  useEffect(()=>{
+    fetch(`/api/physics/practice?level=${level}&all=1`).then(response=>response.json()).then(data=>{
+      const next:Record<string,any>={};
+      (Array.isArray(data.units)?data.units:[]).forEach((item:any)=>next[item.chapter_id]=item);
+      setProgress(next);
+    }).catch(()=>{});
+  },[level]);
+
+  const startPractice=async(unit:PhysicsUnit)=>{
+    if(!unit.available){setMessage(`${unit.title} is coming soon.`);return;}
+    setMessage("Preparing a fresh practice set…");
+    const response=await fetch("/api/physics/practice",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"start",level,chapter:unit.id})});
+    const data=await response.json();
+    if(!response.ok){setMessage(data.error||"Practice could not start.");return;}
+    setPractice(unit);setSession(data);setAnswers(Array(data.questions.length).fill(""));setHints(Array(data.questions.length).fill(false));setCursor(0);setResult(null);setMessage("");
+  };
+  const submitPractice=async()=>{
+    if(!session||!practice)return;
+    setMessage("Marking and saving your set…");
+    const response=await fetch("/api/physics/practice",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"submit",id:session.id,answers,hints})});
+    const data=await response.json();
+    if(!response.ok){setMessage(data.error||"The set could not be saved.");return;}
+    setResult(data);
+    setProgress(current=>({...current,[practice.id]:{attempts:(current[practice.id]?.attempts||0)+1,average:data.score,strong_sets:data.strong_sets,mastered:data.mastered}}));
+    setMessage("");
+  };
+  const closePractice=()=>{setPractice(null);setSession(null);setResult(null);setMessage("");};
+
+  if(practice&&session){
+    const question=session.questions[cursor];
+    if(result)
+      return <section className="stage7-practice panel practice-summary">
+        <header><button onClick={closePractice}>← Curriculum</button><div><small>{level.toUpperCase()} PHYSICS · PRACTICE COMPLETE</small><h2>{practice.title}</h2></div><span>{result.mastered?"Mastered":"Keep practising"}</span></header>
+        <main>
+          <div className="mastery-score"><b>{result.score}%</b><span>{result.score>=80?"Strong set achieved":"Target: 80%"}</span></div>
+          <h2>{result.mastered?"Unit mastery achieved":"Your worked review"}</h2>
+          <p>{result.strong_sets} of 2 strong sets completed · {result.hints_used} hints used</p>
+          <div className="worked-review">{result.results.map((item:any,index:number)=>
+            <article className={item.correct?"correct":"retry"} key={index}>
+              <span>{item.correct?"✓":"!"}</span>
+              <div><b>Question {index+1}: {item.prompt}</b><p>Your answer: {item.answer||"No answer"}</p><strong>{item.solution}</strong></div>
+            </article>
+          )}</div>
+        </main>
+        <footer><button onClick={closePractice}>Return to curriculum</button><button className="primary" onClick={()=>startPractice(practice)}>Start a fresh set →</button></footer>
+      </section>;
+    return <section className="stage7-practice panel">
+      <header><button onClick={closePractice}>← Curriculum</button><div><small>{level.toUpperCase()} PHYSICS · {session.difficulty.toUpperCase()}</small><h2>{practice.title}</h2></div><span>Question {cursor+1} of {session.questions.length}</span></header>
+      <div className="practice-progress"><i style={{width:`${((cursor+1)/session.questions.length)*100}%`}}/></div>
+      <main>
+        <small>QUESTION {cursor+1}</small>
+        {question.objective&&<p className="practice-objective">{question.objective}</p>}
+        <h1>{question.prompt}</h1>
+        {hints[cursor]&&<p className="practice-hint">Hint: {question.hint}</p>}
+        <label>Your answer{question.answerFormat&&<small className="answer-format">Answer format: {question.answerFormat}</small>}
+          <input value={answers[cursor]} placeholder={question.answerFormat||"Enter your answer"} onChange={event=>setAnswers(answers.map((value,index)=>index===cursor?event.target.value:value))} onKeyDown={event=>{if(event.key==="Enter"){event.preventDefault();cursor<session.questions.length-1?setCursor(cursor+1):submitPractice();}}} autoFocus/>
+        </label>
+      </main>
+      <footer>
+        <button onClick={()=>setHints(hints.map((value,index)=>index===cursor?true:value))}>{hints[cursor]?"Hint shown":"Show hint"}</button>
+        <div>
+          <button disabled={cursor===0} onClick={()=>setCursor(cursor-1)}>← Previous</button>
+          {cursor<session.questions.length-1?<button className="primary" onClick={()=>setCursor(cursor+1)}>Next →</button>:<button className="primary" onClick={submitPractice}>Finish &amp; mark set →</button>}
+        </div>
+      </footer>
+      {message&&<p className="queue-message">{message}</p>}
+    </section>;
+  }
+
+  return <>
+    <div className="portal-heading">
+      <div><p>CAMBRIDGE PHYSICS</p><h1>Physics practice</h1><h2>Generated practice questions with instant, reliable marking — separate from your assigned past papers.</h2></div>
+      <div className="stage89-switch">
+        <button className={level==="igcse"?"primary":""} onClick={()=>setLevel("igcse")}>IGCSE Physics</button>
+        <button className={level==="as"?"primary":""} onClick={()=>setLevel("as")}>AS Level Physics</button>
+        <button onClick={back}>← Assigned papers</button>
+      </div>
+    </div>
+    {message&&<p className="queue-message panel">{message}</p>}
+    <div className="stage7-library-head">
+      <div><small>{level.toUpperCase()} CURRICULUM</small><h2>Topic library</h2><p>New topics are added regularly — available ones are ready to practise now.</p></div>
+      <span>{units.filter(unit=>progress[unit.id]?.mastered).length} of {units.filter(unit=>unit.available).length} mastered</span>
+    </div>
+    <div className="stage7-chapter-grid student">{units.map(unit=>{
+      const item=progress[unit.id];
+      return <article key={unit.id} className={unit.available?"":"locked"}>
+        <span>{unit.icon}</span>
+        <small>{level.toUpperCase()} Physics</small>
+        <h3>{unit.title}</h3>
+        <p>{unit.summary}</p>
+        <div><em>{!unit.available?"Coming soon":item?.mastered?"Mastered":item?.attempts?"In progress":"Not started"}</em><b>{unit.available&&item?.attempts?`${item.average}%`:"—"}</b></div>
+        <button disabled={!unit.available} onClick={()=>startPractice(unit)}>{unit.available?"Practise unit →":"Coming soon"}</button>
+      </article>;
+    })}</div>
+  </>;
+}
 
 function Stage89Student({ back }:{ back:()=>void }) {
   const [homeStage, setHomeStage] = useState<8 | 9>(8);
@@ -3984,6 +4122,7 @@ function Submissions() {
     "attention" | "ready" | "published" | "all"
   >("attention");
   const [markCursor, setMarkCursor] = useState(0);
+  const [remarking, setRemarking] = useState(false);
   const [handwrittenPage, setHandwrittenPage] = useState(0);
   const [queueAction, setQueueAction] = useState("");
   const [message, setMessage] = useState("Loading submissions…");
@@ -4202,6 +4341,33 @@ function Submissions() {
             <h2>{active.title}</h2>
           </div>
           <button onClick={() => setActive(null)}>← Marking queue</button>
+          <button
+            className="remark-submission"
+            disabled={remarking}
+            onClick={async () => {
+              setRemarking(true);
+              setMessage("Re-running automatic marking…");
+              try {
+                const response = await fetch(`/api/submissions/${active.id}/remark`, { method: "POST" });
+                if (!response.ok) {
+                  const data = await response.json().catch(() => ({}));
+                  setMessage(data.error || "Re-marking failed.");
+                  return;
+                }
+                await load();
+                const refreshed = await fetch("/api/submissions").then((r) => r.json()).catch(() => []);
+                const updated = Array.isArray(refreshed) ? refreshed.find((item: any) => item.id === active.id) : null;
+                if (updated) openReview(updated);
+                setMessage("Automatic marking updated. Any marks you've already confirmed were left untouched.");
+              } catch {
+                setMessage("Re-marking failed. Check your connection and try again.");
+              } finally {
+                setRemarking(false);
+              }
+            }}
+          >
+            {remarking ? "Re-marking…" : "↻ Re-run automatic marking"}
+          </button>
         </div>
         <section className="moderation-toolbar panel">
           <div>
@@ -5967,7 +6133,7 @@ function AnswerWorkspace({
 
 function StudentPortal({ switchRole }: { switchRole: () => void }) {
   const [started, setStarted] = useState(false);
-  const [studentArea, setStudentArea] = useState<"papers" | "stage7" | "stage89">("papers");
+  const [studentArea, setStudentArea] = useState<"papers" | "stage7" | "stage89" | "physics">("papers");
   const [activeAssignment, setActiveAssignment] = useState<{
     id: string;
     title: string;
@@ -6025,6 +6191,9 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
       <button className={studentArea === "stage89" ? "active" : ""} onClick={() => setStudentArea("stage89")}>
         <span>8</span>Stages 8 &amp; 9
       </button>
+      <button className={studentArea === "physics" ? "active" : ""} onClick={() => setStudentArea("physics")}>
+        <span>⚛</span>Physics practice
+      </button>
     </nav>
   );
   if (activeAssignment)
@@ -6073,6 +6242,12 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
     return (
       <Shell role="Student" onSwitch={switchRole} nav={cleanNav}>
         <Stage89Student back={() => setStudentArea("papers")} />
+      </Shell>
+    );
+  if (studentArea === "physics")
+    return (
+      <Shell role="Student" onSwitch={switchRole} nav={cleanNav}>
+        <PhysicsStudent back={() => setStudentArea("papers")} />
       </Shell>
     );
   return (
