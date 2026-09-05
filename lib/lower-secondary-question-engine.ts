@@ -1027,6 +1027,157 @@ const structuredShapesS9 = (difficulty:"foundational"|"application"|"reasoning")
   ];
 };
 
+const coefN2 = (a:number) => a===1 ? "n²" : `${a}n²`;
+const coefVar = (a:number, sym:string) => a===1 ? sym : `${a}${sym}`;
+const signedTerm = (value:number) => value<0 ? `- ${Math.abs(value)}` : `+ ${value}`;
+
+const structuredSequencesS9 = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const aQuad1=r(1,3),cQuad1=r(1,9),terms1=[1,2,3,4].map(n=>aQuad1*n*n+cQuad1);
+    const ratio2=[2,3][r(0,1)],start2=r(2,5),nthTerm2=start2*(ratio2**3);
+    const aQuad3=r(1,3),cQuad3=r(1,9),nVal3=r(5,10);
+    const t1_4=r(2,8),t2_4=t1_4*[2,3][r(0,1)];
+    const aQuad5=r(1,3),cQuad5=r(1,9),secondDiff5=2*aQuad5;
+    const ratio6=[2,3][r(0,1)],start6=r(2,4),nVal6=r(5,6);
+    return [
+      sq("s9-u9-f1","Find the next term of a quadratic sequence",difficulty,`Find the next term: ${terms1.join(", ")}, ...`,String(aQuad1*25+cQuad1),"Look at how the differences between terms are themselves changing.",`The 5th term is ${aQuad1}(5²)+${cQuad1}=${aQuad1*25+cQuad1}.`),
+      sq("s9-u9-f2","Find a term of a geometric sequence",difficulty,`A geometric sequence starts at ${start2} with common ratio ${ratio2}. Find the 4th term.`,String(nthTerm2),"Multiply by the common ratio three times from the first term.",`${start2}×${ratio2}³=${nthTerm2}.`),
+      sq("s9-u9-f3","Evaluate a quadratic sequence's nth term",difficulty,`A sequence has nth term ${coefN2(aQuad3)} + ${cQuad3}. Find the ${nVal3}th term.`,String(aQuad3*nVal3*nVal3+cQuad3),"Substitute the term number for n.",`${aQuad3}(${nVal3}²)+${cQuad3}=${aQuad3*nVal3*nVal3+cQuad3}.`),
+      sq("s9-u9-f4","Find the common ratio of a geometric sequence",difficulty,`A geometric sequence has first term ${t1_4} and second term ${t2_4}. Find the common ratio.`,String(t2_4/t1_4),"Divide the second term by the first.",`${t2_4}÷${t1_4}=${t2_4/t1_4}.`),
+      sq("s9-u9-f5","Find the second difference of a quadratic sequence",difficulty,`A sequence has nth term ${coefN2(aQuad5)} + ${cQuad5}. Find the second difference between consecutive terms.`,String(secondDiff5),"The second difference of an² + c is always 2a.",`2×${aQuad5}=${secondDiff5}.`),
+      sq("s9-u9-f6","Find a later term of a geometric sequence",difficulty,`A geometric sequence starts at ${start6} with common ratio ${ratio6}. Find the ${nVal6}th term.`,String(start6*(ratio6**(nVal6-1))),"Multiply by the common ratio (n-1) times from the first term.",`${start6}×${ratio6}^${nVal6-1}=${start6*(ratio6**(nVal6-1))}.`),
+    ];
+  }
+  if (difficulty === "application") {
+    const startPop1=r(2,9)*10,ratio1=[2,3][r(0,1)],hours1=r(2,4),finalPop1=startPop1*(ratio1**hours1);
+    const sideDots2=r(2,8),totalDots2=sideDots2*sideDots2;
+    const startVal3=r(50,200)*4,steps3=r(2,3),finalVal3=startVal3/(2**steps3);
+    const aQuad4=r(1,3),cQuad4=r(1,9),patternN4=r(6,10);
+    const principal5=r(2,9)*100,ratePercent5=[10,20,25,50][r(0,3)],years5=r(2,3);
+    const aQuad6=r(1,3),cQuad6=r(1,9),targetN6=r(3,7);
+    return [
+      sq("s9-u9-a1","Apply geometric growth",difficulty,`A bacteria culture starts at ${startPop1} and multiplies by ${ratio1} every hour. Find the population after ${hours1} hours.`,String(finalPop1),"Multiply the starting population by the ratio raised to the number of hours.",`${startPop1}×${ratio1}^${hours1}=${finalPop1}.`),
+      sq("s9-u9-a2","Apply a quadratic pattern",difficulty,`A square pattern has ${sideDots2} dots along each side, arranged in a full square grid. Find the total number of dots.`,String(totalDots2),"Square the number of dots along one side.",`${sideDots2}²=${totalDots2}.`),
+      sq("s9-u9-a3","Apply geometric decay",difficulty,`A radioactive sample starts at ${startVal3} g and halves every hour. Find the mass after ${steps3} hours.`,String(finalVal3),"Divide by 2 for each hour that passes.",`${startVal3}÷2^${steps3}=${finalVal3}.`),
+      sq("s9-u9-a4","Apply a quadratic sequence in context",difficulty,`A tiling pattern has ${coefN2(aQuad4)} + ${cQuad4} tiles in row n. Find the number of tiles in row ${patternN4}.`,String(aQuad4*patternN4*patternN4+cQuad4),"Substitute the row number for n.",`${aQuad4}(${patternN4}²)+${cQuad4}=${aQuad4*patternN4*patternN4+cQuad4}.`),
+      sq("s9-u9-a5","Apply geometric growth to compound interest",difficulty,`R${principal5} is invested at a growth rate that multiplies the amount by ${1+ratePercent5/100} each year (${ratePercent5}% growth). Find the value after ${years5} years.`,String(Math.round(principal5*((1+ratePercent5/100)**years5)*100)/100),"Multiply the principal by the growth factor raised to the number of years.",`R${principal5}×${1+ratePercent5/100}^${years5}.`),
+      sq("s9-u9-a6","Apply a quadratic sequence to area growth",difficulty,`A sequence models the area of a growing pattern: ${coefN2(aQuad6)} + ${cQuad6}. Find the area at stage ${targetN6}.`,String(aQuad6*targetN6*targetN6+cQuad6),"Substitute the stage number for n.",`${aQuad6}(${targetN6}²)+${cQuad6}=${aQuad6*targetN6*targetN6+cQuad6}.`),
+    ];
+  }
+  const aQuad1=r(1,3),cQuad1=r(1,9);
+  const start2=r(2,5),ratio2=[2,3][r(0,1)],targetVal2=start2*(ratio2**4);
+  const aQuad3=r(1,3),cQuad3=r(1,9),wrongDiff3=2*aQuad3+r(1,3);
+  const start4=r(2,4),ratio4=[2,3][r(0,1)];
+  const ratio5=[2,3][r(0,1)],start5=r(2,4);
+  const aQuad6=r(1,3),cQuad6=r(1,9),n6=r(4,8);
+  return [
+    sq("s9-u9-r1","Classify a sequence as linear or quadratic",difficulty,`A sequence has nth term ${coefN2(aQuad1)} + ${cQuad1}. Is this a linear or quadratic sequence?`,"quadratic","A squared term in the nth term makes it quadratic.","The n² term makes this a quadratic sequence."),
+    sq("s9-u9-r2","Find which term first exceeds a value",difficulty,`A geometric sequence starts at ${start2} with common ratio ${ratio2}. Which term number first exceeds ${targetVal2-1}?`,"5","Work out consecutive terms until one exceeds the target.",`The 5th term is ${targetVal2}, which exceeds ${targetVal2-1}.`),
+    sq("s9-u9-r3","Correct a second-difference error",difficulty,`A learner says the sequence with nth term ${coefN2(aQuad3)} + ${cQuad3} has a constant second difference of ${wrongDiff3}. Enter the correct second difference.`,String(2*aQuad3),"The second difference of an² + c is always 2a.",`2×${aQuad3}=${2*aQuad3}.`),
+    sq("s9-u9-r4","Reason about increasing or decreasing geometric sequences",difficulty,`A geometric sequence starts at ${start4} with common ratio ${ratio4}. Is the sequence increasing or decreasing?`,[ratio4>1?"increasing":"decreasing"],"A ratio greater than 1 makes terms grow; less than 1 makes them shrink.",`A ratio of ${ratio4} means the sequence is ${ratio4>1?"increasing":"decreasing"}.`),
+    sq("s9-u9-r5","Find the sum of terms in a geometric sequence",difficulty,`A geometric sequence has first term ${start5} and common ratio ${ratio5}. Find the sum of the first 3 terms.`,String(start5+start5*ratio5+start5*ratio5*ratio5),"Add the first three terms individually.",`${start5}+${start5*ratio5}+${start5*ratio5*ratio5}=${start5+start5*ratio5+start5*ratio5*ratio5}.`),
+    sq("s9-u9-r6","Correct a linear-vs-quadratic misconception",difficulty,`A sequence has nth term ${coefN2(aQuad6)} + ${cQuad6}. A learner assumes it is linear and predicts the ${n6}th term by adding a constant difference each time. Find the actual ${n6}th term.`,String(aQuad6*n6*n6+cQuad6),"Substitute the term number directly into the quadratic formula.",`${aQuad6}(${n6}²)+${cQuad6}=${aQuad6*n6*n6+cQuad6}.`),
+  ];
+};
+
+const structuredGraphsS9 = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const cQuad1=r(1,9),xVal1=r(2,6),yVal1=xVal1*xVal1+cQuad1;
+    const aQuad2=r(2,4),xVal2=r(2,5),yVal2=aQuad2*xVal2*xVal2;
+    const bLin3=r(1,9),cQuad3=r(1,9);
+    const diffCoef4=r(2,4),xSol4=r(2,8);
+    const rootA5=r(1,6),rootB5=r(1,6);
+    const cQuad6=r(-9,-1);
+    return [
+      sq("s9-u10-f1","Evaluate a quadratic function",difficulty,`For y = x² + ${cQuad1}, find y when x = ${xVal1}.`,String(yVal1),"Square x, then add the constant.",`${xVal1}²+${cQuad1}=${yVal1}.`),
+      sq("s9-u10-f2","Evaluate y=ax²",difficulty,`For y = ${aQuad2}x², find y when x = ${xVal2}.`,String(yVal2),"Square x, then multiply by the coefficient.",`${aQuad2}×${xVal2}²=${yVal2}.`),
+      sq("s9-u10-f3","Find the y-intercept of a quadratic",difficulty,`Find the y-intercept of y = x² + ${bLin3}x + ${cQuad3}.`,String(cQuad3),"The y-intercept is the constant term.",`The y-intercept is ${cQuad3}.`),
+      sq("s9-u10-f4","Solve simultaneous equations by substitution",difficulty,`Solve simultaneously: y = ${diffCoef4}x, and x + y = ${xSol4 + xSol4*diffCoef4}. Find x.`,String(xSol4),"Substitute y = kx into the second equation and solve for x.",`x(1+${diffCoef4})=${xSol4 + xSol4*diffCoef4}, so x=${xSol4}.`),
+      sq("s9-u10-f5","Write a quadratic in factorised form",difficulty,`A quadratic graph crosses the x-axis at x = ${rootA5} and x = -${rootB5}. Write the factorised equation in the form (x - a)(x + b) = 0.`,[`(x-${rootA5})(x+${rootB5})`,`(x - ${rootA5})(x + ${rootB5})`],"Each root gives one factor of the equation.",`Roots at ${rootA5} and -${rootB5} give (x-${rootA5})(x+${rootB5})=0.`),
+      sq("s9-u10-f6","Find the minimum value of a quadratic",difficulty,`For y = x² ${signedTerm(cQuad6)}, find the minimum value of y.`,String(cQuad6),"The minimum of x² + c occurs at x=0, giving y=c.",`The minimum value is ${cQuad6}.`),
+    ];
+  }
+  if (difficulty === "application") {
+    const initHeight1=r(1,9)*10,timeVal1=r(2,5),dropCoef1=r(1,3),height1=initHeight1-dropCoef1*timeVal1*timeVal1;
+    const sideLen2=r(2,10);
+    const priceA3=r(2,9),priceB3=r(2,9),qtyA3=r(1,5),qtyB3=r(1,5),total3=priceA3*qtyA3+priceB3*qtyB3;
+    const cQuad4=r(1,9),xForTargetY4=r(2,8),targetY4=xForTargetY4*xForTargetY4+cQuad4;
+    const costFixed5=r(10,50),costPerItem5=r(2,9),qty5=r(2,8),total5=costFixed5+costPerItem5*qty5;
+    const aQuad6=r(1,3),cQuad6=r(1,9);
+    return [
+      sq("s9-u10-a1","Apply a quadratic height model",difficulty,`A ball's height is modelled by h = ${initHeight1} - ${dropCoef1}t², where t is time in seconds. Find the height after ${timeVal1} seconds.`,String(height1),"Square the time, multiply by the coefficient, then subtract from the initial height.",`${initHeight1}−${dropCoef1}(${timeVal1}²)=${height1}.`),
+      sq("s9-u10-a2","Write and evaluate an area function",difficulty,`A square garden has side length ${sideLen2} m. Write an expression for its area in the form y = x², then evaluate it for x = ${sideLen2}.`,String(sideLen2*sideLen2),"Square the side length.",`${sideLen2}²=${sideLen2*sideLen2}.`),
+      sq("s9-u10-a3","Verify a total cost equation",difficulty,`${qtyA3} apples at R${priceA3} each and ${qtyB3} oranges at R${priceB3} each cost a total of R${total3}. If apples cost R${priceA3} each, write this as an equation and confirm the total.`,String(total3),"Multiply each price by its quantity, then add.",`${qtyA3}×R${priceA3}+${qtyB3}×R${priceB3}=R${total3}.`),
+      sq("s9-u10-a4","Solve a quadratic for x",difficulty,`For y = x² + ${cQuad4}, find a positive value of x that gives y = ${targetY4}.`,String(xForTargetY4),"Subtract the constant, then take the square root.",`√(${targetY4}−${cQuad4})=${xForTargetY4}.`),
+      sq("s9-u10-a5","Apply a linear cost model",difficulty,`A phone plan costs R${costFixed5} plus R${costPerItem5} per GB. Find the total cost for ${qty5} GB.`,String(total5),"Multiply the rate by the amount, then add the fixed cost.",`R${costFixed5}+${qty5}×R${costPerItem5}=R${total5}.`),
+      sq("s9-u10-a6","Apply a quadratic model in context",difficulty,`A ball's height follows y = ${coefVar(aQuad6,"x²")} + ${cQuad6} (in metres, x = time in seconds). Find the height at x = 3 seconds.`,String(aQuad6*9+cQuad6),"Substitute x=3 into the formula.",`${aQuad6}(3²)+${cQuad6}=${aQuad6*9+cQuad6}.`),
+    ];
+  }
+  const coefY1=r(2,5),xSol1=r(2,8),sumTotal1=xSol1+xSol1*coefY1;
+  const cQuad2=r(1,9),xVal2=r(2,7),yVal2=xVal2*xVal2+cQuad2;
+  const bLin3=r(1,9),wrongIntercept3=r(1,9);
+  const coefA4=r(2,4),coefB4=r(2,4);
+  const aQuad5=r(1,3),cQuad5=r(1,9);
+  const cQuad6=r(-9,-1);
+  return [
+    sq("s9-u10-r1","Solve simultaneous equations for y",difficulty,`Solve simultaneously: y = ${coefY1}x, and x + y = ${sumTotal1}. Find y.`,String(xSol1*coefY1),"Find x first, then substitute to find y.",`x=${xSol1}, so y=${coefY1}×${xSol1}=${xSol1*coefY1}.`),
+    sq("s9-u10-r2","Use quadratic symmetry",difficulty,`For y = x² + ${cQuad2}, if x = ${xVal2} gives y = ${yVal2}, what other value of x also gives y = ${yVal2}?`,String(-xVal2),"A quadratic graph is symmetric about x=0.",`x=-${xVal2} gives the same y-value.`),
+    sq("s9-u10-r3","Correct a y-intercept error",difficulty,`A learner says the y-intercept of y = x² + ${bLin3}x + ${wrongIntercept3} is ${bLin3}. Enter the correct y-intercept.`,String(wrongIntercept3),"The y-intercept is the constant term, not the coefficient of x.",`The y-intercept is ${wrongIntercept3}.`),
+    sq("s9-u10-r4","Reason about lines with a shared intercept",difficulty,`Two lines y = ${coefA4}x + 5 and y = ${coefB4}x + 5 are graphed. At what x-value do they always intersect (regardless of the coefficients, since they share this point)?`,"0","Both lines share the same y-intercept.","They intersect at x=0, where both give y=5."),
+    sq("s9-u10-r5","Reason about a quadratic's minimum",difficulty,`For y = ${coefVar(aQuad5,"x²")} + ${cQuad5}, is the minimum value of y equal to ${cQuad5}? Answer yes or no.`,"yes","The minimum of ax² + c (for positive a) occurs at x=0.","Yes — the minimum value is always the constant term."),
+    sq("s9-u10-r6","Reason about x-axis intersections",difficulty,`For y = x² ${signedTerm(cQuad6)}, a learner says the graph never crosses the x-axis. Is this correct? Answer yes or no.`,"no","A negative constant means the graph dips below the x-axis.","No — since the constant is negative, the graph does cross the x-axis."),
+  ];
+};
+
+const structuredRatioS9 = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const time1=r(2,8),speed1=r(10,90),dist1=speed1*time1;
+    const vol2=r(2,10),density2=r(2,9),mass2=density2*vol2;
+    const area3=r(2,10),pressure3=r(2,15),force3=pressure3*area3;
+    const speed4=r(2,9)*10,time4=r(2,8),dist4=speed4*time4;
+    const density5=r(2,9),vol5=r(2,10),mass5=density5*vol5;
+    const densityKgM6=r(2,9)*1000;
+    return [
+      sq("s9-u11-f1","Calculate speed",difficulty,`A car travels ${dist1} km in ${time1} hours. Find its average speed in km/h.`,String(dist1/time1),"Divide distance by time.",`${dist1}÷${time1}=${dist1/time1} km/h.`),
+      sq("s9-u11-f2","Calculate density",difficulty,`An object has mass ${mass2} g and volume ${vol2} cm³. Find its density in g/cm³.`,String(density2),"Divide mass by volume.",`${mass2}÷${vol2}=${density2} g/cm³.`),
+      sq("s9-u11-f3","Calculate pressure",difficulty,`A force of ${force3} N acts on an area of ${area3} m². Find the pressure in N/m².`,String(pressure3),"Divide force by area.",`${force3}÷${area3}=${pressure3} N/m².`),
+      sq("s9-u11-f4","Calculate distance from speed and time",difficulty,`A car travels at ${speed4} km/h for ${time4} hours. Find the distance travelled.`,String(dist4),"Multiply speed by time.",`${speed4}×${time4}=${dist4} km.`),
+      sq("s9-u11-f5","Calculate mass from density and volume",difficulty,`A material has density ${density5} g/cm³ and volume ${vol5} cm³. Find its mass.`,String(mass5),"Multiply density by volume.",`${density5}×${vol5}=${mass5} g.`),
+      sq("s9-u11-f6","Convert density units",difficulty,`Convert a density of ${densityKgM6} kg/m³ to g/cm³.`,String(densityKgM6/1000),"Divide by 1000 to convert kg/m³ to g/cm³.",`${densityKgM6}÷1000=${densityKgM6/1000} g/cm³.`),
+    ];
+  }
+  if (difficulty === "application") {
+    const time1=r(2,6),speed1=r(60,120),dist1=speed1*time1;
+    const vol2=r(2,8),density2=[2,3,7,8][r(0,3)],mass2=density2*vol2;
+    const area3=r(2,8),pressure3=r(20,100),force3=pressure3*area3;
+    const speed4=r(20,80),timeAns4=r(2,8),dist4=speed4*timeAns4;
+    const density5=[8,11][r(0,1)],vol5=r(2,10),mass5=density5*vol5;
+    const pressure6=r(2,10),areaAns6=r(2,20),force6=pressure6*areaAns6;
+    return [
+      sq("s9-u11-a1","Calculate distance in context",difficulty,`A train travels at ${speed1} km/h for ${time1} hours. Find the distance travelled.`,String(dist1),"Multiply speed by time.",`${speed1}×${time1}=${dist1} km.`),
+      sq("s9-u11-a2","Calculate mass in context",difficulty,`A metal block has density ${density2} g/cm³ and volume ${vol2} cm³. Find its mass.`,String(mass2),"Multiply density by volume.",`${density2}×${vol2}=${mass2} g.`),
+      sq("s9-u11-a3","Calculate pressure in context",difficulty,`A force of ${force3} N is applied over an area of ${area3} m². Find the pressure.`,String(pressure3),"Divide force by area.",`${force3}÷${area3}=${pressure3} N/m².`),
+      sq("s9-u11-a4","Calculate time from distance and speed",difficulty,`A cyclist travels ${dist4} km at a speed of ${speed4} km/h. Find the time taken (in hours).`,String(timeAns4),"Divide distance by speed.",`${dist4}÷${speed4}=${timeAns4} hours.`),
+      sq("s9-u11-a5","Calculate mass in a real-world context",difficulty,`A gold bar has density ${density5} g/cm³. If its volume is ${vol5} cm³, find its mass.`,String(mass5),"Multiply density by volume.",`${density5}×${vol5}=${mass5} g.`),
+      sq("s9-u11-a6","Calculate area from force and pressure",difficulty,`A force of ${force6} N is spread over an area, creating a pressure of ${pressure6} N/m². Find the area.`,String(areaAns6),"Divide force by pressure.",`${force6}÷${pressure6}=${areaAns6} m².`),
+    ];
+  }
+  const time1=r(2,8),speedAns1=r(30,90),dist1=speedAns1*time1,wrongSpeed1=dist1*time1;
+  const densityA2=[8,11][r(0,1)],densityB2=[2,3][r(0,1)],vol2=r(4,10);
+  const speed3=r(40,100),time3=r(2,6),dist3=speed3*time3;
+  const pressure4=r(2,8),area4=r(2,10),force4=pressure4*area4;
+  const density5=r(2,9),vol5=r(2,8),mass5=density5*vol5;
+  const speed6=r(30,90),time6=r(2,6);
+  return [
+    sq("s9-u11-r1","Correct a speed-calculation error",difficulty,`A learner finds speed by multiplying distance and time instead of dividing, getting ${wrongSpeed1} for a journey of ${dist1} km in ${time1} hours. Enter the correct speed.`,String(speedAns1),"Speed is distance divided by time, not multiplied.",`${dist1}÷${time1}=${speedAns1} km/h.`),
+    sq("s9-u11-r2","Compare densities at equal volume",difficulty,`Material A has density ${densityA2} g/cm³ and Material B has density ${densityB2} g/cm³. For the same volume of ${vol2} cm³, which material has the greater mass, A or B?`,[densityA2>densityB2?"a":"b","material a"],"A higher density means more mass for the same volume.","Material A has the greater density, so the greater mass."),
+    sq("s9-u11-r3","State a compound measure with correct units",difficulty,`A car travels ${dist3} km in ${time3} hours. A learner calculates the speed but forgets the units. State the correct speed with units (km/h).`,[`${speed3}km/h`,`${speed3} km/h`],"Divide distance by time, and don't forget the units.",`${dist3}÷${time3}=${speed3} km/h.`),
+    sq("s9-u11-r4","Reason about pressure and area",difficulty,`Given force = ${force4} N and area = ${area4} m², find the pressure, then state whether increasing the area would increase or decrease the pressure (for the same force).`,"decrease","Pressure is inversely related to area for a fixed force.","Increasing the area, with force fixed, decreases the pressure."),
+    sq("s9-u11-r5","Correct a volume-calculation error",difficulty,`An object has density ${density5} g/cm³ and mass ${mass5} g. A learner tries to find the volume by multiplying density and mass. Enter the correct volume.`,String(vol5),"Volume is mass divided by density, not multiplied.",`${mass5}÷${density5}=${vol5} cm³.`),
+    sq("s9-u11-r6","Reason about proportional change in distance",difficulty,`A car travels at ${speed6} km/h. If the time is doubled from ${time6} hours, does the distance travelled double, triple, or stay the same?`,"double","Distance is directly proportional to time for constant speed.","Doubling the time doubles the distance."),
+  ];
+};
+
 const integers=()=>{const a=r(18,65),b=r(7,24),x=r(-12,-3),y=r(5,17);return[
   q(`Calculate ${a} + (${x}).`,String(a+x),"Adding a negative is subtraction.",`${a}+(${x})=${a+x}`),
   q(`Calculate ${b} - (${x}).`,String(b-x),"Subtracting a negative becomes addition.",`${b}-(${x})=${b-x}`),
@@ -1128,9 +1279,9 @@ export function makeUnitQuestions(chapter:string,difficulty:string){
     "s9-u6": structuredInvestigations,
     "s9-u7": structuredShapesS9,
     "s9-u8": structuredFractionsS9,
-    "s9-u9": structuredSequences,
-    "s9-u10": structuredGraphs,
-    "s9-u11": structuredRatio,
+    "s9-u9": structuredSequencesS9,
+    "s9-u10": structuredGraphsS9,
+    "s9-u11": structuredRatioS9,
     "s9-u12": structuredProbability,
     "s9-u13": structuredTransformations,
     "s9-u14": structuredMeasures,
