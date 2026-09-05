@@ -1374,6 +1374,55 @@ const structuredInvestigationsS9 = (difficulty:"foundational"|"application"|"rea
   ];
 };
 
+const structuredEquationsS9 = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const a1=r(2,9),xAns1=r(2,10),b1=a1*xAns1;
+    const a2=r(2,7),xAns2=r(2,10),c2=r(1,9),b2=a2*xAns2+c2;
+    const a3=r(3,7),d3=r(2,a3-1),xAns3=r(2,8),c3=r(1,9),e3=(a3-d3)*xAns3+c3;
+    const a4=r(2,6),b4=r(1,8),xAns4=r(2,8),rhs4=a4*(xAns4+b4);
+    const a5=r(2,6),xAns5=r(2,10),c5=r(1,9),b5=a5*xAns5+c5;
+    const a6=r(2,6),xAns6=a6*r(2,6),c6=r(1,9),rhs6=xAns6/a6+c6;
+    return [
+      sq("s9-u4-f1","Solve a one-step equation",difficulty,`Solve ${a1}x = ${b1}.`,String(xAns1),"Divide both sides by the coefficient of x.",`${b1}÷${a1}=${xAns1}.`),
+      sq("s9-u4-f2","Solve a two-step equation",difficulty,`Solve ${a2}x + ${c2} = ${b2}.`,String(xAns2),"Subtract the constant, then divide by the coefficient of x.",`(${b2}−${c2})÷${a2}=${xAns2}.`),
+      sq("s9-u4-f3","Solve an equation with x on both sides",difficulty,`Solve ${a3}x + ${c3} = ${d3}x + ${e3}.`,String(xAns3),"Collect the x terms on one side and the constants on the other.",`(${a3}−${d3})x=${e3}−${c3}, so x=${xAns3}.`),
+      sq("s9-u4-f4","Solve an equation with brackets",difficulty,`Solve ${a4}(x + ${b4}) = ${rhs4}.`,String(xAns4),"Divide by the outside number first, then subtract.",`x+${b4}=${rhs4/a4}, so x=${xAns4}.`),
+      sq("s9-u4-f5","Solve a linear inequality",difficulty,`Solve the inequality ${a5}x + ${c5} > ${b5}.`,[`x>${xAns5}`,`x > ${xAns5}`],"Subtract the constant, then divide by the coefficient of x.",`${a5}x>${b5-c5}, so x>${xAns5}.`),
+      sq("s9-u4-f6","Solve an equation with a fraction",difficulty,`Solve x/${a6} + ${c6} = ${rhs6}.`,String(xAns6),"Subtract the constant, then multiply by the denominator.",`(x/${a6})=${rhs6-c6}, so x=${xAns6}.`),
+    ];
+  }
+  if (difficulty === "application") {
+    const perKg1=r(2,9),xAns1=r(2,15),total1=perKg1*xAns1;
+    const fixed2=r(10,40),perUnit2=r(2,9),xAns2=r(2,10),total2=fixed2+perUnit2*xAns2;
+    const priceB3=r(3,7),priceA3=priceB3+r(1,4),xAns3=r(2,10),fixedB3=(priceA3-priceB3)*xAns3;
+    const fixed4=r(10,40),perItem4=r(2,9),xAns4=r(2,10),budgetVal4=fixed4+perItem4*xAns4;
+    const width5=r(2,8),xAns5=r(2,10),area5=width5*(xAns5+r(1,5)),b5=area5/width5-xAns5;
+    const xAns6=r(5,30),total6=3*xAns6+3;
+    return [
+      sq("s9-u4-a1","Form and solve an equation from a shopping context",difficulty,`Apples cost R${perKg1} per kg. A shopper spends R${total1} on apples. Write and solve an equation to find how many kg were bought.`,String(xAns1),"Divide the total spent by the price per kg.",`R${total1}÷R${perKg1}=${xAns1} kg.`),
+      sq("s9-u4-a2","Form and solve an equation from a fixed-plus-rate context",difficulty,`A taxi charges a fixed R${fixed2} plus R${perUnit2} per km. A trip costs R${total2}. Write and solve an equation to find the number of km travelled.`,String(xAns2),"Subtract the fixed charge, then divide by the rate.",`(R${total2}−R${fixed2})÷R${perUnit2}=${xAns2} km.`),
+      sq("s9-u4-a3","Find a break-even point",difficulty,`Plan A costs R${priceA3} per visit. Plan B costs R${priceB3} per visit plus a R${fixedB3} joining fee. For how many visits, x, do both plans cost the same? (Set up ${priceA3}x = ${priceB3}x + ${fixedB3} and solve.)`,String(xAns3),"Collect the x terms on one side and solve.",`(${priceA3}−${priceB3})x=${fixedB3}, so x=${xAns3}.`),
+      sq("s9-u4-a4","Solve an equation from a cost context",difficulty,`A stall has a fixed cost of R${fixed4} plus R${perItem4} per item made. Find the number of items, x, that gives a total cost of exactly R${budgetVal4}.`,String(xAns4),"Subtract the fixed cost, then divide by the cost per item.",`(R${budgetVal4}−R${fixed4})÷R${perItem4}=${xAns4}.`),
+      sq("s9-u4-a5","Solve an equation from an area context",difficulty,`A rectangular garden has width ${width5} m. Its length is (x + ${b5}) m, and its area is ${area5} m². Find x.`,String(xAns5),"Divide the area by the width, then subtract the constant.",`${area5}÷${width5}=${area5/width5}, so x=${xAns5}.`),
+      sq("s9-u4-a6","Solve a consecutive-integers word problem",difficulty,`Three consecutive integers sum to ${total6}. Find the smallest integer.`,String(xAns6),"Let the smallest be x; the others are x+1 and x+2.",`3x+3=${total6}, so x=${xAns6}.`),
+    ];
+  }
+  const a1=r(2,7),c1=r(1,9),xAns1=r(2,10),b1=a1*xAns1+c1,wrongAns1=xAns1+r(1,3);
+  const a2=r(-6,-2),c2=r(1,9),xAns2=r(2,10),b2=a2*xAns2+c2;
+  const priceB3=r(3,7),priceA3=priceB3+r(1,4),xAns3=r(2,10),fixedB3=(priceA3-priceB3)*xAns3;
+  const a4=r(-5,-2),c4=r(1,9),xAns4=r(2,10),b4=a4*xAns4+c4;
+  const xCheck5=r(2,10),a5=r(2,7),c5=r(1,9),rhs5=a5*xCheck5+c5,wrongCheck5=xCheck5+1;
+  const a6=r(2,6),xAns6=r(2,8),c6=r(1,9),b6=a6*xAns6+c6;
+  return [
+    sq("s9-u4-r1","Correct an equation-solving error",difficulty,`A learner solves ${a1}x + ${c1} = ${b1} and gets x = ${wrongAns1}. Enter the correct solution.`,String(xAns1),"Subtract the constant, then divide by the coefficient of x.",`(${b1}−${c1})÷${a1}=${xAns1}.`),
+    sq("s9-u4-r2","Solve an equation with a negative coefficient",difficulty,`Solve ${a2}x + ${c2} = ${b2}. (Notice the coefficient of x is negative.)`,String(xAns2),"Subtract the constant, then divide by the negative coefficient.",`(${b2}−${c2})÷${a2}=${xAns2}.`),
+    sq("s9-u4-r3","Reason beyond a break-even point",difficulty,`Plan A costs R${priceA3} per visit. Plan B costs R${priceB3} per visit plus a R${fixedB3} joining fee. After how many visits does Plan A start costing more than Plan B (i.e. beyond the break-even point)?`,String(xAns3+1),"Find the break-even point first, then consider the next whole visit.",`Break-even is at ${xAns3} visits, so Plan A costs more from visit ${xAns3+1} onward.`),
+    sq("s9-u4-r4","Solve an inequality with a sign flip",difficulty,`Solve the inequality ${a4}x + ${c4} < ${b4}. Remember to flip the inequality sign when dividing by a negative number.`,[`x>${xAns4}`,`x > ${xAns4}`],"Dividing by a negative number reverses the inequality sign.",`${a4}x<${b4-c4}, and dividing by ${a4} flips the sign to x>${xAns4}.`),
+    sq("s9-u4-r5","Verify a solution by substitution",difficulty,`A learner checks if x = ${wrongCheck5} is a solution to ${a5}x + ${c5} = ${rhs5} by substituting. Is x = ${wrongCheck5} correct? Answer yes or no.`,"no","Substitute the value into the equation and check both sides match.",`${a5}(${wrongCheck5})+${c5}≠${rhs5}, so no.`),
+    sq("s9-u4-r6","Solve and classify a solution",difficulty,`Solve ${a6}x + ${c6} = ${b6}, then state whether the solution is a positive or negative number.`,"positive","Solve the equation, then check the sign of the result.",`x=${xAns6}, which is positive.`),
+  ];
+};
+
 const integers=()=>{const a=r(18,65),b=r(7,24),x=r(-12,-3),y=r(5,17);return[
   q(`Calculate ${a} + (${x}).`,String(a+x),"Adding a negative is subtraction.",`${a}+(${x})=${a+x}`),
   q(`Calculate ${b} - (${x}).`,String(b-x),"Subtracting a negative becomes addition.",`${b}-(${x})=${b-x}`),
@@ -1471,6 +1520,7 @@ export function makeUnitQuestions(chapter:string,difficulty:string){
     "s9-u1": structuredIntegersS9,
     "s9-u2": structuredExpressionsS9,
     "s9-u3": structuredRoundingS9,
+    "s9-u4": structuredEquationsS9,
     "s9-u5": structuredAnglesS9,
     "s9-u6": structuredInvestigationsS9,
     "s9-u7": structuredShapesS9,
