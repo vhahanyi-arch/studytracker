@@ -8,8 +8,9 @@ import {
   UserButton,
   useUser,
 } from "@clerk/nextjs";
+import { igcsePhysicsSyllabus } from "@/lib/physics-syllabus";
 type Role = "choose" | "teacher" | "student";
-type TeacherView = "dashboard" | "stage7" | "stage89" | "papers" | "students" | "submissions";
+type TeacherView = "dashboard" | "stage7" | "stage89" | "physics" | "papers" | "students" | "submissions";
 type AssignmentSummary = {
   id: string;
   title: string;
@@ -111,6 +112,44 @@ const stage9Units: LowerSecondaryUnit[] = [
   { id:"s9-u13", strand:"Geometry and Measure", title:"13. Position and transformation", summary:"Coordinates, vectors and transformations", icon:"↻" },
   { id:"s9-u14", strand:"Geometry and Measure", title:"14. Volume, surface area and symmetry", summary:"Three-dimensional measures and symmetry", icon:"▣" },
   { id:"s9-u15", strand:"Statistics", title:"15. Interpreting and discussing results", summary:"Evaluate evidence and communicate conclusions", icon:"▤" },
+];
+
+type PhysicsUnit = { id: string; title: string; summary: string; icon: string; available: boolean };
+const igcsePhysicsUnits: PhysicsUnit[] = [
+  { id:"igcse-u1", title:"1.1 Physical quantities & measurement", summary:"SI units, conversions, precision and error types", icon:"⚖", available:true },
+  { id:"igcse-u2", title:"1.2 Motion", summary:"Speed, velocity, acceleration and motion graphs", icon:"→", available:false },
+  { id:"igcse-u3", title:"1.3–1.4 Mass, weight & density", summary:"Mass, weight, gravity and density calculations", icon:"◆", available:false },
+  { id:"igcse-u4", title:"1.5 Forces & their effects", summary:"Hooke's law, turning effects and equilibrium", icon:"↕", available:false },
+  { id:"igcse-u5", title:"1.6 Momentum", summary:"Momentum and conservation of momentum", icon:"⇒", available:false },
+  { id:"igcse-u6", title:"1.7 Energy, work & power", summary:"Energy transfers, work done and power", icon:"⚡", available:false },
+  { id:"igcse-u7", title:"1.8 Pressure", summary:"Pressure in solids, liquids and gases", icon:"▼", available:false },
+  { id:"igcse-u8", title:"2.1 Kinetic model of matter", summary:"States of matter and particle behaviour", icon:"◌", available:false },
+  { id:"igcse-u9", title:"2.2 Thermal properties & temperature", summary:"Thermal expansion, specific heat and temperature", icon:"🌡", available:false },
+  { id:"igcse-u10", title:"2.3 Thermal energy transfer", summary:"Conduction, convection and radiation", icon:"↺", available:false },
+  { id:"igcse-u11", title:"3.1 General wave properties", summary:"Wave terminology, speed, frequency and wavelength", icon:"∿", available:false },
+  { id:"igcse-u12", title:"3.2 Light", summary:"Reflection, refraction and lenses", icon:"☀", available:false },
+  { id:"igcse-u13", title:"3.3–3.4 Electromagnetic spectrum & sound", summary:"EM spectrum properties and sound waves", icon:"📡", available:false },
+  { id:"igcse-u14", title:"4.1 Magnetism", summary:"Magnetic fields, materials and electromagnets", icon:"🧲", available:true },
+  { id:"igcse-u15", title:"4.2 Electrical quantities", summary:"Charge, current, e.m.f., p.d., resistance and power", icon:"⏚", available:true },
+  { id:"igcse-u16", title:"4.3 Electric circuits", summary:"Circuit diagrams, series and parallel circuits", icon:"🔌", available:true },
+  { id:"igcse-u17", title:"4.4 Electrical safety", summary:"Hazards, fuses, earthing and double insulation", icon:"⚠", available:true },
+  { id:"igcse-u18", title:"4.5 Electromagnetic effects", summary:"Induction, generators, motors and transformers", icon:"🔄", available:true },
+  { id:"igcse-u19", title:"5.1 The nuclear model of the atom", summary:"Atomic structure, protons, neutrons and isotopes", icon:"⚛", available:false },
+  { id:"igcse-u20", title:"5.2 Radioactivity", summary:"Nuclear radiation, decay and half-life", icon:"☢", available:false },
+  { id:"igcse-u21", title:"6.1–6.2 Space physics", summary:"The Solar System, stars and the Universe", icon:"🌌", available:false },
+];
+const asPhysicsUnits: PhysicsUnit[] = [
+  { id:"as-u1", title:"1. Physical quantities & units", summary:"SI units, errors and dimensional analysis", icon:"⚖", available:false },
+  { id:"as-u2", title:"2. Kinematics", summary:"Motion graphs, equations of motion and projectiles", icon:"→", available:false },
+  { id:"as-u3", title:"3. Dynamics", summary:"Newton's laws, momentum and collisions", icon:"⇒", available:false },
+  { id:"as-u4", title:"4. Forces, density & pressure", summary:"Equilibrium, moments, density and pressure", icon:"↕", available:false },
+  { id:"as-u5", title:"5. Work, energy & power", summary:"Work done, energy conservation and efficiency", icon:"⚡", available:false },
+  { id:"as-u6", title:"6. Deformation of solids", summary:"Hooke's law, stress, strain and the Young modulus", icon:"◆", available:false },
+  { id:"as-u7", title:"7. Waves", summary:"Wave properties, the Doppler effect and EM waves", icon:"∿", available:false },
+  { id:"as-u8", title:"8. Superposition", summary:"Interference, diffraction and stationary waves", icon:"≈", available:false },
+  { id:"as-u9", title:"9. Electricity", summary:"Current, resistance, resistivity and power", icon:"⏚", available:false },
+  { id:"as-u10", title:"10. D.C. circuits", summary:"Circuit analysis, EMF and internal resistance", icon:"⎋", available:false },
+  { id:"as-u11", title:"11. Particle physics", summary:"Atomic structure, particles and radiation", icon:"☢", available:false },
 ];
 
 export default function Home() {
@@ -333,6 +372,7 @@ function TeacherPortal({ switchRole }: { switchRole: () => void }) {
           ["dashboard", "⌂", "Overview"],
           ["stage7", "7", "Stage 7 mastery"],
           ["stage89", "8", "Stages 8 & 9"],
+          ["physics", "⚛", "Physics practice"],
           ["papers", "▤", "Papers & assignments"],
           ["submissions", "✓", "Marking queue"],
           ["students", "♙", "Students"],
@@ -357,6 +397,8 @@ function TeacherPortal({ switchRole }: { switchRole: () => void }) {
         <Stage7Teacher />
       ) : view === "stage89" ? (
         <Stage89Teacher />
+      ) : view === "physics" ? (
+        <PhysicsTeacher />
       ) : view === "papers" ? (
         <Papers upload={() => setModal(true)} />
       ) : view === "submissions" ? (
@@ -711,6 +753,92 @@ function PastPaperLibrary({stage}:{stage:8|9}){
   return <section className="panel past-paper-library"><header><div><small>TEACHER-CONTROLLED SOURCE LIBRARY</small><h3>Stage {stage} past papers</h3><p>Upload a question paper with its mark scheme, then approve every detected question before it joins practice.</p></div><button className="primary" onClick={()=>setShowUpload(value=>!value)}>{showUpload?"Cancel":"＋ Upload paper"}</button></header>{message&&<p className="queue-message">{message}</p>}{showUpload&&<form className="past-paper-upload" onSubmit={upload}><label>Paper title<input name="title" placeholder={`Stage ${stage} End-of-year paper`} required/></label><label>Year or session<input name="year" placeholder="2025" required/></label><label>Question paper PDF<input name="paper" type="file" accept="application/pdf,.pdf" required/></label><label>Mark scheme PDF<input name="scheme" type="file" accept="application/pdf,.pdf" required/></label><button className="primary" disabled={uploading}>{uploading?"Uploading…":"Save to library →"}</button></form>}<div className="past-paper-grid">{papers.map(paper=><article key={paper.id}><span>PDF</span><div><b>{paper.title}</b><small>Stage {stage} · {paper.source_year||"Year not set"}</small><em className={paper.status==="assigned"?"paper-ready":"paper-paused"}>{paper.status==="assigned"?"Approved for practice":"Teacher setup required"}</em></div><div className="past-paper-actions"><button onClick={()=>setReviewing(paper)}>Review uploaded files</button><button onClick={()=>setSetup(paper)}>{paper.status==="assigned"?"Review questions":"Set up questions"} →</button></div></article>)}{!papers.length&&!showUpload&&<p className="dashboard-empty">No Stage {stage} past papers have been uploaded yet.</p>}</div>{reviewing&&<FileReview assignment={reviewing} close={()=>setReviewing(null)} openSetup={()=>{setSetup(reviewing);setReviewing(null);}} replaced={(status,notice)=>{setPapers(current=>current.map(paper=>paper.id===reviewing.id?{...paper,status}:paper));setReviewing(current=>current?{...current,status}:current);setMessage(notice);}}/>}{setup&&<QuestionSetup assignment={setup} close={()=>setSetup(null)} saved={()=>{setPapers(current=>current.map(paper=>paper.id===setup.id?{...paper,status:"assigned"}:paper));setMessage("Questions approved. Eligible typed questions can now be selected for Stage practice.");setSetup(null);}}/>}</section>;
 }
 
+function PhysicsSyllabusChecklist({ level }:{ level:"igcse"|"as" }) {
+  const [checked,setChecked]=useState<Set<string>>(new Set());
+  const [state,setState]=useState("Loading syllabus checklist…");
+  const syllabus = level==="igcse" ? igcsePhysicsSyllabus : [];
+  useEffect(()=>{
+    setState("Loading syllabus checklist…");
+    fetch(`/api/physics/checklist?level=${level}`).then(response=>response.json()).then(data=>{
+      setChecked(new Set(Array.isArray(data.checked)?data.checked:[]));
+      setState(level==="as"?"AS Level syllabus content is coming soon.":"");
+    }).catch(()=>setState("The checklist could not be loaded."));
+  },[level]);
+  const toggle=async(objectiveId:string)=>{
+    setChecked(current=>{const next=new Set(current);next.has(objectiveId)?next.delete(objectiveId):next.add(objectiveId);return next;});
+    await fetch("/api/physics/checklist",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({level,objectiveId})});
+  };
+  const totalObjectives = syllabus.reduce((sum,topic)=>sum+topic.groups.reduce((s,g)=>s+g.objectives.length,0),0);
+  return <div className="syllabus-checklist">
+    {state && <p className="queue-message panel">{state}</p>}
+    {!!totalObjectives && <p className="checklist-progress"><b>{checked.size} of {totalObjectives} objectives checked</b><span>{Math.round((checked.size/totalObjectives)*100)}%</span></p>}
+    {syllabus.map(topic=>(
+      <details key={topic.id} className="syllabus-topic">
+        <summary>{topic.id}. {topic.title}</summary>
+        {topic.groups.map(group=>(
+          <div key={group.id} className="syllabus-group">
+            <h4>{group.id} {group.title}</h4>
+            {group.objectives.map(objective=>(
+              <label key={objective.id} className={objective.type}>
+                <input type="checkbox" checked={checked.has(objective.id)} onChange={()=>toggle(objective.id)}/>
+                <span>{objective.text}</span>
+                <em>{objective.type}</em>
+              </label>
+            ))}
+          </div>
+        ))}
+      </details>
+    ))}
+  </div>;
+}
+
+function PhysicsTeacher() {
+  const [level,setLevel]=useState<"igcse"|"as">("igcse");
+  const [view,setView]=useState<"progress"|"checklist">("progress");
+  const [students,setStudents]=useState<Array<{student_id:string;student_name:string;chapter_id:string;attempts:number;average:number;strong_sets:number;mastered:boolean;last_active:string}>>([]);
+  const [state,setState]=useState("Loading physics practice activity…");
+  const units = level==="as" ? asPhysicsUnits : igcsePhysicsUnits;
+  const titleFor = (chapterId:string) => units.find(unit=>unit.id===chapterId)?.title || chapterId;
+  useEffect(()=>{
+    if(view!=="progress")return;
+    setState("Loading physics practice activity…");
+    fetch(`/api/physics/practice?level=${level}`).then(response=>response.json()).then(data=>{
+      setStudents(Array.isArray(data.students)?data.students:[]);
+      setState(Array.isArray(data.students)&&!data.students.length ? "No students have practised yet." : "");
+    }).catch(()=>setState("Physics practice activity could not be loaded."));
+  },[level,view]);
+  return <>
+    <div className="portal-heading">
+      <div><p>PHYSICS</p><h1>Physics practice</h1><h2>See how students are progressing through generated IGCSE and AS Level Physics practice sets.</h2></div>
+      <div className="stage89-switch">
+        <button className={level==="igcse"?"primary":""} onClick={()=>setLevel("igcse")}>IGCSE Physics</button>
+        <button className={level==="as"?"primary":""} onClick={()=>setLevel("as")}>AS Level Physics</button>
+      </div>
+    </div>
+    <div className="stage89-switch">
+      <button className={view==="progress"?"primary":""} onClick={()=>setView("progress")}>Student progress</button>
+      <button className={view==="checklist"?"primary":""} onClick={()=>setView("checklist")}>Syllabus checklist</button>
+    </div>
+    {view==="checklist" ? <PhysicsSyllabusChecklist level={level} /> : <>
+    {state && <p className="queue-message panel">{state}</p>}
+    {!!students.length && <table className="mastery-table">
+      <thead><tr><th>Student</th><th>Topic</th><th>Attempts</th><th>Average</th><th>Strong sets</th><th>Status</th><th>Last active</th></tr></thead>
+      <tbody>{students.map((row,index)=>
+        <tr key={index}>
+          <td>{row.student_name}</td>
+          <td>{titleFor(row.chapter_id)}</td>
+          <td>{row.attempts}</td>
+          <td>{row.average}%</td>
+          <td>{row.strong_sets} / 2</td>
+          <td>{row.mastered?"Mastered":"In progress"}</td>
+          <td>{row.last_active ? new Date(row.last_active).toLocaleDateString() : "—"}</td>
+        </tr>
+      )}</tbody>
+    </table>}
+    </>}
+  </>;
+}
+
 function Stage89Teacher() {
   const [stage, setStage] = useState<8 | 9>(8);
   const [focus, setFocus] = useState<string[]>([]);
@@ -779,6 +907,118 @@ function PastPaperPracticeCrop({source}:{source:PastPaperPracticeSource}){
 }
 
 type CrossStagePracticeUnit = LowerSecondaryUnit & { sourceStage: 7 | 8 | 9 };
+
+function PhysicsStudent({ back }:{ back:()=>void }) {
+  const [level, setLevel] = useState<"igcse"|"as">("igcse");
+  const [libraryView,setLibraryView]=useState<"topics"|"checklist">("topics");
+  const [progress,setProgress]=useState<Record<string,{attempts:number;average:number;strong_sets:number;mastered:boolean}>>({});
+  const [practice,setPractice]=useState<PhysicsUnit|null>(null);
+  const [session,setSession]=useState<{id:string;level:string;chapter:string;difficulty:string;questions:Array<{templateId?:string;objective?:string;difficulty?:string;answerFormat?:string;prompt:string;hint:string}>}|null>(null);
+  const [answers,setAnswers]=useState<string[]>([]),[hints,setHints]=useState<boolean[]>([]),[cursor,setCursor]=useState(0),[result,setResult]=useState<any>(null),[message,setMessage]=useState("");
+  const units = level==="as" ? asPhysicsUnits : igcsePhysicsUnits;
+
+  useEffect(()=>{
+    fetch(`/api/physics/practice?level=${level}&all=1`).then(response=>response.json()).then(data=>{
+      const next:Record<string,any>={};
+      (Array.isArray(data.units)?data.units:[]).forEach((item:any)=>next[item.chapter_id]=item);
+      setProgress(next);
+    }).catch(()=>{});
+  },[level]);
+
+  const startPractice=async(unit:PhysicsUnit)=>{
+    if(!unit.available){setMessage(`${unit.title} is coming soon.`);return;}
+    setMessage("Preparing a fresh practice set…");
+    const response=await fetch("/api/physics/practice",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"start",level,chapter:unit.id})});
+    const data=await response.json();
+    if(!response.ok){setMessage(data.error||"Practice could not start.");return;}
+    setPractice(unit);setSession(data);setAnswers(Array(data.questions.length).fill(""));setHints(Array(data.questions.length).fill(false));setCursor(0);setResult(null);setMessage("");
+  };
+  const submitPractice=async()=>{
+    if(!session||!practice)return;
+    setMessage("Marking and saving your set…");
+    const response=await fetch("/api/physics/practice",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"submit",id:session.id,answers,hints})});
+    const data=await response.json();
+    if(!response.ok){setMessage(data.error||"The set could not be saved.");return;}
+    setResult(data);
+    setProgress(current=>({...current,[practice.id]:{attempts:(current[practice.id]?.attempts||0)+1,average:data.score,strong_sets:data.strong_sets,mastered:data.mastered}}));
+    setMessage("");
+  };
+  const closePractice=()=>{setPractice(null);setSession(null);setResult(null);setMessage("");};
+
+  if(practice&&session){
+    const question=session.questions[cursor];
+    if(result)
+      return <section className="stage7-practice panel practice-summary">
+        <header><button onClick={closePractice}>← Curriculum</button><div><small>{level.toUpperCase()} PHYSICS · PRACTICE COMPLETE</small><h2>{practice.title}</h2></div><span>{result.mastered?"Mastered":"Keep practising"}</span></header>
+        <main>
+          <div className="mastery-score"><b>{result.score}%</b><span>{result.score>=80?"Strong set achieved":"Target: 80%"}</span></div>
+          <h2>{result.mastered?"Unit mastery achieved":"Your worked review"}</h2>
+          <p>{result.strong_sets} of 2 strong sets completed · {result.hints_used} hints used</p>
+          <div className="worked-review">{result.results.map((item:any,index:number)=>
+            <article className={item.correct?"correct":"retry"} key={index}>
+              <span>{item.correct?"✓":"!"}</span>
+              <div><b>Question {index+1}: {item.prompt}</b><p>Your answer: {item.answer||"No answer"}</p><strong>{item.solution}</strong></div>
+            </article>
+          )}</div>
+        </main>
+        <footer><button onClick={closePractice}>Return to curriculum</button><button className="primary" onClick={()=>startPractice(practice)}>Start a fresh set →</button></footer>
+      </section>;
+    return <section className="stage7-practice panel">
+      <header><button onClick={closePractice}>← Curriculum</button><div><small>{level.toUpperCase()} PHYSICS · {session.difficulty.toUpperCase()}</small><h2>{practice.title}</h2></div><span>Question {cursor+1} of {session.questions.length}</span></header>
+      <div className="practice-progress"><i style={{width:`${((cursor+1)/session.questions.length)*100}%`}}/></div>
+      <main>
+        <small>QUESTION {cursor+1}</small>
+        {question.objective&&<p className="practice-objective">{question.objective}</p>}
+        <h1>{question.prompt}</h1>
+        {hints[cursor]&&<p className="practice-hint">Hint: {question.hint}</p>}
+        <label>Your answer{question.answerFormat&&<small className="answer-format">Answer format: {question.answerFormat}</small>}
+          <input value={answers[cursor]} placeholder={question.answerFormat||"Enter your answer"} onChange={event=>setAnswers(answers.map((value,index)=>index===cursor?event.target.value:value))} onKeyDown={event=>{if(event.key==="Enter"){event.preventDefault();cursor<session.questions.length-1?setCursor(cursor+1):submitPractice();}}} autoFocus/>
+        </label>
+      </main>
+      <footer>
+        <button onClick={()=>setHints(hints.map((value,index)=>index===cursor?true:value))}>{hints[cursor]?"Hint shown":"Show hint"}</button>
+        <div>
+          <button disabled={cursor===0} onClick={()=>setCursor(cursor-1)}>← Previous</button>
+          {cursor<session.questions.length-1?<button className="primary" onClick={()=>setCursor(cursor+1)}>Next →</button>:<button className="primary" onClick={submitPractice}>Finish &amp; mark set →</button>}
+        </div>
+      </footer>
+      {message&&<p className="queue-message">{message}</p>}
+    </section>;
+  }
+
+  return <>
+    <div className="portal-heading">
+      <div><p>CAMBRIDGE PHYSICS</p><h1>Physics practice</h1><h2>Generated practice questions with instant, reliable marking — separate from your assigned past papers.</h2></div>
+      <div className="stage89-switch">
+        <button className={level==="igcse"?"primary":""} onClick={()=>setLevel("igcse")}>IGCSE Physics</button>
+        <button className={level==="as"?"primary":""} onClick={()=>setLevel("as")}>AS Level Physics</button>
+        <button onClick={back}>← Assigned papers</button>
+      </div>
+    </div>
+    <div className="stage89-switch">
+      <button className={libraryView==="topics"?"primary":""} onClick={()=>setLibraryView("topics")}>Topic library</button>
+      <button className={libraryView==="checklist"?"primary":""} onClick={()=>setLibraryView("checklist")}>Syllabus checklist</button>
+    </div>
+    {libraryView==="checklist" ? <PhysicsSyllabusChecklist level={level} /> : <>
+    {message&&<p className="queue-message panel">{message}</p>}
+    <div className="stage7-library-head">
+      <div><small>{level.toUpperCase()} CURRICULUM</small><h2>Topic library</h2><p>New topics are added regularly — available ones are ready to practise now.</p></div>
+      <span>{units.filter(unit=>progress[unit.id]?.mastered).length} of {units.filter(unit=>unit.available).length} mastered</span>
+    </div>
+    <div className="stage7-chapter-grid student">{units.map(unit=>{
+      const item=progress[unit.id];
+      return <article key={unit.id} className={unit.available?"":"locked"}>
+        <span>{unit.icon}</span>
+        <small>{level.toUpperCase()} Physics</small>
+        <h3>{unit.title}</h3>
+        <p>{unit.summary}</p>
+        <div><em>{!unit.available?"Coming soon":item?.mastered?"Mastered":item?.attempts?"In progress":"Not started"}</em><b>{unit.available&&item?.attempts?`${item.average}%`:"—"}</b></div>
+        <button disabled={!unit.available} onClick={()=>startPractice(unit)}>{unit.available?"Practise unit →":"Coming soon"}</button>
+      </article>;
+    })}</div>
+    </>}
+  </>;
+}
 
 function Stage89Student({ back }:{ back:()=>void }) {
   const [homeStage, setHomeStage] = useState<8 | 9>(8);
@@ -5967,7 +6207,7 @@ function AnswerWorkspace({
 
 function StudentPortal({ switchRole }: { switchRole: () => void }) {
   const [started, setStarted] = useState(false);
-  const [studentArea, setStudentArea] = useState<"papers" | "stage7" | "stage89">("papers");
+  const [studentArea, setStudentArea] = useState<"papers" | "stage7" | "stage89" | "physics">("papers");
   const [activeAssignment, setActiveAssignment] = useState<{
     id: string;
     title: string;
@@ -6025,6 +6265,9 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
       <button className={studentArea === "stage89" ? "active" : ""} onClick={() => setStudentArea("stage89")}>
         <span>8</span>Stages 8 &amp; 9
       </button>
+      <button className={studentArea === "physics" ? "active" : ""} onClick={() => setStudentArea("physics")}>
+        <span>⚛</span>Physics practice
+      </button>
     </nav>
   );
   if (activeAssignment)
@@ -6073,6 +6316,12 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
     return (
       <Shell role="Student" onSwitch={switchRole} nav={cleanNav}>
         <Stage89Student back={() => setStudentArea("papers")} />
+      </Shell>
+    );
+  if (studentArea === "physics")
+    return (
+      <Shell role="Student" onSwitch={switchRole} nav={cleanNav}>
+        <PhysicsStudent back={() => setStudentArea("papers")} />
       </Shell>
     );
   return (

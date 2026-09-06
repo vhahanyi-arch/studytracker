@@ -180,6 +180,36 @@ async function initializeSchema() {
       PRIMARY KEY (teacher_id, student_id, stage)
     )
   `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS physics_practice_sessions (
+      id UUID PRIMARY KEY,
+      student_id TEXT NOT NULL,
+      teacher_id TEXT,
+      level TEXT NOT NULL,
+      chapter_id TEXT NOT NULL,
+      difficulty TEXT NOT NULL,
+      questions_json TEXT NOT NULL,
+      answers_json TEXT,
+      hints_used INTEGER NOT NULL DEFAULT 0,
+      score INTEGER,
+      status TEXT NOT NULL DEFAULT 'open',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      completed_at TIMESTAMPTZ
+    )
+  `;
+  await sql`
+    ALTER TABLE physics_practice_sessions
+    ADD COLUMN IF NOT EXISTS teacher_id TEXT
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS physics_syllabus_checklist (
+      user_id TEXT NOT NULL,
+      objective_id TEXT NOT NULL,
+      level TEXT NOT NULL DEFAULT 'igcse',
+      checked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (user_id, objective_id, level)
+    )
+  `;
 }
 
 export async function ensureSchema() {
