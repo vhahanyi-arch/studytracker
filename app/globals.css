@@ -4528,3 +4528,146 @@ label {
   .question-upload-list article { grid-template-columns: 1fr auto; }
   .question-upload-list article > span { grid-column: 1 / -1; }
 }
+
+/* ---------- Physics: mastery-table (teacher progress view) ---------- */
+.mastery-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  overflow: hidden;
+  font-size: 14px;
+}
+.mastery-table th,
+.mastery-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+.mastery-table th {
+  background: var(--paper);
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.mastery-table tr:last-child td {
+  border-bottom: none;
+}
+.mastery-table tr:hover td {
+  background: var(--paper);
+}
+
+/* ---------- Physics: syllabus checklist ---------- */
+.syllabus-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.checklist-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 14px 18px;
+}
+.checklist-progress b {
+  color: var(--ink);
+  font-size: 15px;
+}
+.checklist-progress span {
+  color: #fff;
+  background: var(--purple);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.syllabus-topic {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  overflow: hidden;
+}
+.syllabus-topic summary {
+  padding: 14px 18px;
+  font-weight: 700;
+  color: var(--ink);
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.syllabus-topic summary::-webkit-details-marker {
+  display: none;
+}
+.syllabus-topic summary::before {
+  content: "▸";
+  color: var(--purple);
+  transition: transform 0.15s ease;
+  display: inline-block;
+}
+.syllabus-topic[open] summary::before {
+  transform: rotate(90deg);
+}
+.syllabus-topic summary:hover {
+  background: var(--paper);
+}
+.syllabus-group {
+  padding: 4px 18px 16px 18px;
+  border-top: 1px solid var(--line);
+}
+.syllabus-group h4 {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  margin: 14px 0 8px 0;
+}
+.syllabus-group label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 6px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.syllabus-group label:hover {
+  background: var(--paper);
+}
+.syllabus-group label input[type="checkbox"] {
+  margin-top: 3px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--purple);
+  flex-shrink: 0;
+}
+.syllabus-group label span {
+  flex: 1;
+  color: var(--ink);
+}
+.syllabus-group label em {
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+.syllabus-group label.core em {
+  background: #ece9fb;
+  color: var(--purple);
+}
+.syllabus-group label.supplement em {
+  background: var(--paper);
+  color: var(--muted);
+}
