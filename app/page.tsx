@@ -8,6 +8,7 @@ import {
   UserButton,
   useUser,
 } from "@clerk/nextjs";
+import { igcsePhysicsSyllabus } from "@/lib/physics-syllabus";
 type Role = "choose" | "teacher" | "student";
 type TeacherView = "dashboard" | "stage7" | "stage89" | "physics" | "papers" | "students" | "submissions";
 type AssignmentSummary = {
@@ -747,19 +748,60 @@ function PastPaperLibrary({stage}:{stage:8|9}){
   return <section className="panel past-paper-library"><header><div><small>TEACHER-CONTROLLED SOURCE LIBRARY</small><h3>Stage {stage} past papers</h3><p>Upload a question paper with its mark scheme, then approve every detected question before it joins practice.</p></div><button className="primary" onClick={()=>setShowUpload(value=>!value)}>{showUpload?"Cancel":"＋ Upload paper"}</button></header>{message&&<p className="queue-message">{message}</p>}{showUpload&&<form className="past-paper-upload" onSubmit={upload}><label>Paper title<input name="title" placeholder={`Stage ${stage} End-of-year paper`} required/></label><label>Year or session<input name="year" placeholder="2025" required/></label><label>Question paper PDF<input name="paper" type="file" accept="application/pdf,.pdf" required/></label><label>Mark scheme PDF<input name="scheme" type="file" accept="application/pdf,.pdf" required/></label><button className="primary" disabled={uploading}>{uploading?"Uploading…":"Save to library →"}</button></form>}<div className="past-paper-grid">{papers.map(paper=><article key={paper.id}><span>PDF</span><div><b>{paper.title}</b><small>Stage {stage} · {paper.source_year||"Year not set"}</small><em className={paper.status==="assigned"?"paper-ready":"paper-paused"}>{paper.status==="assigned"?"Approved for practice":"Teacher setup required"}</em></div><div className="past-paper-actions"><button onClick={()=>setReviewing(paper)}>Review uploaded files</button><button onClick={()=>setSetup(paper)}>{paper.status==="assigned"?"Review questions":"Set up questions"} →</button></div></article>)}{!papers.length&&!showUpload&&<p className="dashboard-empty">No Stage {stage} past papers have been uploaded yet.</p>}</div>{reviewing&&<FileReview assignment={reviewing} close={()=>setReviewing(null)} openSetup={()=>{setSetup(reviewing);setReviewing(null);}} replaced={(status,notice)=>{setPapers(current=>current.map(paper=>paper.id===reviewing.id?{...paper,status}:paper));setReviewing(current=>current?{...current,status}:current);setMessage(notice);}}/>}{setup&&<QuestionSetup assignment={setup} close={()=>setSetup(null)} saved={()=>{setPapers(current=>current.map(paper=>paper.id===setup.id?{...paper,status:"assigned"}:paper));setMessage("Questions approved. Eligible typed questions can now be selected for Stage practice.");setSetup(null);}}/>}</section>;
 }
 
+function PhysicsSyllabusChecklist({ level }:{ level:"igcse"|"as" }) {
+  const [checked,setChecked]=useState<Set<string>>(new Set());
+  const [state,setState]=useState("Loading syllabus checklist…");
+  const syllabus = level==="igcse" ? igcsePhysicsSyllabus : [];
+  useEffect(()=>{
+    setState("Loading syllabus checklist…");
+    fetch(`/api/physics/checklist?level=${level}`).then(response=>response.json()).then(data=>{
+      setChecked(new Set(Array.isArray(data.checked)?data.checked:[]));
+      setState(level==="as"?"AS Level syllabus content is coming soon.":"");
+    }).catch(()=>setState("The checklist could not be loaded."));
+  },[level]);
+  const toggle=async(objectiveId:string)=>{
+    setChecked(current=>{const next=new Set(current);next.has(objectiveId)?next.delete(objectiveId):next.add(objectiveId);return next;});
+    await fetch("/api/physics/checklist",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({level,objectiveId})});
+  };
+  const totalObjectives = syllabus.reduce((sum,topic)=>sum+topic.groups.reduce((s,g)=>s+g.objectives.length,0),0);
+  return <div className="syllabus-checklist">
+    {state && <p className="queue-message panel">{state}</p>}
+    {!!totalObjectives && <p className="checklist-progress"><b>{checked.size} of {totalObjectives} objectives checked</b><span>{Math.round((checked.size/totalObjectives)*100)}%</span></p>}
+    {syllabus.map(topic=>(
+      <details key={topic.id} className="syllabus-topic">
+        <summary>{topic.id}. {topic.title}</summary>
+        {topic.groups.map(group=>(
+          <div key={group.id} className="syllabus-group">
+            <h4>{group.id} {group.title}</h4>
+            {group.objectives.map(objective=>(
+              <label key={objective.id} className={objective.type}>
+                <input type="checkbox" checked={checked.has(objective.id)} onChange={()=>toggle(objective.id)}/>
+                <span>{objective.text}</span>
+                <em>{objective.type}</em>
+              </label>
+            ))}
+          </div>
+        ))}
+      </details>
+    ))}
+  </div>;
+}
+
 function PhysicsTeacher() {
   const [level,setLevel]=useState<"igcse"|"as">("igcse");
+  const [view,setView]=useState<"progress"|"checklist">("progress");
   const [students,setStudents]=useState<Array<{student_id:string;student_name:string;chapter_id:string;attempts:number;average:number;strong_sets:number;mastered:boolean;last_active:string}>>([]);
   const [state,setState]=useState("Loading physics practice activity…");
   const units = level==="as" ? asPhysicsUnits : igcsePhysicsUnits;
   const titleFor = (chapterId:string) => units.find(unit=>unit.id===chapterId)?.title || chapterId;
   useEffect(()=>{
+    if(view!=="progress")return;
     setState("Loading physics practice activity…");
     fetch(`/api/physics/practice?level=${level}`).then(response=>response.json()).then(data=>{
       setStudents(Array.isArray(data.students)?data.students:[]);
       setState(Array.isArray(data.students)&&!data.students.length ? "No students have practised yet." : "");
     }).catch(()=>setState("Physics practice activity could not be loaded."));
-  },[level]);
+  },[level,view]);
   return <>
     <div className="portal-heading">
       <div><p>PHYSICS</p><h1>Physics practice</h1><h2>See how students are progressing through generated IGCSE and AS Level Physics practice sets.</h2></div>
@@ -768,6 +810,11 @@ function PhysicsTeacher() {
         <button className={level==="as"?"primary":""} onClick={()=>setLevel("as")}>AS Level Physics</button>
       </div>
     </div>
+    <div className="stage89-switch">
+      <button className={view==="progress"?"primary":""} onClick={()=>setView("progress")}>Student progress</button>
+      <button className={view==="checklist"?"primary":""} onClick={()=>setView("checklist")}>Syllabus checklist</button>
+    </div>
+    {view==="checklist" ? <PhysicsSyllabusChecklist level={level} /> : <>
     {state && <p className="queue-message panel">{state}</p>}
     {!!students.length && <table className="mastery-table">
       <thead><tr><th>Student</th><th>Topic</th><th>Attempts</th><th>Average</th><th>Strong sets</th><th>Status</th><th>Last active</th></tr></thead>
@@ -783,6 +830,7 @@ function PhysicsTeacher() {
         </tr>
       )}</tbody>
     </table>}
+    </>}
   </>;
 }
 
@@ -857,6 +905,7 @@ type CrossStagePracticeUnit = LowerSecondaryUnit & { sourceStage: 7 | 8 | 9 };
 
 function PhysicsStudent({ back }:{ back:()=>void }) {
   const [level, setLevel] = useState<"igcse"|"as">("igcse");
+  const [libraryView,setLibraryView]=useState<"topics"|"checklist">("topics");
   const [progress,setProgress]=useState<Record<string,{attempts:number;average:number;strong_sets:number;mastered:boolean}>>({});
   const [practice,setPractice]=useState<PhysicsUnit|null>(null);
   const [session,setSession]=useState<{id:string;level:string;chapter:string;difficulty:string;questions:Array<{templateId?:string;objective?:string;difficulty?:string;answerFormat?:string;prompt:string;hint:string}>}|null>(null);
@@ -941,6 +990,11 @@ function PhysicsStudent({ back }:{ back:()=>void }) {
         <button onClick={back}>← Assigned papers</button>
       </div>
     </div>
+    <div className="stage89-switch">
+      <button className={libraryView==="topics"?"primary":""} onClick={()=>setLibraryView("topics")}>Topic library</button>
+      <button className={libraryView==="checklist"?"primary":""} onClick={()=>setLibraryView("checklist")}>Syllabus checklist</button>
+    </div>
+    {libraryView==="checklist" ? <PhysicsSyllabusChecklist level={level} /> : <>
     {message&&<p className="queue-message panel">{message}</p>}
     <div className="stage7-library-head">
       <div><small>{level.toUpperCase()} CURRICULUM</small><h2>Topic library</h2><p>New topics are added regularly — available ones are ready to practise now.</p></div>
@@ -957,6 +1011,7 @@ function PhysicsStudent({ back }:{ back:()=>void }) {
         <button disabled={!unit.available} onClick={()=>startPractice(unit)}>{unit.available?"Practise unit →":"Coming soon"}</button>
       </article>;
     })}</div>
+    </>}
   </>;
 }
 

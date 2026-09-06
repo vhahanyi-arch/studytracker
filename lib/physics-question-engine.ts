@@ -56,71 +56,57 @@ function validateUnitSet(questions: PhysicsQuestion[], difficulty: string) {
 }
 
 // ---------- IGCSE Unit 1: Physical Quantities & Measurement ----------
-const SI_UNITS = [
-  { qty: "length", unit: ["metre","metres","m"] },
-  { qty: "mass", unit: ["kilogram","kilograms","kg"] },
-  { qty: "time", unit: ["second","seconds","s"] },
-  { qty: "electric current", unit: ["ampere","amperes","amp","amps","a"] },
-  { qty: "temperature", unit: ["kelvin","k"] },
+const LENGTH_INSTRUMENTS = [
+  { name:"ruler", answers:["ruler","a ruler","metrerule","metre rule"] },
+  { name:"measuring tape", answers:["measuringtape","tape measure","a tape measure"] },
 ];
-const SCALAR_QUANTITIES = ["mass","time","temperature","energy","speed","distance","density"];
-const VECTOR_QUANTITIES = ["force","velocity","displacement","acceleration","momentum","weight"];
+const VOLUME_INSTRUMENT = { name:"measuring cylinder", answers:["measuringcylinder","measuring cylinder","a measuring cylinder"] };
+const SCALAR_QUANTITIES2 = ["distance","speed","time","mass","energy","temperature"];
+const VECTOR_QUANTITIES2 = ["force","weight","velocity","acceleration","momentum"];
+const FORCE_TRIPLES: [number,number,number][] = [[3,4,5],[6,8,10],[5,12,13],[8,15,17],[9,12,15]];
 
 const structuredIgcseMeasurement = (difficulty:"foundational"|"application"|"reasoning") => {
   if (difficulty === "foundational") {
-    const cm1=r(2,20)*10,m1=cm1/100;
-    const g2=r(2,20)*100,kg2=g2/1000;
-    const ms3=r(2,20)*100,s3=ms3/1000;
-    const ml4=r(2,20)*100,l4=ml4/1000;
-    const siPick=SI_UNITS[r(0,SI_UNITS.length-1)];
-    const isVector=r(0,1)===1,pool=isVector?VECTOR_QUANTITIES:SCALAR_QUANTITIES,quantityPick=pool[r(0,pool.length-1)];
+    const wrongOpt1=LENGTH_INSTRUMENTS[r(0,1)].name;
+    const lengthInstrument3=LENGTH_INSTRUMENTS[r(0,1)];
+    let scalarPick4a=SCALAR_QUANTITIES2[r(0,SCALAR_QUANTITIES2.length-1)],scalarPick4b=SCALAR_QUANTITIES2[r(0,SCALAR_QUANTITIES2.length-1)];
+    while(scalarPick4b===scalarPick4a){scalarPick4b=SCALAR_QUANTITIES2[r(0,SCALAR_QUANTITIES2.length-1)];}
+    const vectorPick4=VECTOR_QUANTITIES2[r(0,VECTOR_QUANTITIES2.length-1)];
+    const cm5=r(2,20)*10,m5=cm5/100;
     return validateUnitSet([
-      sq("igcse-u1-f1","Convert centimetres to metres",difficulty,`Convert ${cm1} cm to metres.`,String(m1),"Divide by 100 to convert cm to m.",`${cm1}÷100=${m1} m.`),
-      sq("igcse-u1-f2","Convert grams to kilograms",difficulty,`Convert ${g2} g to kilograms.`,String(kg2),"Divide by 1000 to convert g to kg.",`${g2}÷1000=${kg2} kg.`),
-      sq("igcse-u1-f3","Convert milliseconds to seconds",difficulty,`Convert ${ms3} ms to seconds.`,String(s3),"Divide by 1000 to convert ms to s.",`${ms3}÷1000=${s3} s.`),
-      sq("igcse-u1-f4","Convert millilitres to litres",difficulty,`Convert ${ml4} ml to litres.`,String(l4),"Divide by 1000 to convert ml to l.",`${ml4}÷1000=${l4} l.`),
-      sq("igcse-u1-f5","Identify an SI unit",difficulty,`What is the SI unit for ${siPick.qty}?`,siPick.unit,"Recall the base SI unit for this quantity.",`The SI unit for ${siPick.qty} is the ${siPick.unit[0]}.`),
-      sq("igcse-u1-f6","Classify a quantity as scalar or vector",difficulty,`Is ${quantityPick} a scalar or vector quantity?`,isVector?"vector":"scalar","A vector has direction; a scalar does not.",`${quantityPick} is a ${isVector?"vector":"scalar"} quantity.`),
+      sq("igcse-u1-f1","Identify a measuring instrument (multiple choice)",difficulty,`Which instrument would you use to measure the volume of a liquid? (a) ${wrongOpt1} (b) measuring cylinder (c) thermometer (d) ammeter`,["b",...VOLUME_INSTRUMENT.answers],"A measuring cylinder has a graduated scale for reading liquid volume.","The correct answer is (b) measuring cylinder."),
+      sq("igcse-u1-f2","Evaluate a statement about scalars (true/false)",difficulty,"True or false: a scalar quantity has both magnitude and direction.","false","A scalar has magnitude only; a vector has both magnitude and direction.","False — that describes a vector, not a scalar."),
+      sq("igcse-u1-f3","Name a measuring instrument (short answer)",difficulty,"Name one instrument that could be used to measure the length of a table.",lengthInstrument3.answers,"Think of a common tool for measuring length.",`A ${lengthInstrument3.name} would be suitable.`),
+      sq("igcse-u1-f4","Identify a vector quantity (multiple choice)",difficulty,`Which of these is a vector quantity? (a) ${scalarPick4a} (b) ${scalarPick4b} (c) ${vectorPick4} (d) volume`,["c",vectorPick4],"A vector has both magnitude and direction.",`The correct answer is (c) ${vectorPick4}.`),
+      sq("igcse-u1-f5","Convert centimetres to metres",difficulty,`Convert ${cm5} cm to metres.`,String(m5),"Divide by 100 to convert cm to m.",`${cm5}÷100=${m5} m.`),
+      sq("igcse-u1-f6","Evaluate a statement about resultant forces (true/false)",difficulty,"True or false: two forces acting at right angles to each other can be combined into a single resultant force.","true","Perpendicular vectors can be combined using Pythagoras' theorem.","True — this gives a single resultant force."),
     ], difficulty);
   }
   if (difficulty === "application") {
     const t1=r(20,80)/10,t2=r(20,80)/10,t3=r(20,80)/10,avg1=Math.round(((t1+t2+t3)/3)*100)/100;
-    const massG2=r(2,20)*100,massKg2=massG2/1000;
-    const instrumentOptions=[
-      { desc:"the diameter of a thin wire", answer:["micrometer","micrometerscrewgauge","micrometer screw gauge"] },
-      { desc:"the length of a metre-long table", answer:["metrerule","metre rule","ruler"] },
-      { desc:"the external diameter of a test tube", answer:["vernier","verniercalipers","vernier calipers"] },
-    ];
-    const instrumentPick=instrumentOptions[r(0,instrumentOptions.length-1)];
-    const microReading4Raw=r(1000,9999),microReading4Rounded=Math.round(microReading4Raw/10)/100;
-    const errorTypeOptions=[
-      { desc:"a badly calibrated instrument that reads 2 g too high every time", answer:["systematic"] },
-      { desc:"a student's reaction time varying slightly each time they press a stopwatch", answer:["random"] },
-    ];
-    const errorPick=errorTypeOptions[r(0,errorTypeOptions.length-1)];
-    const distanceKm6=r(2,20),distanceM6=distanceKm6*1000;
+    const [forceA2,forceB2,resultant2]=FORCE_TRIPLES[r(0,FORCE_TRIPLES.length-1)];
+    const massG3=r(2,20)*100,massKg3=massG3/1000;
+    const swingCount5=r(10,30);
     return validateUnitSet([
       sq("igcse-u1-a1","Find an average from repeated readings",difficulty,`A student times a swinging pendulum three times: ${t1} s, ${t2} s, ${t3} s. Find the average time.`,String(avg1),"Add the readings, then divide by 3.",`(${t1}+${t2}+${t3})÷3=${avg1} s.`),
-      sq("igcse-u1-a2","Convert a measured mass for use in a formula",difficulty,`An object has a mass of ${massG2} g. Convert this to kilograms for use in a formula.`,String(massKg2),"Divide by 1000 to convert g to kg.",`${massG2}÷1000=${massKg2} kg.`),
-      sq("igcse-u1-a3","Choose an appropriate measuring instrument",difficulty,`Which instrument is best for measuring ${instrumentPick.desc}?`,instrumentPick.answer,"Match the instrument's precision to the size of the object.",`The most suitable instrument is a ${instrumentPick.answer[2]}.`),
-      sq("igcse-u1-a4","Round a reading to an instrument's precision",difficulty,`A micrometer screw gauge measures to the nearest 0.01 mm. A raw reading shows ${(microReading4Raw/1000).toFixed(3)} mm. State this to the correct precision (2 decimal places).`,microReading4Rounded.toFixed(2),"Round to 2 decimal places, matching the instrument's precision.",`${(microReading4Raw/1000).toFixed(3)} rounds to ${microReading4Rounded.toFixed(2)} mm.`),
-      sq("igcse-u1-a5","Classify a source of measurement error",difficulty,`A measurement error is caused by ${errorPick.desc}. Is this a systematic or random error?`,errorPick.answer,"Systematic errors are consistent; random errors vary unpredictably.",`This is a ${errorPick.answer[0]} error.`),
-      sq("igcse-u1-a6","Convert kilometres to metres",difficulty,`A journey is ${distanceKm6} km long. Convert this distance to metres.`,String(distanceM6),"Multiply by 1000 to convert km to m.",`${distanceKm6}×1000=${distanceM6} m.`),
+      sq("igcse-u1-a2","Find a resultant force at right angles",difficulty,`Two forces of ${forceA2} N and ${forceB2} N act at right angles to each other on an object. Find the magnitude of the resultant force.`,String(resultant2),"Use Pythagoras' theorem, since the forces are perpendicular.",`√(${forceA2}²+${forceB2}²)=${resultant2} N.`),
+      sq("igcse-u1-a3","Convert a measured mass for use in a formula",difficulty,`An object has a mass of ${massG3} g. Convert this to kilograms for use in a formula.`,String(massKg3),"Divide by 1000 to convert g to kg.",`${massG3}÷1000=${massKg3} kg.`),
+      sq("igcse-u1-a4","Evaluate a statement about averaging readings (true/false)",difficulty,`True or false: measuring the time for ${swingCount5} swings of a pendulum and dividing by ${swingCount5} gives a more accurate value for the period than timing just one swing.`,"true","Averaging over many swings reduces the effect of timing error.","True — this is a standard technique to improve accuracy."),
+      sq("igcse-u1-a5","Choose the best instrument for a short time interval (multiple choice)",difficulty,"Which instrument would give the most precise reading of a short time interval, such as one swing of a pendulum? (a) sundial (b) calendar (c) digital timer (d) metre rule",["c","digitaltimer","digital timer"],"Consider which instrument can measure fractions of a second.","The correct answer is (c) digital timer."),
+      sq("igcse-u1-a6","Evaluate a statement about weight as a vector (true/false)",difficulty,"True or false: weight is a scalar quantity because it only has a size, not a direction.","false","Weight is a force, and forces are vectors — it acts in a specific direction (downward).","False — weight is a vector quantity."),
     ], difficulty);
   }
-  const cm1=r(2,20)*10,m2Ans1=(cm1*cm1)/10000;
-  const cm2=r(2,15)*10,m3Ans2=(cm2*cm2*cm2)/1000000;
-  const cm3=r(2,20)*10,wrongM3=cm3/10,correctM3=cm3/100;
-  const readings4=[r(20,30)/10,r(20,30)/10,r(45,55)/10];
-  const massKg5=r(2,20),badZeroReading5=massKg5+0.5;
-  const cm6=r(2,20)*10,mm6=cm6*10;
+  const cm1=r(2,20)*10,wrongM1=cm1/10,correctM1=cm1/100;
+  const [forceA2,forceB2,resultant2]=FORCE_TRIPLES[r(0,FORCE_TRIPLES.length-1)];
+  const readings3=[r(20,30)/10,r(20,30)/10,r(45,55)/10];
+  const massKg5=r(2,20),badReading5=massKg5+0.5;
   return validateUnitSet([
-    sq("igcse-u1-r1","Convert area units correctly",difficulty,`A square has sides of ${cm1} cm. Find its area in m² (remember: area units scale by the square of the length conversion).`,String(m2Ans1),"Convert the side length to metres first, then square it.",`(${cm1}÷100)²=${m2Ans1} m².`),
-    sq("igcse-u1-r2","Convert volume units correctly",difficulty,`A cube has sides of ${cm2} cm. Find its volume in m³ (remember: volume units scale by the cube of the length conversion).`,String(m3Ans2),"Convert the side length to metres first, then cube it.",`(${cm2}÷100)³=${m3Ans2} m³.`),
-    sq("igcse-u1-r3","Correct a unit conversion error",difficulty,`A learner converts ${cm3} cm to metres by dividing by 10, getting ${wrongM3}. Enter the correct value in metres.`,String(correctM3),"Converting cm to m requires dividing by 100, not 10.",`${cm3}÷100=${correctM3} m.`),
-    sq("igcse-u1-r4","Identify an anomalous reading",difficulty,`A student takes three readings of a swinging pendulum: ${readings4[0]} s, ${readings4[1]} s, ${readings4[2]} s. One reading looks anomalous. Which reading should be treated with suspicion (state its value)?`,String(readings4[2]),"Look for the reading that differs noticeably from the others.",`${readings4[2]} s stands out from the other two readings.`),
-    sq("igcse-u1-r5","Correct for a systematic zero error",difficulty,`A balance always reads ${badZeroReading5-massKg5} kg too high due to a zero error. A student records a mass of ${badZeroReading5} kg. Find the true mass.`,String(massKg5),"Subtract the zero error from the recorded reading.",`${badZeroReading5}−${badZeroReading5-massKg5}=${massKg5} kg.`),
-    sq("igcse-u1-r6","Convert centimetres to millimetres",difficulty,`Convert ${cm6} cm to millimetres.`,String(mm6),"Multiply by 10 to convert cm to mm.",`${cm6}×10=${mm6} mm.`),
+    sq("igcse-u1-r1","Correct a unit conversion error",difficulty,`A learner converts ${cm1} cm to metres by dividing by 10, getting ${wrongM1}. Enter the correct value in metres.`,String(correctM1),"Converting cm to m requires dividing by 100, not 10.",`${cm1}÷100=${correctM1} m.`),
+    sq("igcse-u1-r2","Correct a resultant-force error",difficulty,`A student says the resultant of two perpendicular forces of ${forceA2} N and ${forceB2} N is simply ${forceA2+forceB2} N (by adding them). Enter the correct resultant force.`,String(resultant2),"Perpendicular forces combine using Pythagoras' theorem, not simple addition.",`√(${forceA2}²+${forceB2}²)=${resultant2} N.`),
+    sq("igcse-u1-r3","Identify an anomalous reading",difficulty,`A student takes three readings of a swinging pendulum: ${readings3[0]} s, ${readings3[1]} s, ${readings3[2]} s. Which reading should be treated with suspicion?`,String(readings3[2]),"Look for the reading that differs noticeably from the others.",`${readings3[2]} s stands out from the other two readings.`),
+    sq("igcse-u1-r4","Evaluate a statement about reducing random error (true/false)",difficulty,"True or false: using an average of several repeated readings reduces the effect of random error.","true","Averaging cancels out some of the random variation between readings.","True — averaging reduces the impact of random error."),
+    sq("igcse-u1-r5","Correct for a systematic zero error",difficulty,`A balance always reads ${badReading5-massKg5} kg too high due to a zero error. A student records a mass of ${badReading5} kg. Find the true mass.`,String(massKg5),"Subtract the zero error from the recorded reading.",`${badReading5}−${badReading5-massKg5}=${massKg5} kg.`),
+    sq("igcse-u1-r6","Distinguish zero error from random error (true/false)",difficulty,"True or false: a zero error on an instrument is an example of random error.","false","A zero error is consistent every time — that makes it systematic, not random.","False — a zero error is a systematic error."),
   ], difficulty);
 };
 

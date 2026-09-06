@@ -197,6 +197,15 @@ async function initializeSchema() {
       completed_at TIMESTAMPTZ
     )
   `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS physics_syllabus_checklist (
+      user_id TEXT NOT NULL,
+      objective_id TEXT NOT NULL,
+      level TEXT NOT NULL DEFAULT 'igcse',
+      checked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (user_id, objective_id, level)
+    )
+  `;
 }
 
 export async function ensureSchema() {
