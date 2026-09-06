@@ -198,6 +198,10 @@ async function initializeSchema() {
     )
   `;
   await sql`
+    ALTER TABLE physics_practice_sessions
+    ADD COLUMN IF NOT EXISTS teacher_id TEXT
+  `;
+  await sql`
     CREATE TABLE IF NOT EXISTS physics_syllabus_checklist (
       user_id TEXT NOT NULL,
       objective_id TEXT NOT NULL,
