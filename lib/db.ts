@@ -184,6 +184,7 @@ async function initializeSchema() {
     CREATE TABLE IF NOT EXISTS physics_practice_sessions (
       id UUID PRIMARY KEY,
       student_id TEXT NOT NULL,
+      teacher_id TEXT,
       level TEXT NOT NULL,
       chapter_id TEXT NOT NULL,
       difficulty TEXT NOT NULL,

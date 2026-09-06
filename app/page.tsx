@@ -9,7 +9,7 @@ import {
   useUser,
 } from "@clerk/nextjs";
 type Role = "choose" | "teacher" | "student";
-type TeacherView = "dashboard" | "stage7" | "stage89" | "papers" | "students" | "submissions";
+type TeacherView = "dashboard" | "stage7" | "stage89" | "physics" | "papers" | "students" | "submissions";
 type AssignmentSummary = {
   id: string;
   title: string;
@@ -366,6 +366,7 @@ function TeacherPortal({ switchRole }: { switchRole: () => void }) {
           ["dashboard", "⌂", "Overview"],
           ["stage7", "7", "Stage 7 mastery"],
           ["stage89", "8", "Stages 8 & 9"],
+          ["physics", "⚛", "Physics practice"],
           ["papers", "▤", "Papers & assignments"],
           ["submissions", "✓", "Marking queue"],
           ["students", "♙", "Students"],
@@ -390,6 +391,8 @@ function TeacherPortal({ switchRole }: { switchRole: () => void }) {
         <Stage7Teacher />
       ) : view === "stage89" ? (
         <Stage89Teacher />
+      ) : view === "physics" ? (
+        <PhysicsTeacher />
       ) : view === "papers" ? (
         <Papers upload={() => setModal(true)} />
       ) : view === "submissions" ? (
@@ -742,6 +745,45 @@ function PastPaperLibrary({stage}:{stage:8|9}){
   useEffect(()=>{load();setMessage("");setShowUpload(false);setSetup(null);setReviewing(null);},[stage]);
   const upload=async(event:React.FormEvent<HTMLFormElement>)=>{event.preventDefault();setUploading(true);setMessage("Uploading both PDFs securely…");const data=new FormData(event.currentTarget);data.set("profile",`lower-secondary-stage${stage}`);data.set("paperMode","structured");data.set("className",`Stage ${stage} past-paper library`);data.set("library","true");data.set("stage",String(stage));const response=await fetch("/api/assignments",{method:"POST",body:data});const result=await response.json();setUploading(false);if(!response.ok){setMessage(result.error||"The paper could not be uploaded.");return;}setPapers(current=>[result,...current]);setShowUpload(false);setMessage("Paper saved. Open question setup to detect, match and approve its questions.");};
   return <section className="panel past-paper-library"><header><div><small>TEACHER-CONTROLLED SOURCE LIBRARY</small><h3>Stage {stage} past papers</h3><p>Upload a question paper with its mark scheme, then approve every detected question before it joins practice.</p></div><button className="primary" onClick={()=>setShowUpload(value=>!value)}>{showUpload?"Cancel":"＋ Upload paper"}</button></header>{message&&<p className="queue-message">{message}</p>}{showUpload&&<form className="past-paper-upload" onSubmit={upload}><label>Paper title<input name="title" placeholder={`Stage ${stage} End-of-year paper`} required/></label><label>Year or session<input name="year" placeholder="2025" required/></label><label>Question paper PDF<input name="paper" type="file" accept="application/pdf,.pdf" required/></label><label>Mark scheme PDF<input name="scheme" type="file" accept="application/pdf,.pdf" required/></label><button className="primary" disabled={uploading}>{uploading?"Uploading…":"Save to library →"}</button></form>}<div className="past-paper-grid">{papers.map(paper=><article key={paper.id}><span>PDF</span><div><b>{paper.title}</b><small>Stage {stage} · {paper.source_year||"Year not set"}</small><em className={paper.status==="assigned"?"paper-ready":"paper-paused"}>{paper.status==="assigned"?"Approved for practice":"Teacher setup required"}</em></div><div className="past-paper-actions"><button onClick={()=>setReviewing(paper)}>Review uploaded files</button><button onClick={()=>setSetup(paper)}>{paper.status==="assigned"?"Review questions":"Set up questions"} →</button></div></article>)}{!papers.length&&!showUpload&&<p className="dashboard-empty">No Stage {stage} past papers have been uploaded yet.</p>}</div>{reviewing&&<FileReview assignment={reviewing} close={()=>setReviewing(null)} openSetup={()=>{setSetup(reviewing);setReviewing(null);}} replaced={(status,notice)=>{setPapers(current=>current.map(paper=>paper.id===reviewing.id?{...paper,status}:paper));setReviewing(current=>current?{...current,status}:current);setMessage(notice);}}/>}{setup&&<QuestionSetup assignment={setup} close={()=>setSetup(null)} saved={()=>{setPapers(current=>current.map(paper=>paper.id===setup.id?{...paper,status:"assigned"}:paper));setMessage("Questions approved. Eligible typed questions can now be selected for Stage practice.");setSetup(null);}}/>}</section>;
+}
+
+function PhysicsTeacher() {
+  const [level,setLevel]=useState<"igcse"|"as">("igcse");
+  const [students,setStudents]=useState<Array<{student_id:string;student_name:string;chapter_id:string;attempts:number;average:number;strong_sets:number;mastered:boolean;last_active:string}>>([]);
+  const [state,setState]=useState("Loading physics practice activity…");
+  const units = level==="as" ? asPhysicsUnits : igcsePhysicsUnits;
+  const titleFor = (chapterId:string) => units.find(unit=>unit.id===chapterId)?.title || chapterId;
+  useEffect(()=>{
+    setState("Loading physics practice activity…");
+    fetch(`/api/physics/practice?level=${level}`).then(response=>response.json()).then(data=>{
+      setStudents(Array.isArray(data.students)?data.students:[]);
+      setState(Array.isArray(data.students)&&!data.students.length ? "No students have practised yet." : "");
+    }).catch(()=>setState("Physics practice activity could not be loaded."));
+  },[level]);
+  return <>
+    <div className="portal-heading">
+      <div><p>PHYSICS</p><h1>Physics practice</h1><h2>See how students are progressing through generated IGCSE and AS Level Physics practice sets.</h2></div>
+      <div className="stage89-switch">
+        <button className={level==="igcse"?"primary":""} onClick={()=>setLevel("igcse")}>IGCSE Physics</button>
+        <button className={level==="as"?"primary":""} onClick={()=>setLevel("as")}>AS Level Physics</button>
+      </div>
+    </div>
+    {state && <p className="queue-message panel">{state}</p>}
+    {!!students.length && <table className="mastery-table">
+      <thead><tr><th>Student</th><th>Topic</th><th>Attempts</th><th>Average</th><th>Strong sets</th><th>Status</th><th>Last active</th></tr></thead>
+      <tbody>{students.map((row,index)=>
+        <tr key={index}>
+          <td>{row.student_name}</td>
+          <td>{titleFor(row.chapter_id)}</td>
+          <td>{row.attempts}</td>
+          <td>{row.average}%</td>
+          <td>{row.strong_sets} / 2</td>
+          <td>{row.mastered?"Mastered":"In progress"}</td>
+          <td>{row.last_active ? new Date(row.last_active).toLocaleDateString() : "—"}</td>
+        </tr>
+      )}</tbody>
+    </table>}
+  </>;
 }
 
 function Stage89Teacher() {

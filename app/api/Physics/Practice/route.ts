@@ -14,16 +14,60 @@ function levelFrom(value: unknown) {
   return level === "as" ? "as" : "igcse";
 }
 
+async function teacherFor(studentId: string) {
+  const enrollment = await sql`
+    SELECT teacher_id FROM lower_secondary_enrollments
+    WHERE student_id=${studentId}
+    ORDER BY enrolled_at DESC LIMIT 1
+  `;
+  if (enrollment.length) return String(enrollment[0].teacher_id);
+  const linked = await sql`
+    SELECT a.teacher_id FROM assignment_students ast
+    JOIN assignments a ON a.id=ast.assignment_id
+    WHERE ast.student_id=${studentId}
+    ORDER BY ast.assigned_at DESC LIMIT 1
+  `;
+  return linked.length ? String(linked[0].teacher_id) : null;
+}
+
 export async function GET(request: Request) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
   const clerk = await clerkClient();
   const user = await clerk.users.getUser(userId);
-  if (user.publicMetadata.role !== "student")
-    return NextResponse.json({ error: "Access denied." }, { status: 403 });
   await ensureSchema();
   const url = new URL(request.url);
   const level = levelFrom(url.searchParams.get("level"));
+
+  if (user.publicMetadata.role === "teacher") {
+    const rows = await sql`
+      SELECT student_id,chapter_id,COUNT(*)::int attempts,
+        COALESCE(ROUND(AVG(score)),0)::int average,
+        COUNT(*) FILTER (WHERE score>=80)::int strong_sets,MAX(completed_at) last_active
+      FROM physics_practice_sessions
+      WHERE teacher_id=${userId} AND level=${level} AND status='completed'
+      GROUP BY student_id,chapter_id
+      ORDER BY last_active DESC
+    `;
+    const studentIds = Array.from(new Set(rows.map((row) => String(row.student_id))));
+    const names: Record<string,string> = {};
+    await Promise.all(studentIds.map(async (id) => {
+      try {
+        const student = await clerk.users.getUser(id);
+        names[id] = student.fullName || student.username || "Student";
+      } catch { names[id] = "Student"; }
+    }));
+    return NextResponse.json({
+      level,
+      students: rows.map((row) => ({
+        ...row, student_name: names[String(row.student_id)] || "Student",
+        mastered: Number(row.strong_sets) >= 2,
+      })),
+    });
+  }
+
+  if (user.publicMetadata.role !== "student")
+    return NextResponse.json({ error: "Access denied." }, { status: 403 });
   const chapterParam = url.searchParams.get("chapter");
   const wantsAll = url.searchParams.get("all") === "1" || !chapterParam;
 
@@ -79,10 +123,11 @@ export async function POST(request: Request) {
     const difficulty = strong === 0 ? "foundational" : strong === 1 ? "application" : "reasoning";
     const questions = makePhysicsQuestions(level, chapter, difficulty);
     const id = crypto.randomUUID();
+    const teacherId = await teacherFor(userId);
     await sql`
       INSERT INTO physics_practice_sessions
-        (id,student_id,level,chapter_id,difficulty,questions_json)
-      VALUES (${id},${userId},${level},${chapter},${difficulty},${JSON.stringify(questions)})
+        (id,student_id,teacher_id,level,chapter_id,difficulty,questions_json)
+      VALUES (${id},${userId},${teacherId},${level},${chapter},${difficulty},${JSON.stringify(questions)})
     `;
     return NextResponse.json({
       id, level, chapter, difficulty,
