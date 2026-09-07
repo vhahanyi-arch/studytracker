@@ -4224,6 +4224,7 @@ function Submissions() {
     "attention" | "ready" | "published" | "all"
   >("attention");
   const [markCursor, setMarkCursor] = useState(0);
+  const [remarking, setRemarking] = useState(false);
   const [handwrittenPage, setHandwrittenPage] = useState(0);
   const [queueAction, setQueueAction] = useState("");
   const [message, setMessage] = useState("Loading submissions…");
@@ -4442,6 +4443,33 @@ function Submissions() {
             <h2>{active.title}</h2>
           </div>
           <button onClick={() => setActive(null)}>← Marking queue</button>
+          <button
+            className="remark-submission"
+            disabled={remarking}
+            onClick={async () => {
+              setRemarking(true);
+              setMessage("Re-running automatic marking…");
+              try {
+                const response = await fetch(`/api/submissions/${active.id}/remark`, { method: "POST" });
+                if (!response.ok) {
+                  const data = await response.json().catch(() => ({}));
+                  setMessage(data.error || "Re-marking failed.");
+                  return;
+                }
+                await load();
+                const refreshed = await fetch("/api/submissions").then((r) => r.json()).catch(() => []);
+                const updated = Array.isArray(refreshed) ? refreshed.find((item: any) => item.id === active.id) : null;
+                if (updated) openReview(updated);
+                setMessage("Automatic marking updated. Any marks you've already confirmed were left untouched.");
+              } catch {
+                setMessage("Re-marking failed. Check your connection and try again.");
+              } finally {
+                setRemarking(false);
+              }
+            }}
+          >
+            {remarking ? "Re-marking…" : "↻ Re-run automatic marking"}
+          </button>
         </div>
         <section className="moderation-toolbar panel">
           <div>
@@ -6208,6 +6236,16 @@ function AnswerWorkspace({
 function StudentPortal({ switchRole }: { switchRole: () => void }) {
   const [started, setStarted] = useState(false);
   const [studentArea, setStudentArea] = useState<"papers" | "stage7" | "stage89" | "physics">("papers");
+  const [stage89Enrolled, setStage89Enrolled] = useState<boolean | null>(null);
+  useEffect(() => {
+    Promise.all(
+      [8, 9].map((value) =>
+        fetch(`/api/lower-secondary/focus?stage=${value}`).then((r) => (r.ok ? r.json() : { enrolled: false })),
+      ),
+    )
+      .then((results) => setStage89Enrolled(results.some((result) => Boolean(result.enrolled))))
+      .catch(() => setStage89Enrolled(false));
+  }, []);
   const [activeAssignment, setActiveAssignment] = useState<{
     id: string;
     title: string;
@@ -6265,9 +6303,11 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
       <button className={studentArea === "stage89" ? "active" : ""} onClick={() => setStudentArea("stage89")}>
         <span>8</span>Stages 8 &amp; 9
       </button>
-      <button className={studentArea === "physics" ? "active" : ""} onClick={() => setStudentArea("physics")}>
-        <span>⚛</span>Physics practice
-      </button>
+      {stage89Enrolled === false && (
+        <button className={studentArea === "physics" ? "active" : ""} onClick={() => setStudentArea("physics")}>
+          <span>⚛</span>Physics practice
+        </button>
+      )}
     </nav>
   );
   if (activeAssignment)
@@ -6318,7 +6358,7 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
         <Stage89Student back={() => setStudentArea("papers")} />
       </Shell>
     );
-  if (studentArea === "physics")
+  if (studentArea === "physics" && stage89Enrolled === false)
     return (
       <Shell role="Student" onSwitch={switchRole} nav={cleanNav}>
         <PhysicsStudent back={() => setStudentArea("papers")} />
