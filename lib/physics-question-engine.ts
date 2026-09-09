@@ -354,8 +354,169 @@ const structuredElectromagneticEffects = (difficulty:"foundational"|"application
   ], difficulty);
 };
 
+const structuredMotion = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const time1=r(2,10),speed1=r(2,20)*10,dist1=speed1*time1;
+    const t1_2=r(2,6),t2_2=r(2,6),totalTime2=t1_2+t2_2,avgSpeed2=r(20,60)*10,totalDist2=avgSpeed2*totalTime2;
+    const d1_2=r(10,totalDist2-10),d2_2=totalDist2-d1_2;
+    const time4=r(2,10),grad4=r(10,80),dist4=grad4*time4;
+    const gValue5=r(0,1)===1;
+    const time6=r(2,8),accel6=r(2,10),v1_6=r(2,20),v2_6=v1_6+accel6*time6;
+    return validateUnitSet([
+      sq("igcse-u2-f1","Calculate speed from distance and time",difficulty,`A car travels ${dist1} m in ${time1} s. Find its speed, using v = s/t.`,String(speed1),"Divide distance by time.",`${dist1}÷${time1}=${speed1} m/s.`),
+      sq("igcse-u2-f2","Calculate average speed over multiple stages",difficulty,`A journey covers ${d1_2} m in ${t1_2} s, then ${d2_2} m in ${t2_2} s. Find the average speed for the whole journey.`,String(avgSpeed2),"Divide total distance by total time.",`(${d1_2}+${d2_2})÷(${t1_2}+${t2_2})=${avgSpeed2} m/s.`),
+      sq("igcse-u2-f3","Interpret a distance-time graph shape",difficulty,"A distance-time graph shows a straight, sloped line. Is the object moving at constant speed or accelerating?",["constant speed","constantspeed"],"A straight sloped line has a constant gradient.","A straight line means constant speed."),
+      sq("igcse-u2-f4","Find speed from a distance-time graph gradient",difficulty,`A distance-time graph shows a straight line covering ${dist4} m in ${time4} s. Find the speed from the gradient.`,String(grad4),"The gradient of a distance-time graph is the speed.",`${dist4}÷${time4}=${grad4} m/s.`),
+      sq("igcse-u2-f5","Recall the value of g",difficulty,`True or false: the acceleration of free fall, g, near the Earth's surface is approximately ${gValue5?"9.8":"5.8"} m/s².`,gValue5?"true":"false","Recall the standard value of g.",`g is approximately 9.8 m/s².`),
+      sq("igcse-u2-f6","Calculate acceleration from a velocity change",difficulty,`An object's velocity changes from ${v1_6} m/s to ${v2_6} m/s over ${time6} s. Find its acceleration, using a = Δv/Δt.`,String(accel6),"Divide the change in velocity by the time taken.",`(${v2_6}−${v1_6})÷${time6}=${accel6} m/s².`),
+    ], difficulty);
+  }
+  if (difficulty === "application") {
+    const speed1=r(2,20)*5,time1=r(2,10),dist1=speed1*time1;
+    const accel2=r(2,8),time2=r(2,8),vf2=accel2*time2,dist2=(accel2*time2*time2)/2;
+    const isDecel3=r(0,1)===1;
+    const isFaster4=r(0,1)===1;
+    const speed5=r(2,20)*10,time5=r(2,8),dist5=speed5*time5;
+    const hasResistance6=r(0,1)===1;
+    return validateUnitSet([
+      sq("igcse-u2-a1","Calculate distance from constant speed",difficulty,`A cyclist travels at a constant ${speed1} m/s for ${time1} s. Find the distance travelled.`,String(dist1),"Multiply speed by time.",`${speed1}×${time1}=${dist1} m.`),
+      sq("igcse-u2-a2","Find distance from a speed-time graph area",difficulty,`A car starts from rest and accelerates uniformly at ${accel2} m/s² for ${time2} s, reaching ${vf2} m/s. Using the area under the speed-time graph, find the distance travelled.`,String(dist2),"The area under the graph (a triangle) is ½ × time × final speed.",`½×${time2}×${vf2}=${dist2} m.`),
+      sq("igcse-u2-a3","Define deceleration",difficulty,`True or false: ${isDecel3?"a decrease":"an increase"} in speed over time is called a deceleration.`,isDecel3?"true":"false","A deceleration is a decrease in speed.",`${isDecel3?"True":"False"} — a deceleration is a decrease in speed.`),
+      sq("igcse-u2-a4","Interpret gradient steepness on a distance-time graph",difficulty,`On a distance-time graph, a ${isFaster4?"steeper":"flatter"} line represents a ${isFaster4?"faster":"slower"} speed. Is this statement correct? Answer yes or no.`,"yes","A steeper gradient means greater speed.","Yes — steeper lines represent faster speeds."),
+      sq("igcse-u2-a5","Calculate distance from speed and time",difficulty,`A train travels at ${speed5} m/s for ${time5} s. Find the distance covered.`,String(dist5),"Multiply speed by time.",`${speed5}×${time5}=${dist5} m.`),
+      sq("igcse-u2-a6","Reason about terminal velocity",difficulty,`A skydiver falls ${hasResistance6?"with":"without"} air resistance. Will they reach a terminal (constant maximum) velocity? Answer yes or no.`,hasResistance6?"yes":"no","Terminal velocity occurs when resistance balances weight.",`${hasResistance6?"Yes":"No"} — ${hasResistance6?"resistance allows a terminal velocity to be reached":"without resistance, there is no terminal velocity"}.`),
+    ], difficulty);
+  }
+  const accel1=r(2,8),time1=r(2,8),v0_1=r(2,10),vf1=v0_1+accel1*time1,wrongV1=v0_1+accel1;
+  let speedA2,time2a,dist2a,speedB2,time2b,dist2b,correctAvg2;
+  do {
+    speedA2=r(20,60)*2; time2a=r(2,6); dist2a=speedA2*time2a;
+    speedB2=r(20,60)*2; time2b=r(2,6); dist2b=speedB2*time2b;
+    correctAvg2=(dist2a+dist2b)/(time2a+time2b);
+  } while (!Number.isInteger(correctAvg2));
+  const wrongAvg2=(speedA2+speedB2)/2;
+  const accel3=r(2,6),time3a=r(2,6),time3b=r(2,6),dist3=(accel3*time3a*time3a)/2+accel3*time3a*time3b;
+  const hasResistance4=r(0,1)===1;
+  const accel5=r(2,8),time5=r(2,8),wrongSign5=r(0,1)===1;
+  const time6a=r(2,6),time6b=r(2,6),totalTime6=time6a+time6b,avgSpeed6=r(10,80),dist6=avgSpeed6*totalTime6;
+  return validateUnitSet([
+    sq("igcse-u2-r1","Correct an equation-of-motion error",difficulty,`A learner calculates final velocity using v = u + a (forgetting to multiply by time) for an object starting at ${v0_1} m/s with acceleration ${accel1} m/s² over ${time1} s, getting ${wrongV1} m/s. Enter the correct final velocity.`,String(vf1),"v = u + at, don't forget to multiply acceleration by time.",`${v0_1}+${accel1}×${time1}=${vf1} m/s.`),
+    sq("igcse-u2-r2","Correct an average-speed misconception",difficulty,`A learner averages two separate speeds (${speedA2} m/s and ${speedB2} m/s) to get ${wrongAvg2} m/s for a journey of ${dist2a} m in ${time2a} s then ${dist2b} m in ${time2b} s. Enter the correct average speed for the whole journey (using total distance ÷ total time).`,String(correctAvg2),"Average speed is total distance divided by total time, not the average of the two speeds.",`(${dist2a}+${dist2b})÷(${time2a}+${time2b})=${correctAvg2} m/s.`),
+    sq("igcse-u2-r3","Combine acceleration and constant-speed phases",difficulty,`A car accelerates uniformly at ${accel3} m/s² from rest for ${time3a} s, then continues at constant speed for a further ${time3b} s. Find the total distance travelled.`,String(dist3),"Find the distance during acceleration, then add the constant-speed distance.",`½×${accel3}×${time3a}²+${accel3}×${time3a}×${time3b}=${dist3} m.`),
+    sq("igcse-u2-r4","Reason about free fall with resistance",difficulty,`An object falls ${hasResistance4?"with":"without"} air resistance acting on it. Will its acceleration remain constant at g throughout the fall? Answer yes or no.`,hasResistance4?"no":"yes","Air resistance increases with speed, changing the acceleration.",`${hasResistance4?"No":"Yes"} — ${hasResistance4?"resistance changes the acceleration as speed increases":"without resistance, acceleration stays constant at g"}.`),
+    sq("igcse-u2-r5","Identify acceleration vs deceleration from sign",difficulty,`An object has acceleration ${wrongSign5?"-":""}${accel5} m/s² for ${time5} s. Is the object ${wrongSign5?"decelerating":"accelerating"}? Answer yes or no.`,"yes","A negative acceleration is a deceleration; a positive one is an acceleration.",`Yes — this matches the sign of the acceleration given.`),
+    sq("igcse-u2-r6","Calculate average speed from total distance",difficulty,`A journey covers ${dist6} m in total, taking ${time6a} s for the first half of the time and ${time6b} s for the second half. Find the average speed for the whole journey.`,String(avgSpeed6),"Divide total distance by total time.",`${dist6}÷(${time6a}+${time6b})=${avgSpeed6} m/s.`),
+  ], difficulty);
+};
+
+const structuredMassWeightDensity = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const isCorrect1=r(0,1)===1;
+    const mass2=r(2,20),g2=10,weight2=mass2*g2;
+    const mass3=r(2,20),g3=r(2,12),weight3=mass3*g3;
+    const volume4=r(2,10),density4=r(2,12),mass4=density4*volume4;
+    const objDensity5=r(0,1)===1;
+    return validateUnitSet([
+      sq("igcse-u3-f1","Distinguish mass from weight (true/false)",difficulty,`True or false: mass is a measure of the quantity of matter in an object, and ${isCorrect1?"does not change":"changes"} depending on location.`,isCorrect1?"true":"false","Mass stays constant regardless of location; weight changes with gravitational field strength.",`${isCorrect1?"True":"False"} — mass does not change with location.`),
+      sq("igcse-u3-f2","Calculate weight from mass",difficulty,`An object has a mass of ${mass2} kg. Using g = ${g2} N/kg, find its weight, using W = mg.`,String(weight2),"Multiply mass by gravitational field strength.",`${mass2}×${g2}=${weight2} N.`),
+      sq("igcse-u3-f3","Calculate gravitational field strength",difficulty,`An object of mass ${mass3} kg has a weight of ${weight3} N. Find the gravitational field strength, using g = W/m.`,String(g3),"Divide weight by mass.",`${weight3}÷${mass3}=${g3} N/kg.`),
+      sq("igcse-u3-f4","Calculate density",difficulty,`An object has a mass of ${mass4} kg and a volume of ${volume4} m³. Find its density, using ρ = m/V.`,String(density4),"Divide mass by volume.",`${mass4}÷${volume4}=${density4} kg/m³.`),
+      sq("igcse-u3-f5","Predict floating based on density",difficulty,`An object has a density ${objDensity5?"greater":"less"} than water. Will it float or sink in water?`,objDensity5?"sink":"float","An object denser than the liquid sinks; less dense floats.",`It will ${objDensity5?"sink":"float"}.`),
+      sq("igcse-u3-f6","Name the method for finding irregular volume",difficulty,"What method is used to find the volume of an irregularly shaped solid that sinks in a liquid?",["displacement","volume by displacement","water displacement"],"This method uses the change in liquid level.","This is called volume by displacement."),
+    ], difficulty);
+  }
+  if (difficulty === "application") {
+    const mass1=r(2,20),g1=10,weight1=mass1*g1;
+    const volume2=r(2,10),density2=r(2,12),mass2=density2*volume2;
+    const objDensity3=r(0,1)===1;
+    const beforeReading4=r(20,60),afterReading4=beforeReading4+r(5,20),volume4=afterReading4-beforeReading4,mass4=r(2,10)*volume4,density4=mass4/volume4;
+    const liquidADensity6=r(2,10),liquidBDensity6=r(2,10);
+    return validateUnitSet([
+      sq("igcse-u3-a1","Calculate weight on Earth",difficulty,`An astronaut has a mass of ${mass1} kg on Earth, where g = ${g1} N/kg. Find their weight on Earth.`,String(weight1),"Multiply mass by g.",`${mass1}×${g1}=${weight1} N.`),
+      sq("igcse-u3-a2","Calculate mass from density and volume",difficulty,`A block has a density of ${density2} g/cm³ and a volume of ${volume2} cm³. Find its mass.`,String(mass2),"Multiply density by volume.",`${density2}×${volume2}=${mass2} g.`),
+      sq("igcse-u3-a3","Predict floating from a density comparison",difficulty,`An object has a density ${objDensity3?"less than":"greater than"} water. Will this object ${objDensity3?"float":"sink"}? Answer yes or no.`,"yes","Comparing object density to water density predicts floating or sinking.",`Yes — this matches the density comparison given.`),
+      sq("igcse-u3-a4","Find density using volume by displacement",difficulty,`A measuring cylinder reads ${beforeReading4} cm³ before an irregular solid is submerged, and ${afterReading4} cm³ after. The solid has a mass of ${mass4} g. Find its density.`,String(density4),"Find the volume from the level change, then divide mass by volume.",`${mass4}÷(${afterReading4}−${beforeReading4})=${density4} g/cm³.`),
+      sq("igcse-u3-a5","Recall the use of a balance (true/false)",difficulty,"True or false: a balance is used to compare the masses of two objects.","true","A balance compares masses directly.","True — this is the standard use of a balance."),
+      sq("igcse-u3-a6","Predict which liquid floats",difficulty,`Liquid A has density ${liquidADensity6} g/cm³ and Liquid B has density ${liquidBDensity6} g/cm³. If they do not mix, will Liquid ${liquidADensity6<liquidBDensity6?"A":"B"} float on top? Answer yes or no.`,"yes","The less dense liquid floats on top.","Yes — the less dense liquid floats on top."),
+    ], difficulty);
+  }
+  const mass1=r(2,20),g1=10,weight1=mass1*g1,wrongWeight1=mass1+g1;
+  const isMoonGravity2=r(0,1)===1;
+  const density3=r(2,8),volume3=r(2,10),mass3=density3*volume3;
+  const beforeReading4=r(20,60),volume4=r(5,20),afterReading4=beforeReading4+volume4,densityTarget4=r(2,8),mass4=densityTarget4*volume4;
+  const objDensity5=r(2,8),isFloat5=objDensity5<1;
+  const totalVolume6=r(2,10),density6=r(2,10),totalMass6=density6*totalVolume6;
+  return validateUnitSet([
+    sq("igcse-u3-r1","Correct a weight-calculation error",difficulty,`A learner finds weight by adding mass and g instead of multiplying, getting ${wrongWeight1} N for a mass of ${mass1} kg with g=${g1} N/kg. Enter the correct weight.`,String(weight1),"Multiply mass by g, don't add them.",`${mass1}×${g1}=${weight1} N.`),
+    sq("igcse-u3-r2","Reason about weight on the Moon",difficulty,`An astronaut has the same mass on the Moon as on Earth, but their weight is ${isMoonGravity2?"less":"the same"} on the Moon (where gravitational field strength is weaker). Is this correct? Answer yes or no.`,isMoonGravity2?"yes":"no","Weight depends on g, which is weaker on the Moon.",`${isMoonGravity2?"Yes":"No"} — weaker gravity means less weight for the same mass.`),
+    sq("igcse-u3-r3","Calculate mass then reason about floating",difficulty,`A solid has density ${density3} g/cm³ and volume ${volume3} cm³. Find its mass, then state whether it would float in water (density 1 g/cm³). Give the mass only.`,String(mass3),"Multiply density by volume.",`${density3}×${volume3}=${mass3} g.`),
+    sq("igcse-u3-r4","Calculate density from a displacement scenario",difficulty,`A measuring cylinder reads ${beforeReading4} cm³ before a solid of mass ${mass4} g is submerged, rising to ${afterReading4} cm³. Find the density of the solid.`,String(densityTarget4),"Find the volume from the level change, then divide mass by volume.",`${mass4}÷${volume4}=${densityTarget4} g/cm³.`),
+    sq("igcse-u3-r5","Predict floating from density values",difficulty,`An object has density ${objDensity5} g/cm³. Water has density 1 g/cm³. Will the object float or sink?`,isFloat5?"float":"sink","Compare the object's density to water's density.",`It will ${isFloat5?"float":"sink"}.`),
+    sq("igcse-u3-r6","Calculate density from mass and volume",difficulty,`A mixture has total mass ${totalMass6} kg and total volume ${totalVolume6} m³. A learner wants the density. Find it, using ρ = m/V.`,String(density6),"Divide mass by volume.",`${totalMass6}÷${totalVolume6}=${density6} kg/m³.`),
+  ], difficulty);
+};
+
+const structuredForces = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const f1a=r(5,20),f1b=r(2,10),sameDir1=r(0,1)===1,resultant1=sameDir1?f1a+f1b:f1a-f1b;
+    const force3=r(2,20),dist3=r(2,10),moment3=force3*dist3;
+    const isEquilibrium4=r(0,1)===1;
+    const frictionScenarios6=[
+      { desc:"a swimmer moving through water", answer:["liquidfriction","drag","liquid drag","drag from a liquid"] },
+      { desc:"a parachutist falling through the air", answer:["airresistance","air resistance","gas friction","drag from a gas"] },
+      { desc:"a box being dragged across a rough floor", answer:["solidfriction","solid friction","friction"] },
+    ];
+    const scenario6=frictionScenarios6[r(0,frictionScenarios6.length-1)];
+    return validateUnitSet([
+      sq("igcse-u4-f1","Find the resultant of forces on a line",difficulty,`Two forces act on an object along the same line: ${f1a} N and ${f1b} N, acting in ${sameDir1?"the same":"opposite"} directions. Find the resultant force.`,String(resultant1),"Add forces in the same direction; subtract opposing forces.",`${f1a}${sameDir1?"+":"−"}${f1b}=${resultant1} N.`),
+      sq("igcse-u4-f2","Recall Newton's first law (true/false)",difficulty,"True or false: an object at rest will remain at rest unless a resultant force acts on it.","true","This is Newton's first law.","True — this is Newton's first law."),
+      sq("igcse-u4-f3","Calculate a moment",difficulty,`A force of ${force3} N acts at a perpendicular distance of ${dist3} m from a pivot. Find the moment, using moment = force × perpendicular distance.`,String(moment3),"Multiply force by perpendicular distance.",`${force3}×${dist3}=${moment3} N·m.`),
+      sq("igcse-u4-f4","Recall the condition for equilibrium",difficulty,`An object has no resultant force and no resultant moment acting on it. Is it ${isEquilibrium4?"in equilibrium":"accelerating"}?`,isEquilibrium4?"yes":"no","No resultant force or moment means equilibrium, not acceleration.",`${isEquilibrium4?"Yes":"No"} — no resultant force or moment means equilibrium.`),
+      sq("igcse-u4-f5","Name the force between touching surfaces",difficulty,"A force that impedes motion and produces heating between two touching surfaces is called what?",["solid friction","friction"],"This force acts between surfaces in contact.","This is solid friction."),
+      sq("igcse-u4-f6","Identify the type of friction/drag in a scenario",difficulty,`Which type of friction acts on ${scenario6.desc}?`,scenario6.answer,"Consider whether the object moves through a solid surface, liquid, or gas.",`This describes drag/friction relevant to that medium.`),
+    ], difficulty);
+  }
+  if (difficulty === "application") {
+    const engineForce1=r(20,60),dragForce1=r(5,19),resultant1=engineForce1-dragForce1;
+    const distA2=r(2,8),distB2=r(2,8),kFactor2=r(2,5),momentA2=distA2*distB2*kFactor2,forceA2=distB2*kFactor2,forceB2=distA2*kFactor2;
+    const isWithinLimit3=r(0,1)===1;
+    const mass4=r(2,10),accel4=r(2,10),force4=mass4*accel4;
+    const isLower5=r(0,1)===1;
+    const forceIncrease6=r(0,1)===1;
+    return validateUnitSet([
+      sq("igcse-u4-a1","Find the resultant of engine and drag forces",difficulty,`A car's engine provides a driving force of ${engineForce1} N, while drag/friction provides ${dragForce1} N in the opposite direction. Find the resultant force.`,String(resultant1),"Subtract the opposing force from the driving force.",`${engineForce1}−${dragForce1}=${resultant1} N.`),
+      sq("igcse-u4-a2","Apply the principle of moments",difficulty,`A beam balances with a force of ${forceA2} N at a distance of ${distA2} m from the pivot on one side, and an unknown force at a distance of ${distB2} m on the other side. Find the unknown force, using the principle of moments.`,String(forceB2),"Set the two moments equal and solve for the unknown force.",`${forceA2}×${distA2}=${momentA2}; ${momentA2}÷${distB2}=${forceB2} N.`),
+      sq("igcse-u4-a3","Reason about the limit of proportionality",difficulty,`A spring is stretched ${isWithinLimit3?"within":"beyond"} its limit of proportionality. Does the load-extension graph remain a straight line at this point? Answer yes or no.`,isWithinLimit3?"yes":"no","Beyond the limit of proportionality, the graph is no longer a straight line.",`${isWithinLimit3?"Yes":"No"} — ${isWithinLimit3?"within this limit, the graph is straight":"beyond this limit, the graph curves"}.`),
+      sq("igcse-u4-a4","Calculate resultant force using F = ma",difficulty,`An object of mass ${mass4} kg accelerates at ${accel4} m/s². Find the resultant force acting on it, using F = ma.`,String(force4),"Multiply mass by acceleration.",`${mass4}×${accel4}=${force4} N.`),
+      sq("igcse-u4-a5","Reason about centre of gravity and stability",difficulty,`A vehicle with a ${isLower5?"lower":"higher"} centre of gravity is generally ${isLower5?"more":"less"} stable. Is this statement correct? Answer yes or no.`,"yes","A lower centre of gravity generally increases stability.","Yes — this is correct."),
+      sq("igcse-u4-a6","Reason about circular motion factors",difficulty,`An object moves in a circular path at constant mass and radius. If the force towards the centre ${forceIncrease6?"increases":"decreases"}, does the object's speed ${forceIncrease6?"increase":"decrease"}?`,"yes","At constant mass and radius, speed and centripetal force change together.",`Yes — this matches the relationship between force and speed here.`),
+    ], difficulty);
+  }
+  const distA1=r(2,8),distB1=r(2,8),kFactor1=r(2,5),forceA1=distB1*kFactor1,forceB1=distA1*kFactor1,wrongForceB1=forceA1+distB1;
+  let distA2,distB2,distC2,forceA2,forceB2,forceC2;
+  do {
+    distA2=r(2,8); distB2=r(2,8); distC2=r(2,8);
+    forceA2=r(2,10); forceB2=r(2,10);
+    forceC2=(forceA2*distA2+forceB2*distB2)/distC2;
+  } while (!Number.isInteger(forceC2));
+  const mass3=r(2,10),force3=r(2,10)*mass3,accel3=force3/mass3;
+  const speedIncrease5=r(0,1)===1;
+  const isBeyondLimit6=r(0,1)===1;
+  return validateUnitSet([
+    sq("igcse-u4-r1","Correct a moments error",difficulty,`A beam has a force of ${forceA1} N at ${distA1} m from the pivot on one side. A learner calculates the balancing force on the other side (at ${distB1} m) by adding instead of using moments, getting ${wrongForceB1} N. Enter the correct balancing force.`,String(forceB1),"Use moments (force × distance), not addition.",`(${forceA1}×${distA1})÷${distB1}=${forceB1} N.`),
+    sq("igcse-u4-r2","Apply moments with two forces on one side",difficulty,`A beam has two forces on one side: ${forceA2} N at ${distA2} m, and ${forceB2} N at ${distB2} m from the pivot. Find the single balancing force needed at ${distC2} m on the other side.`,String(forceC2),"Add both moments on one side, then divide by the distance on the other.",`(${forceA2}×${distA2}+${forceB2}×${distB2})÷${distC2}=${forceC2} N.`),
+    sq("igcse-u4-r3","Calculate acceleration from force and mass",difficulty,`An object of mass ${mass3} kg has a resultant force of ${force3} N acting on it. Find its acceleration, using F = ma.`,String(accel3),"Divide force by mass.",`${force3}÷${mass3}=${accel3} m/s².`),
+    sq("igcse-u4-r4","Reason about friction and heating (true/false)",difficulty,"True or false: friction between two surfaces always produces heating, even when it is not the main effect being considered.","true","Friction converts kinetic energy to heat as a byproduct.","True — friction always produces some heating."),
+    sq("igcse-u4-r5","Reason about mass and force in circular motion",difficulty,`In circular motion at constant force and radius, does ${speedIncrease5?"an increased mass require an increased force":"a decreased mass require a decreased force"} to maintain the same speed and radius?`,speedIncrease5?"yes":"no","A larger mass needs a larger force to maintain the same circular motion.",`${speedIncrease5?"Yes":"No"} — mass and required force are related this way.`),
+    sq("igcse-u4-r6","Reason about the limit of proportionality",difficulty,`A spring is stretched ${isBeyondLimit6?"beyond":"within"} its limit of proportionality. Is the extension still directly proportional to the load at this point? Answer yes or no.`,isBeyondLimit6?"no":"yes","Beyond the limit of proportionality, extension is no longer proportional to load.",`${isBeyondLimit6?"No":"Yes"} — ${isBeyondLimit6?"proportionality no longer holds beyond this point":"proportionality holds within this limit"}.`),
+  ], difficulty);
+};
+
 const igcseTopics: Record<string,(difficulty:"foundational"|"application"|"reasoning")=>PhysicsQuestion[]> = {
   "igcse-u1": structuredIgcseMeasurement,
+  "igcse-u2": structuredMotion,
+  "igcse-u3": structuredMassWeightDensity,
+  "igcse-u4": structuredForces,
   "igcse-u14": structuredMagnetism,
   "igcse-u15": structuredElectricalQuantities,
   "igcse-u16": structuredElectricCircuits,

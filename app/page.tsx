@@ -117,9 +117,9 @@ const stage9Units: LowerSecondaryUnit[] = [
 type PhysicsUnit = { id: string; title: string; summary: string; icon: string; available: boolean };
 const igcsePhysicsUnits: PhysicsUnit[] = [
   { id:"igcse-u1", title:"1.1 Physical quantities & measurement", summary:"SI units, conversions, precision and error types", icon:"⚖", available:true },
-  { id:"igcse-u2", title:"1.2 Motion", summary:"Speed, velocity, acceleration and motion graphs", icon:"→", available:false },
-  { id:"igcse-u3", title:"1.3–1.4 Mass, weight & density", summary:"Mass, weight, gravity and density calculations", icon:"◆", available:false },
-  { id:"igcse-u4", title:"1.5 Forces & their effects", summary:"Hooke's law, turning effects and equilibrium", icon:"↕", available:false },
+  { id:"igcse-u2", title:"1.2 Motion", summary:"Speed, velocity, acceleration and motion graphs", icon:"→", available:true },
+  { id:"igcse-u3", title:"1.3–1.4 Mass, weight & density", summary:"Mass, weight, gravity and density calculations", icon:"◆", available:true },
+  { id:"igcse-u4", title:"1.5 Forces & their effects", summary:"Hooke's law, turning effects and equilibrium", icon:"↕", available:true },
   { id:"igcse-u5", title:"1.6 Momentum", summary:"Momentum and conservation of momentum", icon:"⇒", available:false },
   { id:"igcse-u6", title:"1.7 Energy, work & power", summary:"Energy transfers, work done and power", icon:"⚡", available:false },
   { id:"igcse-u7", title:"1.8 Pressure", summary:"Pressure in solids, liquids and gases", icon:"▼", available:false },
