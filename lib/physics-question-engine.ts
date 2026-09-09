@@ -512,11 +512,200 @@ const structuredForces = (difficulty:"foundational"|"application"|"reasoning") =
   ], difficulty);
 };
 
+const structuredMomentum = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const mass1=r(2,20),velocity1=r(2,20),momentum1=mass1*velocity1;
+    const force2=r(2,20),time2=r(2,10),impulse2=force2*time2;
+    const hasExternalForce3=r(0,1)===1;
+    const deltaT4=r(2,10),force4=r(2,20),deltaP4=force4*deltaT4;
+    let m1_5,v1_5,m2_5,totalM5,vCombined5;
+    do {
+      m1_5=r(2,10); v1_5=r(2,20); m2_5=r(2,10); totalM5=m1_5+m2_5;
+      vCombined5=(m1_5*v1_5)/totalM5;
+    } while (!Number.isInteger(vCombined5));
+    return validateUnitSet([
+      sq("igcse-u5-f1","Calculate momentum",difficulty,`An object has mass ${mass1} kg and velocity ${velocity1} m/s. Find its momentum, using p = mv.`,String(momentum1),"Multiply mass by velocity.",`${mass1}×${velocity1}=${momentum1} kg·m/s.`),
+      sq("igcse-u5-f2","Calculate impulse",difficulty,`A force of ${force2} N acts for ${time2} s. Find the impulse, using impulse = FΔt.`,String(impulse2),"Multiply force by time.",`${force2}×${time2}=${impulse2} N·s.`),
+      sq("igcse-u5-f3","Reason about momentum conservation (true/false)",difficulty,`True or false: in a system with ${hasExternalForce3?"a significant external force acting":"no external forces acting"}, total momentum is conserved.`,hasExternalForce3?"false":"true","Momentum is only conserved when there is no net external force.",`${hasExternalForce3?"False":"True"} — momentum is conserved only with no net external force.`),
+      sq("igcse-u5-f4","Calculate force from a momentum change",difficulty,`An object's momentum changes by ${deltaP4} kg·m/s over ${deltaT4} s. Find the resultant force, using F = Δp/Δt.`,String(deltaP4/deltaT4),"Divide the change in momentum by the time taken.",`${deltaP4}÷${deltaT4}=${deltaP4/deltaT4} N.`),
+      sq("igcse-u5-f5","Apply conservation of momentum to a collision",difficulty,`An object of mass ${m1_5} kg moving at ${v1_5} m/s collides and sticks to a stationary object of mass ${m2_5} kg. Using conservation of momentum, find their combined velocity after collision.`,String(vCombined5),"Total momentum before equals total momentum after.",`(${m1_5}×${v1_5})÷(${m1_5}+${m2_5})=${vCombined5} m/s.`),
+      sq("igcse-u5-f6","Recall the SI unit of momentum",difficulty,"What is the SI unit of momentum?",["kgm/s","kg m/s","kgms-1","kg·m/s"],"Momentum's unit comes from mass × velocity.","The unit is kg·m/s."),
+    ], difficulty);
+  }
+  if (difficulty === "application") {
+    const mass1=r(500,2000),velocity1=r(2,30),momentum1=mass1*velocity1;
+    const force2=r(200,2000),time2=r(1,5)/10,impulse2=Math.round(force2*time2*100)/100;
+    let m1_3,v1_3,m2_3,totalM3,vCombined3;
+    do {
+      m1_3=r(500,1500); v1_3=r(2,20); m2_3=r(500,1500); totalM3=m1_3+m2_3;
+      vCombined3=(m1_3*v1_3)/totalM3;
+    } while (!Number.isInteger(vCombined3));
+    const deltaT4=r(1,5)/10,force4=r(100,1000),deltaP4=Math.round(force4*deltaT4*100)/100;
+    const isConserved5=r(0,1)===1;
+    const mass6=r(500,2000),v1_6=r(2,20),v2_6=v1_6+r(2,15),deltaP6=mass6*(v2_6-v1_6);
+    return validateUnitSet([
+      sq("igcse-u5-a1","Calculate momentum in a real context",difficulty,`A car of mass ${mass1} kg travels at ${velocity1} m/s. Find its momentum.`,String(momentum1),"Multiply mass by velocity.",`${mass1}×${velocity1}=${momentum1} kg·m/s.`),
+      sq("igcse-u5-a2","Calculate impulse in a collision",difficulty,`During a collision, a force of ${force2} N acts for ${time2} s. Find the impulse delivered.`,String(impulse2),"Multiply force by time.",`${force2}×${time2}=${impulse2} N·s.`),
+      sq("igcse-u5-a3","Apply conservation of momentum in context",difficulty,`A trolley of mass ${m1_3} kg moving at ${v1_3} m/s collides and sticks to a stationary trolley of mass ${m2_3} kg. Find their combined velocity after the collision.`,String(vCombined3),"Total momentum before equals total momentum after.",`(${m1_3}×${v1_3})÷(${m1_3}+${m2_3})=${vCombined3} m/s.`),
+      sq("igcse-u5-a4","Calculate momentum change from an airbag scenario",difficulty,`An airbag increases the time of impact to ${deltaT4} s for a force of ${force4} N. Find the change in momentum during this time.`,String(deltaP4),"Multiply force by time.",`${force4}×${deltaT4}=${deltaP4} kg·m/s.`),
+      sq("igcse-u5-a5","Reason about momentum conservation in an explosion",difficulty,`True or false: a gun recoils backward when a bullet is fired forward, because momentum ${isConserved5?"is":"is not"} conserved in the explosion.`,isConserved5?"true":"false","Momentum conservation explains recoil.",`${isConserved5?"True":"False"} — this is due to conservation of momentum.`),
+      sq("igcse-u5-a6","Calculate a change in momentum",difficulty,`A vehicle of mass ${mass6} kg speeds up from ${v1_6} m/s to ${v2_6} m/s. Find the change in momentum.`,String(deltaP6),"Multiply mass by the change in velocity.",`${mass6}×(${v2_6}−${v1_6})=${deltaP6} kg·m/s.`),
+    ], difficulty);
+  }
+  const mass1=r(2,20),velocity1=r(2,20),wrongMomentum1=mass1+velocity1,correctMomentum1=mass1*velocity1;
+  const deltaT2=r(1,5)/10,force2=r(100,1000),deltaP2=Math.round(force2*deltaT2*100)/100;
+  let m1_3,v1_3,m2_3,totalM3,vCombined3;
+  do {
+    m1_3=r(500,1500); v1_3=r(2,20); m2_3=r(500,1500); totalM3=m1_3+m2_3;
+    vCombined3=(m1_3*v1_3)/totalM3;
+  } while (!Number.isInteger(vCombined3));
+  const isLongerTime4=r(0,1)===1;
+  const mass5=r(2,10),accel5=r(2,10),force5=mass5*accel5,time5=r(2,8),deltaP5=force5*time5;
+  const isTrue6=r(0,1)===1;
+  return validateUnitSet([
+    sq("igcse-u5-r1","Correct a momentum-calculation error",difficulty,`A learner finds momentum by adding mass and velocity instead of multiplying, getting ${wrongMomentum1} for an object of mass ${mass1} kg and velocity ${velocity1} m/s. Enter the correct momentum.`,String(correctMomentum1),"Multiply mass by velocity, don't add them.",`${mass1}×${velocity1}=${correctMomentum1} kg·m/s.`),
+    sq("igcse-u5-r2","Find momentum change from force and time",difficulty,`A force of ${force2} N acts for ${deltaT2} s. Find the change in momentum, then state the units of your answer (kg·m/s or N·s are equivalent). Give the numerical value only.`,String(deltaP2),"Multiply force by time.",`${force2}×${deltaT2}=${deltaP2}.`),
+    sq("igcse-u5-r3","Correct a collision misconception",difficulty,`A trolley of mass ${m1_3} kg moving at ${v1_3} m/s collides and sticks to a stationary trolley of mass ${m2_3} kg. A learner assumes the final velocity is simply ${v1_3}/2. Use conservation of momentum to find the correct combined velocity.`,String(vCombined3),"Use conservation of momentum, weighted by mass, not a simple average.",`(${m1_3}×${v1_3})÷(${m1_3}+${m2_3})=${vCombined3} m/s.`),
+    sq("igcse-u5-r4","Reason about force and collision time (true/false)",difficulty,`True or false: increasing the time over which a collision occurs (e.g. with an airbag or crumple zone), while keeping the change in momentum the same, ${isLongerTime4?"reduces":"increases"} the force experienced.`,isLongerTime4?"true":"false","F=Δp/Δt, so a longer time reduces the force for the same momentum change.",`${isLongerTime4?"True":"False"} — a longer collision time reduces the force.`),
+    sq("igcse-u5-r5","Combine F=ma with momentum change",difficulty,`A resultant force is found using F = ma for an object of mass ${mass5} kg and acceleration ${accel5} m/s². Find the change in momentum produced over ${time5} s.`,String(deltaP5),"Find the force first, then multiply by time.",`${mass5}×${accel5}×${time5}=${deltaP5} kg·m/s.`),
+    sq("igcse-u5-r6","Reason about momentum in an explosion",difficulty,`True or false: in an explosion where two initially stationary objects separate, the total momentum after the explosion is ${isTrue6?"zero, the same as before":"not necessarily zero"}.`,isTrue6?"true":"false","Momentum starts at zero and must remain zero, so the two momenta must cancel.",`${isTrue6?"True":"False"} — the total remains zero, matching the momentum before.`),
+  ], difficulty);
+};
+
+const ENERGY_STORES = ["kinetic","gravitational potential","chemical","elastic (strain)","nuclear","electrostatic","internal (thermal)"];
+const structuredEnergyWorkPower = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const mass2=r(2,10)*2,velocity2=r(2,10),ke2=(mass2*velocity2*velocity2)/2;
+    const mass3=r(2,20),g3=10,height3=r(2,20),ep3=mass3*g3*height3;
+    const force4=r(2,20),dist4=r(2,20),work4=force4*dist4;
+    const time5=r(2,10),power5=r(20,60),work5=power5*time5;
+    const wordingCorrect6=r(0,1)===1;
+    return validateUnitSet([
+      sq("igcse-u6-f1","Identify a non-existent energy store",difficulty,`Which of these is NOT a recognised energy store? (a) kinetic (b) gravitational potential (c) motion energy (d) internal (thermal)`,["c","motionenergy","motion energy"],"The seven recognised stores are kinetic, gravitational potential, chemical, elastic, nuclear, electrostatic, and internal (thermal).","The correct answer is (c) motion energy — not a recognised store name."),
+      sq("igcse-u6-f2","Calculate kinetic energy",difficulty,`An object of mass ${mass2} kg moves at ${velocity2} m/s. Find its kinetic energy, using Ek = ½mv².`,String(ke2),"Square the velocity, multiply by mass, then halve.",`½×${mass2}×${velocity2}²=${ke2} J.`),
+      sq("igcse-u6-f3","Calculate gravitational potential energy",difficulty,`An object of mass ${mass3} kg is raised ${height3} m. Using g=${g3} N/kg, find the change in gravitational potential energy, using ΔEp = mgΔh.`,String(ep3),"Multiply mass, g, and height together.",`${mass3}×${g3}×${height3}=${ep3} J.`),
+      sq("igcse-u6-f4","Calculate work done",difficulty,`A force of ${force4} N moves an object ${dist4} m in the direction of the force. Find the work done, using W = Fd.`,String(work4),"Multiply force by distance.",`${force4}×${dist4}=${work4} J.`),
+      sq("igcse-u6-f5","Calculate power",difficulty,`${work5} J of work is done in ${time5} s. Find the power, using P = W/t.`,String(power5),"Divide work by time.",`${work5}÷${time5}=${power5} W.`),
+      sq("igcse-u6-f6","Evaluate a statement about energy conservation (true/false)",difficulty,`True or false: energy ${wordingCorrect6?"cannot be created or destroyed, only transferred between stores":"can sometimes be created or destroyed during a transfer"}.`,wordingCorrect6?"true":"false","Energy is always conserved — never created or destroyed, only transferred.",`${wordingCorrect6?"True":"False"} — energy is conserved, only ever transferred between stores.`),
+    ], difficulty);
+  }
+  if (difficulty === "application") {
+    const mass1=r(2,10)*2,velocity1=r(2,10),ke1=(mass1*velocity1*velocity1)/2;
+    const mass2=r(2,20),g2=10,height2=r(2,20),ep2=mass2*g2*height2;
+    let time3,power3,work3,dist3,force3;
+    do {
+      time3=r(2,10); power3=r(20,60); work3=power3*time3; dist3=r(2,10);
+      force3=work3/dist3;
+    } while (!Number.isInteger(force3));
+    const resourceOptions=[
+      { name:"solar power", answer:["renewable"] },
+      { name:"coal", answer:["nonrenewable","non-renewable"] },
+      { name:"wind power", answer:["renewable"] },
+      { name:"natural gas", answer:["nonrenewable","non-renewable"] },
+    ];
+    const resourcePick=resourceOptions[r(0,resourceOptions.length-1)];
+    const EFFICIENCY_RATIOS:[number,number][]=[[1,2],[1,4],[1,5],[3,4],[1,10],[3,5]];
+    const [effNum5,effDen5]=EFFICIENCY_RATIOS[r(0,EFFICIENCY_RATIOS.length-1)];
+    const totalIn5=r(2,10)*effDen5*10,usefulOut5=totalIn5*effNum5/effDen5,efficiency5=(usefulOut5/totalIn5)*100;
+    const isFusion6=r(0,1)===1;
+    return validateUnitSet([
+      sq("igcse-u6-a1","Calculate kinetic energy in context",difficulty,`A ball of mass ${mass1} kg travels at ${velocity1} m/s. Find its kinetic energy.`,String(ke1),"Square the velocity, multiply by mass, then halve.",`½×${mass1}×${velocity1}²=${ke1} J.`),
+      sq("igcse-u6-a2","Calculate GPE in context",difficulty,`A crane lifts a mass of ${mass2} kg to a height of ${height2} m. Using g=${g2} N/kg, find the increase in gravitational potential energy.`,String(ep2),"Multiply mass, g, and height together.",`${mass2}×${g2}×${height2}=${ep2} J.`),
+      sq("igcse-u6-a3","Calculate power from force, distance and time",difficulty,`A force of ${force3} N pushes an object ${dist3} m in ${time3} s. Find the power developed.`,String(power3),"Find the work done, then divide by time.",`(${force3}×${dist3})÷${time3}=${power3} W.`),
+      sq("igcse-u6-a4","Classify an energy resource",difficulty,`Is ${resourcePick.name} a renewable or non-renewable energy resource?`,resourcePick.answer,"Consider whether the resource replenishes naturally on a human timescale.",`${resourcePick.name} is ${resourcePick.answer[0]}.`),
+      sq("igcse-u6-a5","Calculate efficiency",difficulty,`A machine has a useful energy output of ${usefulOut5} J for a total energy input of ${totalIn5} J. Find its efficiency as a percentage.`,String(efficiency5),"Divide useful output by total input, then multiply by 100%.",`(${usefulOut5}÷${totalIn5})×100=${efficiency5}%.`),
+      sq("igcse-u6-a6","Recall the Sun's energy source (true/false)",difficulty,`True or false: the Sun's energy is produced by nuclear ${isFusion6?"fusion":"fission"}.`,isFusion6?"true":"false","The Sun is powered by nuclear fusion of hydrogen into helium.",`${isFusion6?"True":"False"} — the Sun's energy comes from nuclear fusion.`),
+    ], difficulty);
+  }
+  const mass1=r(2,10)*2,velocity1=r(2,10),wrongKe1=mass1*velocity1,correctKe1=(mass1*velocity1*velocity1)/2;
+  let workSum2a,workSum2b,time2,power2;
+  do {
+    workSum2a=r(20,100); workSum2b=r(20,100); time2=r(2,10);
+    power2=(workSum2a+workSum2b)/time2;
+  } while (!Number.isInteger(power2));
+  const mass3=r(2,10)*2,height3=r(2,20),g3=10,ep3=mass3*g3*height3;
+  const EFF_RATIOS:[number,number][]=[[1,2],[1,4],[1,5],[3,4],[1,10],[3,5]];
+  const [effNum4,effDen4]=EFF_RATIOS[r(0,EFF_RATIOS.length-1)];
+  const totalIn4=r(2,10)*effDen4*10,usefulOut4=totalIn4*effNum4/effDen4,efficiency4=(usefulOut4/totalIn4)*100,wastedEnergy4=totalIn4-usefulOut4;
+  const isFusion5=r(0,1)===1;
+  let force6,dist6,time6,work6,power6;
+  do {
+    force6=r(20,100); dist6=r(2,10); work6=force6*dist6; time6=r(2,10);
+    power6=work6/time6;
+  } while (!Number.isInteger(power6));
+  return validateUnitSet([
+    sq("igcse-u6-r1","Correct a kinetic-energy error",difficulty,`A learner finds kinetic energy using Ek = mv (forgetting to square v and halve), getting ${wrongKe1} J for a mass of ${mass1} kg at ${velocity1} m/s. Enter the correct kinetic energy.`,String(correctKe1),"Ek = ½mv² — don't forget to square v and halve the result.",`½×${mass1}×${velocity1}²=${correctKe1} J.`),
+    sq("igcse-u6-r2","Calculate average power over multiple stages",difficulty,`Two stages of a process do ${workSum2a} J and ${workSum2b} J of work respectively, taking a total of ${time2} s. Find the average power over the whole process.`,String(power2),"Add the total work, then divide by total time.",`(${workSum2a}+${workSum2b})÷${time2}=${power2} W.`),
+    sq("igcse-u6-r3","Calculate GPE and identify the energy store",difficulty,`An object of mass ${mass3} kg is raised ${height3} m. Using g=${g3} N/kg, find the gain in gravitational potential energy, then state which energy store this represents.`,String(ep3),"Multiply mass, g, and height together.",`${mass3}×${g3}×${height3}=${ep3} J.`),
+    sq("igcse-u6-r4","Calculate efficiency from wasted energy",difficulty,`A machine has a total energy input of ${totalIn4} J and wastes ${wastedEnergy4} J. Find its efficiency as a percentage.`,String(efficiency4),"Find the useful output first, then divide by total input.",`(${totalIn4}−${wastedEnergy4})÷${totalIn4}×100=${efficiency4}%.`),
+    sq("igcse-u6-r5","Reason about the source of Earth's energy resources",difficulty,`True or false: the energy released by nuclear ${isFusion5?"fusion":"fission"} in the Sun is the source of most of Earth's energy resources.`,isFusion5?"true":"false","The Sun's fusion reactions power most Earth energy resources except geothermal, nuclear and tidal.",`${isFusion5?"True":"False"} — this is the source for most (not all) energy resources.`),
+    sq("igcse-u6-r6","Combine W=Fd and P=W/t",difficulty,`A force of ${force6} N moves an object ${dist6} m in ${time6} s. Find the power developed, combining W=Fd and P=W/t.`,String(power6),"Find the work done first, then divide by time.",`(${force6}×${dist6})÷${time6}=${power6} W.`),
+  ], difficulty);
+};
+
+const structuredPressure = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    let force1,area1,pressure1;
+    do { force1=r(20,100); area1=r(2,10); pressure1=force1/area1; } while (!Number.isInteger(pressure1));
+    const pressure2=r(2,20),area2=r(2,10),force2=pressure2*area2;
+    let pressure3,force3,area3;
+    do { pressure3=r(2,20); force3=r(20,100); area3=force3/pressure3; } while (!Number.isInteger(area3));
+    const isDeeper4=r(0,1)===1;
+    const density6=r(2,10)*100,g6=10,height6=r(2,10),deltaP6=density6*g6*height6;
+    return validateUnitSet([
+      sq("igcse-u7-f1","Calculate pressure",difficulty,`A force of ${force1} N acts on an area of ${area1} m². Find the pressure, using p = F/A.`,String(pressure1),"Divide force by area.",`${force1}÷${area1}=${pressure1} Pa.`),
+      sq("igcse-u7-f2","Calculate force from pressure and area",difficulty,`A pressure of ${pressure2} Pa acts on an area of ${area2} m². Find the force, rearranging p = F/A.`,String(force2),"Multiply pressure by area.",`${pressure2}×${area2}=${force2} N.`),
+      sq("igcse-u7-f3","Calculate area from pressure and force",difficulty,`A force of ${force3} N produces a pressure of ${pressure3} Pa. Find the area, rearranging p = F/A.`,String(area3),"Divide force by pressure.",`${force3}÷${pressure3}=${area3} m².`),
+      sq("igcse-u7-f4","Recall how liquid pressure varies with depth (true/false)",difficulty,`True or false: pressure beneath the surface of a liquid ${isDeeper4?"increases":"decreases"} with increasing depth.`,isDeeper4?"true":"false","Liquid pressure increases with depth.",`${isDeeper4?"True":"False"} — pressure increases with depth.`),
+      sq("igcse-u7-f5","Recall how liquid pressure varies with density (true/false)",difficulty,"True or false: at the same depth, a less dense liquid produces a smaller pressure.","true","Liquid pressure depends on density as well as depth.","True — lower density means lower pressure at the same depth."),
+      sq("igcse-u7-f6","Calculate a pressure change with depth",difficulty,`Find the pressure change at a depth of ${height6} m in a liquid of density ${density6} kg/m³. Using g=${g6} N/kg, use Δp = ρgΔh.`,String(deltaP6),"Multiply density, g, and depth together.",`${density6}×${g6}×${height6}=${deltaP6} Pa.`),
+    ], difficulty);
+  }
+  if (difficulty === "application") {
+    let weight1,area1,pressure1;
+    do { weight1=r(400,900); area1=r(2,10); pressure1=weight1/area1; } while (!Number.isInteger(pressure1));
+    const isSmaller2=r(0,1)===1;
+    const density3=r(2,10)*100,g3=10,height3=r(2,10),deltaP3=density3*g3*height3;
+    let pressure4,force4,area4;
+    do { pressure4=r(2,20); force4=r(20,200); area4=force4/pressure4; } while (!Number.isInteger(area4));
+    const isWider5=r(0,1)===1;
+    const densityA6=r(2,10),densityB6=r(2,10);
+    return validateUnitSet([
+      sq("igcse-u7-a1","Calculate pressure in a real context",difficulty,`A person's weight is ${weight1} N, spread over a foot area of ${area1} m² (exaggerated for calculation). Find the pressure exerted.`,String(pressure1),"Divide weight by area.",`${weight1}÷${area1}=${pressure1} Pa.`),
+      sq("igcse-u7-a2","Reason about area and pressure (true/false)",difficulty,`True or false: a sharp knife cuts more easily than a blunt one because its ${isSmaller2?"smaller":"larger"} blade area produces a ${isSmaller2?"greater":"smaller"} pressure for the same force.`,isSmaller2?"true":"false","A smaller area concentrates the same force into a greater pressure.",`${isSmaller2?"True":"False"} — a smaller area gives greater pressure for the same force.`),
+      sq("igcse-u7-a3","Calculate pressure at a diving depth",difficulty,`A swimmer dives to a depth of ${height3} m in water of density ${density3} kg/m³. Using g=${g3} N/kg, find the pressure increase due to the water.`,String(deltaP3),"Multiply density, g, and depth together.",`${density3}×${g3}×${height3}=${deltaP3} Pa.`),
+      sq("igcse-u7-a4","Calculate area from a hydraulic press",difficulty,`A hydraulic press exerts a pressure of ${pressure4} Pa and a force of ${force4} N. Find the area over which the force acts.`,String(area4),"Divide force by pressure.",`${force4}÷${pressure4}=${area4} m².`),
+      sq("igcse-u7-a5","Reason about tyre width and ground pressure (true/false)",difficulty,`True or false: wider tyres on a vehicle ${isWider5?"reduce":"increase"} the pressure on the ground for the same vehicle weight.`,isWider5?"true":"false","A wider tyre spreads the same weight over a larger area, reducing pressure.",`${isWider5?"True":"False"} — wider tyres reduce ground pressure.`),
+      sq("igcse-u7-a6","Compare pressures of two liquids",difficulty,`Liquid A has density ${densityA6} g/cm³ and Liquid B has density ${densityB6} g/cm³. At the same depth, which liquid produces the greater pressure, A or B?`,densityA6>densityB6?"a":"b","The denser liquid produces the greater pressure at the same depth.",`Liquid ${densityA6>densityB6?"A":"B"} is denser, so it produces the greater pressure.`),
+    ], difficulty);
+  }
+  let force1,area1,wrongPressure1,correctPressure1;
+  do { force1=r(20,100); area1=r(2,10); correctPressure1=force1/area1; } while (!Number.isInteger(correctPressure1));
+  wrongPressure1=force1*area1;
+  const density2=r(2,10)*100,g2=10,height2=r(2,10),deltaP2=density2*g2*height2;
+  const isDifferentDensity3=r(0,1)===1;
+  const pressure4=r(2,20),area4=r(2,10),force4=pressure4*area4,wrongArea4=force4+pressure4;
+  const isTaller5=r(0,1)===1;
+  const densityA6=r(2,10)*100,heightA6=r(2,8),pA6=densityA6*10*heightA6;
+  const densityB6=r(2,10)*100,heightB6=r(2,8),pB6=densityB6*10*heightB6;
+  return validateUnitSet([
+    sq("igcse-u7-r1","Correct a pressure-calculation error",difficulty,`A learner finds pressure by multiplying force and area instead of dividing, getting ${wrongPressure1} for a force of ${force1} N on an area of ${area1} m². Enter the correct pressure.`,String(correctPressure1),"Divide force by area, don't multiply.",`${force1}÷${area1}=${correctPressure1} Pa.`),
+    sq("igcse-u7-r2","Calculate a pressure increase with depth",difficulty,`A tank of liquid has density ${density2} kg/m³. Using g=${g2} N/kg, find the pressure increase between the surface and a depth of ${height2} m.`,String(deltaP2),"Multiply density, g, and depth together.",`${density2}×${g2}×${height2}=${deltaP2} Pa.`),
+    sq("igcse-u7-r3","Reason about density and pressure at the same depth",difficulty,`True or false: two liquids with ${isDifferentDensity3?"different densities":"the same density"}, at the same depth, always produce the same pressure.`,isDifferentDensity3?"false":"true","Pressure at a given depth depends on the liquid's density.",`${isDifferentDensity3?"False":"True"} — pressure depends on density as well as depth.`),
+    sq("igcse-u7-r4","Correct an area-calculation error",difficulty,`A learner finds area by adding force and pressure instead of dividing, getting ${wrongArea4} for a force of ${force4} N and pressure of ${pressure4} Pa. Enter the correct area.`,String(area4),"Divide force by pressure, don't add them.",`${force4}÷${pressure4}=${area4} m².`),
+    sq("igcse-u7-r5","Reason about liquid column height and pressure",difficulty,`Two identical liquid columns have the same density, but column A is ${isTaller5?"taller":"shorter"} than column B. Does column A produce a ${isTaller5?"greater":"smaller"} pressure at its base?`,"yes","Taller columns of the same liquid produce greater pressure at the base.","Yes — this matches the relationship between height and pressure."),
+    sq("igcse-u7-r6","Compare two liquid pressures from density and depth",difficulty,`Liquid A (density ${densityA6} kg/m³) at depth ${heightA6} m produces pressure ${pA6} Pa. Liquid B (density ${densityB6} kg/m³) at depth ${heightB6} m produces pressure ${pB6} Pa. Which produces the greater pressure, A or B?`,pA6>pB6?"a":"b","Compare the two calculated pressures directly.",`Liquid ${pA6>pB6?"A":"B"} produces the greater pressure.`),
+  ], difficulty);
+};
+
 const igcseTopics: Record<string,(difficulty:"foundational"|"application"|"reasoning")=>PhysicsQuestion[]> = {
   "igcse-u1": structuredIgcseMeasurement,
   "igcse-u2": structuredMotion,
   "igcse-u3": structuredMassWeightDensity,
   "igcse-u4": structuredForces,
+  "igcse-u5": structuredMomentum,
+  "igcse-u6": structuredEnergyWorkPower,
+  "igcse-u7": structuredPressure,
   "igcse-u14": structuredMagnetism,
   "igcse-u15": structuredElectricalQuantities,
   "igcse-u16": structuredElectricCircuits,
