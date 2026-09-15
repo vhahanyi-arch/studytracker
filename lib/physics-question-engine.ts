@@ -698,6 +698,363 @@ const structuredPressure = (difficulty:"foundational"|"application"|"reasoning")
   ], difficulty);
 };
 
+const structuredKineticModel = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const stateOptions=[
+      { desc:"are held in fixed positions but vibrate", answer:["solid"] },
+      { desc:"are close together but can move past each other", answer:["liquid"] },
+      { desc:"are far apart and move randomly at high speed", answer:["gas"] },
+    ];
+    const statePick=stateOptions[r(0,stateOptions.length-1)];
+    const changeOptions=[
+      { desc:"solid to liquid", answer:["melting"] },
+      { desc:"liquid to gas", answer:["boiling","evaporating","evaporation"] },
+      { desc:"gas to liquid", answer:["condensation","condensing"] },
+      { desc:"liquid to solid", answer:["freezing","solidification","solidifying"] },
+    ];
+    const changePick=changeOptions[r(0,changeOptions.length-1)];
+    const celsius3=r(-20,80),kelvin3=celsius3+273;
+    const isAbsZero4=r(0,1)===1;
+    const isCollisions5=r(0,1)===1;
+    return validateUnitSet([
+      sq("igcse-u8-f1","Identify a state of matter from particle behaviour",difficulty,`Which state of matter has particles that ${statePick.desc}?`,statePick.answer,"Consider how tightly packed and free-moving the particles are.",`This describes a ${statePick.answer[0]}.`),
+      sq("igcse-u8-f2","Name a change of state",difficulty,`What is the name of the change of state from ${changePick.desc}?`,changePick.answer,"Recall the standard terms for changes between states of matter.",`This change is called ${changePick.answer[0]}.`),
+      sq("igcse-u8-f3","Convert Celsius to kelvin",difficulty,`Convert ${celsius3}°C to kelvin, using T (K) = θ (°C) + 273.`,String(kelvin3),"Add 273 to the Celsius value.",`${celsius3}+273=${kelvin3} K.`),
+      sq("igcse-u8-f4","Recall the value of absolute zero (true/false)",difficulty,`True or false: absolute zero, the lowest possible temperature, is ${isAbsZero4?"-273°C":"-373°C"}.`,isAbsZero4?"true":"false","Absolute zero is -273°C.",`${isAbsZero4?"True":"False"} — absolute zero is -273°C.`),
+      sq("igcse-u8-f5","Explain the cause of gas pressure (true/false)",difficulty,`True or false: gas pressure is caused by gas particles ${isCollisions5?"colliding with the walls of their container":"sticking to the walls of their container"}.`,isCollisions5?"true":"false","Gas pressure results from particle collisions with the container walls.",`${isCollisions5?"True":"False"} — pressure is caused by particle collisions.`),
+      sq("igcse-u8-f6","Name the evidence for the kinetic particle model",difficulty,"What phenomenon provides evidence for the kinetic particle model, involving the random motion of microscopic particles in a suspension?",["brownian motion","brownianmotion"],"This motion was named after its discoverer.","This is Brownian motion."),
+    ], difficulty);
+  }
+  if (difficulty === "application") {
+    const kelvin1=r(200,400),celsius1=kelvin1-273;
+    const isDecreasePressure3=r(0,1)===1;
+    const stateDiagramOptions=[
+      { desc:"widely spaced, randomly arranged particles moving freely", answer:["gas"] },
+      { desc:"closely packed particles arranged in a regular pattern", answer:["solid"] },
+    ];
+    const diagramPick4=stateDiagramOptions[r(0,stateDiagramOptions.length-1)];
+    const isPollen5=r(0,1)===1;
+    const p1_6=r(2,10)*10,v1_6=r(2,10),constant6=p1_6*v1_6,v2_6=r(2,10),p2_6=constant6/v2_6;
+    return validateUnitSet([
+      sq("igcse-u8-a1","Convert kelvin to Celsius",difficulty,`A temperature is recorded as ${kelvin1} K. Convert this to degrees Celsius.`,String(celsius1),"Subtract 273 from the kelvin value.",`${kelvin1}−273=${celsius1}°C.`),
+      sq("igcse-u8-a2","Reason about pressure and temperature at constant volume (true/false)",difficulty,"True or false: increasing the temperature of a fixed mass of gas at constant volume increases its pressure.","true","Faster-moving particles collide with the walls more forcefully and frequently.","True — pressure increases with temperature at constant volume."),
+      sq("igcse-u8-a3","Reason about pressure and volume (true/false)",difficulty,`True or false: increasing the volume of a fixed mass of gas at constant temperature ${isDecreasePressure3?"decreases":"increases"} its pressure.`,isDecreasePressure3?"true":"false","A larger volume means fewer collisions per unit area, reducing pressure.",`${isDecreasePressure3?"True":"False"} — increasing volume decreases pressure at constant temperature.`),
+      sq("igcse-u8-a4","Identify a state from a particle diagram description",difficulty,`A particle diagram shows ${diagramPick4.desc}. Which state of matter does this represent?`,diagramPick4.answer,"Consider the arrangement and spacing of the particles.",`This represents a ${diagramPick4.answer[0]}.`),
+      sq("igcse-u8-a5","Name random particle motion in a suspension",difficulty,`${isPollen5?"Pollen grains":"Smoke particles"} viewed under a microscope move in a random, jerky path. What is this motion called?`,["brownian motion","brownianmotion"],"This motion results from collisions with faster invisible molecules.","This is Brownian motion."),
+      sq("igcse-u8-a6","Apply Boyle's law",difficulty,`A gas has pressure ${p1_6} Pa and volume ${v1_6} m³ at constant temperature. If the volume changes to ${v2_6} m³, find the new pressure, using pV = constant.`,String(p2_6),"Find the constant pV, then divide by the new volume.",`(${p1_6}×${v1_6})÷${v2_6}=${p2_6} Pa.`),
+    ], difficulty);
+  }
+  const celsius1=r(-20,50),wrongKelvin1=celsius1,correctKelvin1=celsius1+273;
+  const isWrongValue2=r(0,1)===1;
+  const isMoreFrequent3=r(0,1)===1;
+  const p1_4=r(2,10)*10,v1_4=r(2,12),constant4=p1_4*v1_4,p2_4=r(2,10)*10,v2_4=constant4/p2_4;
+  const isCloser6=r(0,1)===1;
+  return validateUnitSet([
+    sq("igcse-u8-r1","Correct a Celsius-to-kelvin conversion error",difficulty,`A learner converts ${celsius1}°C to kelvin by leaving the value unchanged, getting ${wrongKelvin1} K. Enter the correct temperature in kelvin.`,String(correctKelvin1),"Add 273 to the Celsius value.",`${celsius1}+273=${correctKelvin1} K.`),
+    sq("igcse-u8-r2","Reason about particle energy at absolute zero (true/false)",difficulty,`True or false: absolute zero is the temperature at which particles have ${isWrongValue2?"least":"most"} kinetic energy.`,isWrongValue2?"true":"false","Absolute zero is the temperature of minimum possible kinetic energy.",`${isWrongValue2?"True":"False"} — particles have least kinetic energy at absolute zero.`),
+    sq("igcse-u8-r3","Explain the pressure-temperature relationship",difficulty,`As the temperature of a fixed mass of gas at constant volume increases, particles collide with the container walls ${isMoreFrequent3?"more frequently and with more force":"less frequently and with less force"}. Does this increase the pressure?`,isMoreFrequent3?"yes":"no","More frequent, forceful collisions increase pressure.",`${isMoreFrequent3?"Yes":"No"} — this matches the given collision behaviour.`),
+    sq("igcse-u8-r4","Apply Boyle's law in reverse",difficulty,`A gas has pressure ${p1_4} Pa and volume ${v1_4} m³ at constant temperature. If the pressure changes to ${p2_4} Pa, find the new volume, using pV = constant.`,String(v2_4),"Find the constant pV, then divide by the new pressure.",`(${p1_4}×${v1_4})÷${p2_4}=${v2_4} m³.`),
+    sq("igcse-u8-r5","Correct a misconception about Brownian motion",difficulty,"True or false: Brownian motion is caused by the suspended particles themselves moving faster than the surrounding molecules, not by being struck by them.","false","Brownian motion is caused by collisions with faster, invisible molecules.","False — it's caused by being struck by surrounding molecules."),
+    sq("igcse-u8-r6","Reason about particle spacing and forces",difficulty,`True or false: particles that are ${isCloser6?"closer together":"farther apart"} generally experience ${isCloser6?"stronger":"weaker"} forces between them.`,"true","Interparticle forces are stronger at shorter distances.",`True — closer particles experience stronger forces.`),
+  ], difficulty);
+};
+
+const structuredThermalProperties = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const EXPANSION_CLAIMS:[string,boolean][]=[
+      ["gases expand more than liquids for the same temperature rise",true],
+      ["liquids expand more than gases for the same temperature rise",false],
+      ["solids expand less than liquids for the same temperature rise",true],
+      ["liquids expand less than solids for the same temperature rise",false],
+    ];
+    const [claim1,claimTrue1]=EXPANSION_CLAIMS[r(0,EXPANSION_CLAIMS.length-1)];
+    const mass2=r(2,10),tempRise2=r(2,20),specHeat2=r(2,10)*100,energy2=mass2*specHeat2*tempRise2;
+    let energy3,mass3,specHeat3,tempRise3;
+    do { energy3=r(2,10)*1000; mass3=r(2,10); specHeat3=r(2,10)*100; tempRise3=energy3/(mass3*specHeat3); } while (!Number.isInteger(tempRise3));
+    const isNoTempChange4=r(0,1)===1;
+    const isCooling6=r(0,1)===1;
+    return validateUnitSet([
+      sq("igcse-u9-f1","Compare thermal expansion between states",difficulty,`True or false: ${claim1}.`,claimTrue1?"true":"false","Gases expand most, then liquids, then solids, for the same temperature rise.",`${claimTrue1?"True":"False"}.`),
+      sq("igcse-u9-f2","Calculate energy from specific heat capacity",difficulty,`Find the energy required to heat ${mass2} kg of a substance by ${tempRise2}°C, given a specific heat capacity of ${specHeat2} J/(kg°C), using E = mcΔθ.`,String(energy2),"Multiply mass, specific heat capacity, and temperature rise together.",`${mass2}×${specHeat2}×${tempRise2}=${energy2} J.`),
+      sq("igcse-u9-f3","Calculate temperature rise from energy",difficulty,`${energy3} J of energy raises the temperature of ${mass3} kg of a substance with specific heat capacity ${specHeat3} J/(kg°C). Find the temperature rise, rearranging E = mcΔθ.`,String(tempRise3),"Divide energy by (mass × specific heat capacity).",`${energy3}÷(${mass3}×${specHeat3})=${tempRise3}°C.`),
+      sq("igcse-u9-f4","Recall that melting/boiling occur without temperature change (true/false)",difficulty,`True or false: melting and boiling occur with ${isNoTempChange4?"no change":"a change"} in temperature, despite energy being supplied.`,isNoTempChange4?"true":"false","Melting and boiling occur at constant temperature.",`${isNoTempChange4?"True":"False"} — temperature stays constant during a change of state.`),
+      sq("igcse-u9-f5","Recall the boiling point of water",difficulty,"What is the boiling point of water, in °C, at standard atmospheric pressure?","100","Recall the standard boiling point of water.","Water boils at 100°C at standard atmospheric pressure."),
+      sq("igcse-u9-f6","Recall that evaporation causes cooling (true/false)",difficulty,`True or false: evaporation ${isCooling6?"causes cooling of":"causes heating of"} a liquid.`,isCooling6?"true":"false","The most energetic particles escape during evaporation, lowering the average energy.",`${isCooling6?"True":"False"} — evaporation cools a liquid.`),
+    ], difficulty);
+  }
+  if (difficulty === "application") {
+    const mass1=r(2,10),tempRise1=r(5,30),specHeat1=r(2,10)*100,energy1=mass1*specHeat1*tempRise1;
+    const expansionScenarios=[
+      { desc:"Small gaps are deliberately left between sections of railway track.", answer:["thermal expansion","expansion"] },
+      { desc:"A liquid-in-glass thermometer uses the rise of a liquid column to measure temperature.", answer:["thermal expansion","expansion"] },
+      { desc:"A bimetallic strip bends when heated, used in some thermostats.", answer:["thermal expansion","expansion"] },
+    ];
+    const scenarioPick2=expansionScenarios[r(0,expansionScenarios.length-1)];
+    const isEvaporation3=r(0,1)===1;
+    let energy4,specHeat4,tempRise4,mass4;
+    do { energy4=r(2,10)*1000; specHeat4=r(2,10)*100; tempRise4=r(2,10); mass4=energy4/(specHeat4*tempRise4); } while (!Number.isInteger(mass4));
+    const isCoolingSkin6=r(0,1)===1;
+    return validateUnitSet([
+      sq("igcse-u9-a1","Calculate energy to heat water",difficulty,`${mass1} kg of water is heated, causing a temperature rise of ${tempRise1}°C. Given a specific heat capacity of ${specHeat1} J/(kg°C), find the energy supplied.`,String(energy1),"Multiply mass, specific heat capacity, and temperature rise together.",`${mass1}×${specHeat1}×${tempRise1}=${energy1} J.`),
+      sq("igcse-u9-a2","Identify thermal expansion in a scenario",difficulty,`${scenarioPick2.desc} What property of materials does this rely on?`,scenarioPick2.answer,"Consider what happens to materials as their temperature changes.",`This relies on thermal expansion.`),
+      sq("igcse-u9-a3","Distinguish evaporation from boiling (true/false)",difficulty,`True or false: ${isEvaporation3?"evaporation":"boiling"} can occur at any temperature, not just at a fixed boiling point.`,isEvaporation3?"true":"false","Evaporation happens at any temperature; boiling occurs only at the boiling point.",`${isEvaporation3?"True":"False"}.`),
+      sq("igcse-u9-a4","Calculate mass from energy and temperature rise",difficulty,`${energy4} J of energy is supplied to a substance with specific heat capacity ${specHeat4} J/(kg°C), causing a temperature rise of ${tempRise4}°C. Find the mass of the substance.`,String(mass4),"Divide energy by (specific heat capacity × temperature rise).",`${energy4}÷(${specHeat4}×${tempRise4})=${mass4} kg.`),
+      sq("igcse-u9-a5","Recall a factor affecting evaporation rate (true/false)",difficulty,"True or false: increasing temperature increases the rate of evaporation of a liquid.","true","Higher temperature gives particles more energy to escape the liquid surface.","True — higher temperature increases evaporation rate."),
+      sq("igcse-u9-a6","Reason about sweat cooling the body (true/false)",difficulty,`True or false: sweat evaporating from skin has a ${isCoolingSkin6?"cooling":"warming"} effect on the body.`,isCoolingSkin6?"true":"false","Evaporating sweat removes energy from the skin, cooling it.",`${isCoolingSkin6?"True":"False"} — evaporating sweat cools the body.`),
+    ], difficulty);
+  }
+  const mass1=r(2,10),tempRise1=r(2,20),specHeat1=r(2,10)*100,energy1=mass1*specHeat1*tempRise1,wrongEnergy1=mass1+specHeat1+tempRise1;
+  const isEvapVsBoil2=r(0,1)===1;
+  let energy3,mass3,specHeat3,tempRise3;
+  do { energy3=r(2,10)*1000; mass3=r(2,10); specHeat3=r(2,10)*100; tempRise3=energy3/(mass3*specHeat3); } while (!Number.isInteger(tempRise3));
+  const isKE4=r(0,1)===1;
+  const meltingPoint5=r(0,1)===1;
+  return validateUnitSet([
+    sq("igcse-u9-r1","Correct a specific-heat-capacity error",difficulty,`A learner finds energy by adding mass, specific heat capacity, and temperature rise instead of multiplying, getting ${wrongEnergy1} for ${mass1} kg, ${specHeat1} J/(kg°C), and a rise of ${tempRise1}°C. Enter the correct energy, using E = mcΔθ.`,String(energy1),"Multiply the three quantities together, don't add them.",`${mass1}×${specHeat1}×${tempRise1}=${energy1} J.`),
+    sq("igcse-u9-r2","Distinguish boiling from evaporation in detail",difficulty,`True or false: ${isEvapVsBoil2?"boiling occurs throughout the liquid at a fixed temperature, while evaporation occurs only at the surface and at any temperature":"evaporation occurs throughout the liquid at a fixed temperature, while boiling occurs only at the surface"}.`,isEvapVsBoil2?"true":"false","Boiling occurs throughout the liquid at a fixed temperature; evaporation happens at the surface at any temperature.",`${isEvapVsBoil2?"True":"False"}.`),
+    sq("igcse-u9-r3","Calculate temperature rise in a reasoning context",difficulty,`${energy3} J raises the temperature of ${mass3} kg of a liquid with specific heat capacity ${specHeat3} J/(kg°C). Find the temperature rise.`,String(tempRise3),"Divide energy by (mass × specific heat capacity).",`${energy3}÷(${mass3}×${specHeat3})=${tempRise3}°C.`),
+    sq("igcse-u9-r4","Reason about temperature and particle energy",difficulty,`True or false: a rise in temperature corresponds to an increase in the average ${isKE4?"kinetic energy":"potential energy"} of the particles in a substance.`,isKE4?"true":"false","Temperature relates to the average kinetic energy of particles.",`${isKE4?"True":"False"}.`),
+    sq("igcse-u9-r5","Recall the melting point of ice",difficulty,`True or false: the melting point of ice at standard atmospheric pressure is ${meltingPoint5?"0°C":"100°C"}.`,meltingPoint5?"true":"false","Ice melts at 0°C at standard atmospheric pressure.",`${meltingPoint5?"True":"False"}.`),
+    sq("igcse-u9-r6","Recall a factor affecting evaporation (true/false)",difficulty,"True or false: increased air movement over a liquid's surface increases its rate of evaporation.","true","Air movement carries away evaporated particles, encouraging further evaporation.","True — air movement increases evaporation rate."),
+  ], difficulty);
+};
+
+const structuredThermalTransfer = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const conductorOptions=["copper","aluminium","iron","steel"];
+    const conductorPick1=conductorOptions[r(0,conductorOptions.length-1)];
+    const insulatorOptions=["wood","plastic","air","glass wool"];
+    const insulatorPick1=insulatorOptions[r(0,insulatorOptions.length-1)];
+    const isConvectionCorrect2=r(0,1)===1;
+    const isRadiationInfrared3=r(0,1)===1;
+    const isNoMedium4=r(0,1)===1;
+    const isBestEmitter5=r(0,1)===1;
+    return validateUnitSet([
+      sq("igcse-u10-f1","Identify a good thermal conductor",difficulty,`Which is a good thermal conductor: (a) ${conductorPick1} (b) ${insulatorPick1} (c) vacuum (d) polystyrene`,["a",conductorPick1],"Metals are generally good thermal conductors.",`The correct answer is (a) ${conductorPick1}.`),
+      sq("igcse-u10-f2","Recall convection's importance (true/false)",difficulty,`True or false: convection is ${isConvectionCorrect2?"an important":"not an important"} method of thermal energy transfer in liquids and gases.`,isConvectionCorrect2?"true":"false","Convection is a key transfer method in fluids.",`${isConvectionCorrect2?"True":"False"}.`),
+      sq("igcse-u10-f3","Recall that thermal radiation is infrared (true/false)",difficulty,`True or false: thermal radiation ${isRadiationInfrared3?"is":"is not"} infrared radiation.`,isRadiationInfrared3?"true":"false","Thermal radiation is infrared radiation.",`${isRadiationInfrared3?"True":"False"}.`),
+      sq("igcse-u10-f4","Recall that radiation needs no medium (true/false)",difficulty,`True or false: thermal radiation ${isNoMedium4?"does not require":"requires"} a medium to travel through.`,isNoMedium4?"true":"false","Radiation can travel through a vacuum, unlike conduction and convection.",`${isNoMedium4?"True":"False"}.`),
+      sq("igcse-u10-f5","Identify the best emitter of infrared",difficulty,`Which surface is the ${isBestEmitter5?"best":"worst"} emitter of infrared radiation: (a) black and dull (b) white and shiny`,isBestEmitter5?"a":"b","Dull black surfaces emit infrared radiation best.",`The correct answer is (${isBestEmitter5?"a":"b"}).`),
+      sq("igcse-u10-f6","Identify the best reflector of infrared",difficulty,"Which surface is the best reflector of infrared radiation: (a) black and dull (b) white and shiny","b","Shiny white surfaces reflect infrared radiation best.","The correct answer is (b) white and shiny."),
+    ], difficulty);
+  }
+  if (difficulty === "application") {
+    const isWarmRises1=r(0,1)===1;
+    const isFeelsCold2=r(0,1)===1;
+    const isEqualRates3=r(0,1)===1;
+    const isHeatingUp4=r(0,1)===1;
+    const convectionExamples=["heating a room using a radiator","hot air rising above a flame","sea breezes forming near a coastline"];
+    const examplePick5=convectionExamples[r(0,convectionExamples.length-1)];
+    const isLargerArea6=r(0,1)===1;
+    return validateUnitSet([
+      sq("igcse-u10-a1","Explain convection via density (true/false)",difficulty,`True or false: in convection, warmer (less dense) fluid ${isWarmRises1?"rises":"sinks"} above cooler (denser) fluid.`,isWarmRises1?"true":"false","Warmer, less dense fluid rises above cooler, denser fluid.",`${isWarmRises1?"True":"False"}.`),
+      sq("igcse-u10-a2","Reason about why metal feels cold (true/false)",difficulty,`True or false: touching a metal object feels ${isFeelsCold2?"colder":"warmer"} than touching wood at the same temperature, because metal conducts heat away from your hand faster.`,isFeelsCold2?"true":"false","Metal conducts heat away from skin faster, feeling colder.",`${isFeelsCold2?"True":"False"}.`),
+      sq("igcse-u10-a3","Recall the condition for constant temperature",difficulty,`True or false: for an object to stay at a constant temperature, it must transfer energy away at ${isEqualRates3?"the same rate":"a different rate"} that it receives energy.`,isEqualRates3?"true":"false","A constant temperature requires balanced energy transfer rates.",`${isEqualRates3?"True":"False"}.`),
+      sq("igcse-u10-a4","Reason about heating vs cooling from energy rates",difficulty,`An object receives energy at a faster rate than it transfers energy away. Is the object ${isHeatingUp4?"heating up":"cooling down"}?`,isHeatingUp4?"yes":"no","If more energy is received than lost, temperature rises.",`${isHeatingUp4?"Yes":"No"}.`),
+      sq("igcse-u10-a5","Identify convection from an example",difficulty,`"${examplePick5}" is an everyday example of which method of thermal energy transfer?`,["convection"],"This involves the bulk movement of a heated fluid.","This is convection."),
+      sq("igcse-u10-a6","Reason about surface area and radiation rate",difficulty,`True or false: an object with a ${isLargerArea6?"larger":"smaller"} surface area emits radiation at a greater rate (at the same temperature).`,isLargerArea6?"true":"false","A larger surface area increases the rate of radiation emission.",`${isLargerArea6?"True":"False"}.`),
+    ], difficulty);
+  }
+  const isLatticeVibration1=r(0,1)===1;
+  const isPoorConduction2=r(0,1)===1;
+  const isMultipleTransfers3=r(0,1)===1;
+  const isCarRadiator4=r(0,1)===1;
+  const isMoreOutgoing5=r(0,1)===1;
+  const isBadEmitter6=r(0,1)===1;
+  return validateUnitSet([
+    sq("igcse-u10-r1","Explain solid conduction mechanisms",difficulty,`True or false: in solids, thermal conduction occurs partly due to ${isLatticeVibration1?"vibrations of the particles in the lattice":"particles moving freely between positions"}.`,isLatticeVibration1?"true":"false","Conduction in solids occurs via lattice vibrations (and free electrons in metals).",`${isLatticeVibration1?"True":"False"}.`),
+    sq("igcse-u10-r2","Explain poor conduction in gases",difficulty,`True or false: thermal conduction is ${isPoorConduction2?"poor":"excellent"} in gases because their particles are far apart and collide with each other much less often than in solids.`,isPoorConduction2?"true":"false","Gas particles are far apart, making conduction poor.",`${isPoorConduction2?"True":"False"}.`),
+    sq("igcse-u10-r3","Reason about multiple transfer types in a fire",difficulty,`True or false: a fire burning wood or coal typically involves ${isMultipleTransfers3?"more than one type":"only one type"} of thermal energy transfer (conduction, convection, and radiation together).`,isMultipleTransfers3?"true":"false","A fire typically involves conduction, convection, and radiation together.",`${isMultipleTransfers3?"True":"False"}.`),
+    sq("igcse-u10-r4","Reason about a car radiator's cooling methods",difficulty,`True or false: a car radiator relies on ${isCarRadiator4?"more than one type of thermal energy transfer":"conduction alone"} to cool the engine.`,isCarRadiator4?"true":"false","A car radiator relies on conduction, convection, and radiation together.",`${isCarRadiator4?"True":"False"}.`),
+    sq("igcse-u10-r5","Reason about energy balance and temperature change",difficulty,`If an object receives ${isMoreOutgoing5?"less":"more"} radiation than it emits, will its temperature rise?`,isMoreOutgoing5?"no":"yes","Receiving more energy than is emitted causes a temperature rise.",`${isMoreOutgoing5?"No":"Yes"}.`),
+    sq("igcse-u10-r6","Reason about absorbers of infrared radiation",difficulty,`True or false: a dull black surface is generally a ${isBadEmitter6?"good":"poor"} absorber of infrared radiation.`,isBadEmitter6?"true":"false","Dull black surfaces are good absorbers of infrared radiation.",`${isBadEmitter6?"True":"False"}.`),
+  ], difficulty);
+};
+
+const structuredGeneralWaveProperties = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const freq1=r(2,20),wavelength1=r(2,10),speed1=freq1*wavelength1;
+    const freq2=r(2,10),wavelength2=r(2,10),speed2=freq2*wavelength2;
+    const isEnergy3=r(0,1)===1;
+    const transverseOptions=["light","water waves","seismic S-waves"];
+    const transversePick=transverseOptions[r(0,transverseOptions.length-1)];
+    const longitudinalOptions=["sound waves","seismic P-waves"];
+    const longitudinalPick=longitudinalOptions[r(0,longitudinalOptions.length-1)];
+    const phenomenaOptions=[
+      { desc:"a wave bounces off a plane surface", answer:["reflection"] },
+      { desc:"a wave changes speed and direction when crossing a boundary", answer:["refraction"] },
+      { desc:"a wave spreads out after passing through a narrow gap", answer:["diffraction"] },
+    ];
+    const phenomenaPick=phenomenaOptions[r(0,phenomenaOptions.length-1)];
+    return validateUnitSet([
+      sq("igcse-u11-f1","Calculate wave speed",difficulty,`A wave has frequency ${freq1} Hz and wavelength ${wavelength1} m. Find its speed, using v = fλ.`,String(speed1),"Multiply frequency by wavelength.",`${freq1}×${wavelength1}=${speed1} m/s.`),
+      sq("igcse-u11-f2","Calculate frequency from speed and wavelength",difficulty,`A wave travels at ${speed2} m/s with wavelength ${wavelength2} m. Find its frequency, rearranging v = fλ.`,String(freq2),"Divide speed by wavelength.",`${speed2}÷${wavelength2}=${freq2} Hz.`),
+      sq("igcse-u11-f3","Recall that waves transfer energy not matter (true/false)",difficulty,`True or false: waves transfer energy ${isEnergy3?"without":"by"} transferring matter.`,isEnergy3?"true":"false","Waves transfer energy without transferring matter.",`${isEnergy3?"True":"False"}.`),
+      sq("igcse-u11-f4","Identify transverse wave direction",difficulty,`In ${transversePick}, is the direction of vibration at right angles to, or parallel to, the direction the wave travels?`,["rightangles","right angles","atrightangles","at right angles"],"Transverse waves vibrate perpendicular to their direction of travel.",`The vibration is at right angles to the direction of travel.`),
+      sq("igcse-u11-f5","Identify longitudinal wave direction",difficulty,`In ${longitudinalPick}, is the direction of vibration at right angles to, or parallel to, the direction the wave travels?`,["parallel"],"Longitudinal waves vibrate parallel to their direction of travel.",`The vibration is parallel to the direction of travel.`),
+      sq("igcse-u11-f6","Identify a wave phenomenon from a description",difficulty,`Which wave phenomenon describes: ${phenomenaPick.desc}?`,phenomenaPick.answer,"Match the description to reflection, refraction, or diffraction.",`This describes ${phenomenaPick.answer[0]}.`),
+    ], difficulty);
+  }
+  if (difficulty === "application") {
+    const freq1=r(2,20),wavelength1=r(2,10),speed1=freq1*wavelength1;
+    const freq2=r(2,10),wavelength2=r(10,30)*2,speed2=freq2*wavelength2;
+    const isTransverse3=r(0,1)===1;
+    const isLongitudinal4=r(0,1)===1;
+    const isNarrower5=r(0,1)===1;
+    const rippleUses=[
+      { desc:"reflection at a plane surface", answer:["reflection"] },
+      { desc:"refraction due to a change in depth", answer:["refraction"] },
+      { desc:"diffraction through a gap", answer:["diffraction"] },
+    ];
+    const ripplePick=rippleUses[r(0,rippleUses.length-1)];
+    return validateUnitSet([
+      sq("igcse-u11-a1","Calculate wave speed in context",difficulty,`A water wave has frequency ${freq1} Hz and wavelength ${wavelength1} m. Find its speed.`,String(speed1),"Multiply frequency by wavelength.",`${freq1}×${wavelength1}=${speed1} m/s.`),
+      sq("igcse-u11-a2","Calculate wavelength from speed and frequency",difficulty,`A wave travels at ${speed2} m/s with frequency ${freq2} Hz. Find its wavelength.`,String(wavelength2),"Divide speed by frequency.",`${speed2}÷${freq2}=${wavelength2} m.`),
+      sq("igcse-u11-a3","Identify light as a transverse wave (true/false)",difficulty,`True or false: light can be modelled as a ${isTransverse3?"transverse":"longitudinal"} wave.`,isTransverse3?"true":"false","Light is modelled as a transverse wave.",`${isTransverse3?"True":"False"}.`),
+      sq("igcse-u11-a4","Identify sound as a longitudinal wave (true/false)",difficulty,`True or false: sound can be modelled as a ${isLongitudinal4?"longitudinal":"transverse"} wave.`,isLongitudinal4?"true":"false","Sound is modelled as a longitudinal wave.",`${isLongitudinal4?"True":"False"}.`),
+      sq("igcse-u11-a5","Reason about gap size and diffraction",difficulty,`True or false: a ${isNarrower5?"narrower":"wider"} gap (relative to the wavelength) causes greater diffraction of a wave passing through it.`,isNarrower5?"true":"false","A narrower gap relative to wavelength causes more noticeable diffraction.",`${isNarrower5?"True":"False"}.`),
+      sq("igcse-u11-a6","Identify a ripple tank demonstration",difficulty,`A ripple tank experiment is used to demonstrate ${ripplePick.desc}. Name this wave phenomenon.`,ripplePick.answer,"Match the description to the wave phenomenon it demonstrates.",`This demonstrates ${ripplePick.answer[0]}.`),
+    ], difficulty);
+  }
+  const freq1=r(2,20),wavelength1=r(2,10),wrongSpeed1=freq1+wavelength1,correctSpeed1=freq1*wavelength1;
+  const freq2=r(2,10),wavelength2=r(10,30)*2,speed2=freq2*wavelength2,newFreq2=freq2*2,newWavelength2=speed2/newFreq2;
+  const isFasterInMedium3=r(0,1)===1;
+  const isLarger4=r(0,1)===1;
+  const isSameSpeed5=r(0,1)===1;
+  const freq6=r(2,10),wavelength6=r(10,30)*2,speed6=freq6*wavelength6;
+  return validateUnitSet([
+    sq("igcse-u11-r1","Correct a wave-speed calculation error",difficulty,`A learner finds wave speed by adding frequency and wavelength instead of multiplying, getting ${wrongSpeed1} for a wave of frequency ${freq1} Hz and wavelength ${wavelength1} m. Enter the correct speed.`,String(correctSpeed1),"Multiply frequency by wavelength, don't add them.",`${freq1}×${wavelength1}=${correctSpeed1} m/s.`),
+    sq("igcse-u11-r2","Find a new wavelength after a frequency change",difficulty,`A wave has frequency ${freq2} Hz and wavelength ${wavelength2} m (speed ${speed2} m/s). If the frequency doubles to ${newFreq2} Hz while the wave speed stays the same, find the new wavelength.`,String(newWavelength2),"Speed stays constant, so divide it by the new frequency.",`${speed2}÷${newFreq2}=${newWavelength2} m.`),
+    sq("igcse-u11-r3","Reason about the cause of refraction",difficulty,`True or false: refraction occurs because a wave ${isFasterInMedium3?"changes speed":"changes frequency"} when it crosses a boundary into a different medium.`,isFasterInMedium3?"true":"false","Refraction is caused by a change in wave speed at a boundary.",`${isFasterInMedium3?"True":"False"}.`),
+    sq("igcse-u11-r4","Reason about gap size and diffraction visibility",difficulty,`True or false: a ${isLarger4?"larger":"smaller"} gap size relative to the wavelength results in less noticeable diffraction.`,isLarger4?"true":"false","A larger gap relative to wavelength gives less noticeable diffraction.",`${isLarger4?"True":"False"}.`),
+    sq("igcse-u11-r5","Reason about reflection and wave properties",difficulty,`True or false: when a wave reflects off a surface, its ${isSameSpeed5?"speed and frequency stay the same":"speed and frequency both change"}.`,isSameSpeed5?"true":"false","Reflection does not change a wave's speed or frequency, only its direction.",`${isSameSpeed5?"True":"False"}.`),
+    sq("igcse-u11-r6","Calculate wave speed in a multi-step context",difficulty,`A wave has frequency ${freq6} Hz and wavelength ${wavelength6} m. Find the speed, then state whether this wave is more likely transverse or longitudinal if it is light. Give the speed only.`,String(speed6),"Multiply frequency by wavelength.",`${freq6}×${wavelength6}=${speed6} m/s.`),
+  ], difficulty);
+};
+
+const structuredLight = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const isEqual1=r(0,1)===1;
+    const mirrorOptions=[
+      { desc:"the image is the same size as the object", answer:["true"] },
+      { desc:"the image is a different size from the object", answer:["false"] },
+    ];
+    const mirrorPick=mirrorOptions[r(0,mirrorOptions.length-1)];
+    const lensOptions=[
+      { desc:"a converging lens", answer:["converging"] },
+      { desc:"a diverging lens", answer:["diverging"] },
+    ];
+    const isConverging4=r(0,1)===1;
+    const isPrismCorrect5=r(0,1)===1;
+    const colorOptions=[
+      { name:"red", position:"lowest frequency / longest wavelength" },
+      { name:"violet", position:"highest frequency / shortest wavelength" },
+    ];
+    const colorPick=colorOptions[r(0,colorOptions.length-1)];
+    return validateUnitSet([
+      sq("igcse-u12-f1","Recall the law of reflection (true/false)",difficulty,`True or false: for reflection, the angle of incidence is ${isEqual1?"equal to":"always greater than"} the angle of reflection.`,isEqual1?"true":"false","The angle of incidence always equals the angle of reflection.",`${isEqual1?"True":"False"}.`),
+      sq("igcse-u12-f2","Recall plane mirror image characteristics (true/false)",difficulty,`True or false: for a plane mirror, ${mirrorPick.desc}.`,mirrorPick.answer,"A plane mirror image is the same size as the object.",`This statement is ${mirrorPick.answer[0]}.`),
+      sq("igcse-u12-f3","Define critical angle",difficulty,"What term describes the angle of incidence in a denser medium above which total internal reflection occurs?",["criticalangle","critical angle"],"This angle marks the boundary for total internal reflection.","This is the critical angle."),
+      sq("igcse-u12-f4","Identify a lens type from its action",difficulty,`A parallel beam of light passes through ${isConverging4?"a converging":"a diverging"} lens and is brought together at a single point. Is this a converging or diverging lens?`,isConverging4?"converging":"diverging","A converging lens brings parallel rays together at a focus.",`This is a ${isConverging4?"converging":"diverging"} lens.`),
+      sq("igcse-u12-f5","Recall dispersion of light (true/false)",difficulty,`True or false: shining white light through a glass prism produces a ${isPrismCorrect5?"spectrum of colours (dispersion)":"single colour of light"}.`,isPrismCorrect5?"true":"false","A prism disperses white light into a spectrum of colours.",`${isPrismCorrect5?"True":"False"}.`),
+      sq("igcse-u12-f6","Recall the order of colours in the visible spectrum",difficulty,`In the visible spectrum, does ${colorPick.name} light have the ${colorPick.position}?`,"yes","Red has the lowest frequency/longest wavelength; violet has the highest/shortest.","Yes — this matches the order of the visible spectrum."),
+    ], difficulty);
+  }
+  if (difficulty === "application") {
+    const incidence1=r(10,80),reflection1=incidence1;
+    const isGreater2=r(0,1)===1;
+    const isVirtual3=r(0,1)===1;
+    const isVirtualCannotProject5=r(0,1)===1;
+    const isMagnifier5=r(0,1)===1;
+    return validateUnitSet([
+      sq("igcse-u12-a1","Apply the law of reflection",difficulty,`A ray of light hits a mirror at an angle of incidence of ${incidence1}°. Find the angle of reflection.`,String(reflection1),"The angle of reflection equals the angle of incidence.",`The angle of reflection is ${reflection1}°.`),
+      sq("igcse-u12-a2","Recall the condition for total internal reflection",difficulty,`True or false: total internal reflection occurs when the angle of incidence is ${isGreater2?"greater than":"less than"} the critical angle.`,isGreater2?"true":"false","Total internal reflection occurs above the critical angle.",`${isGreater2?"True":"False"}.`),
+      sq("igcse-u12-a3","Reason about real images from a converging lens",difficulty,`True or false: an image formed by a converging lens, when the object is placed further than the focal length away, can be ${isVirtual3?"real":"virtual"}.`,isVirtual3?"true":"false","Beyond the focal length, a converging lens forms a real image.",`${isVirtual3?"True":"False"}.`),
+      sq("igcse-u12-a4","Reason about optical fibres",difficulty,"Optical fibres are used in telecommunications because they allow total internal reflection to carry light signals with little loss. Is this correct? Answer yes or no.","yes","Optical fibres rely on total internal reflection for efficient signal transmission.","Yes — this is correct."),
+      sq("igcse-u12-a5","Recall that virtual images cannot be projected (true/false)",difficulty,`True or false: a virtual image ${isVirtualCannotProject5?"cannot":"can"} be projected onto a screen.`,isVirtualCannotProject5?"true":"false","Virtual images cannot be projected onto a screen.",`${isVirtualCannotProject5?"True":"False"}.`),
+      sq("igcse-u12-a6","Reason about the magnifying glass",difficulty,`A single converging lens used to produce an enlarged, upright, virtual image is being used as ${isMagnifier5?"a magnifying glass":"a projector"}. Is this correct? Answer yes or no.`,isMagnifier5?"yes":"no","A magnifying glass uses a converging lens to produce an enlarged, upright, virtual image.",`${isMagnifier5?"Yes":"No"}.`),
+    ], difficulty);
+  }
+  const incidence1=r(10,80),wrongReflection1=180-incidence1,correctReflection1=incidence1;
+  const isTrue2=r(0,1)===1;
+  const isFocalCorrect3=r(0,1)===1;
+  const isConverging4=r(0,1)===1;
+  const useCriticalForm5=r(0,1)===1;
+  const criticalAngleOptions5:[number,number][]=[[30,2],[90,1]];
+  const [criticalAngle5,refractiveIndexA5]=criticalAngleOptions5[r(0,1)];
+  const refractiveIndex5=useCriticalForm5?refractiveIndexA5:2;
+  const isMonochromatic6=r(0,1)===1;
+  return validateUnitSet([
+    sq("igcse-u12-r1","Correct a reflection-angle error",difficulty,`A learner finds the angle of reflection using 180° minus the angle of incidence, getting ${wrongReflection1}° for an angle of incidence of ${incidence1}°. Enter the correct angle of reflection.`,String(correctReflection1),"The angle of reflection equals the angle of incidence.",`The correct angle of reflection is ${correctReflection1}°.`),
+    sq("igcse-u12-r2","Reason about the nature of a plane mirror image",difficulty,`True or false: the image formed by a plane mirror is always ${isTrue2?"virtual":"real"}.`,isTrue2?"true":"false","A plane mirror always forms a virtual image.",`${isTrue2?"True":"False"}.`),
+    sq("igcse-u12-r3","Define focal length",difficulty,`True or false: the focal length of a lens is ${isFocalCorrect3?"the distance from the lens to the principal focus":"always equal to the diameter of the lens"}.`,isFocalCorrect3?"true":"false","Focal length is the distance from the lens to its principal focus.",`${isFocalCorrect3?"True":"False"}.`),
+    sq("igcse-u12-r4","Reason about object position and image type",difficulty,`A converging lens forms a real, inverted image. True or false: this means the object was placed ${isConverging4?"beyond":"within"} the focal length of the lens.`,isConverging4?"true":"false","A real, inverted image forms when the object is beyond the focal length.",`${isConverging4?"True":"False"}.`),
+    sq("igcse-u12-r5","Calculate refractive index using clean trigonometric values",difficulty,useCriticalForm5?`A material has a critical angle of ${criticalAngle5}°. Using n = 1/sin(c), and sin(${criticalAngle5}°) = ${criticalAngle5===30?"0.5":"1"}, find the refractive index.`:`Light passes from air (angle of incidence 90°) into a material at an angle of refraction of 30°. Using n = sin(i)/sin(r), and sin(90°)=1, sin(30°)=0.5, find the refractive index.`,String(refractiveIndex5),"Substitute the given sine values into the refractive index formula.",`The refractive index is ${refractiveIndex5}.`),
+    sq("igcse-u12-r6","Define monochromatic light (true/false)",difficulty,`True or false: light of a single frequency is described as ${isMonochromatic6?"monochromatic":"dispersed"}.`,isMonochromatic6?"true":"false","Light of a single frequency is called monochromatic.",`${isMonochromatic6?"True":"False"}.`),
+  ], difficulty);
+};
+
+const structuredEMSpectrumSound = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const emOrderTrue1=r(0,1)===1;
+    const isSameSpeed2=r(0,1)===1;
+    const emUses=[
+      { region:"X-rays", use:"medical scanning", answer:["true"] },
+      { region:"gamma rays", use:"sterilising food and medical equipment", answer:["true"] },
+      { region:"microwaves", use:"satellite television", answer:["true"] },
+      { region:"infrared", use:"remote controllers for televisions", answer:["true"] },
+    ];
+    const emUsePick=emUses[r(0,emUses.length-1)];
+    const isMediumNeeded4=r(0,1)===1;
+    const time5=r(2,8),speed5=[300,320,330,340,350][r(0,4)],distance5=speed5*time5;
+    const isAudibleRange6=r(0,1)===1;
+    return validateUnitSet([
+      sq("igcse-u13-f1","Compare EM spectrum frequencies (true/false)",difficulty,`True or false: radio waves have a ${emOrderTrue1?"lower":"higher"} frequency than gamma rays.`,emOrderTrue1?"true":"false","Radio waves have the lowest frequency in the EM spectrum; gamma rays have the highest.",`${emOrderTrue1?"True":"False"}.`),
+      sq("igcse-u13-f2","Recall EM wave speed in a vacuum (true/false)",difficulty,`True or false: all electromagnetic waves travel at the ${isSameSpeed2?"same":"different"} speed in a vacuum.`,isSameSpeed2?"true":"false","All EM waves travel at the same speed in a vacuum.",`${isSameSpeed2?"True":"False"}.`),
+      sq("igcse-u13-f3","Match an EM region to its use (true/false)",difficulty,`True or false: ${emUsePick.region} are typically used for ${emUsePick.use}.`,emUsePick.answer,"Match the EM region to its typical application.",`This is a correct use of ${emUsePick.region}.`),
+      sq("igcse-u13-f4","Recall that sound needs a medium (true/false)",difficulty,`True or false: sound waves ${isMediumNeeded4?"require":"do not require"} a medium to travel through.`,isMediumNeeded4?"true":"false","Sound waves need a medium and cannot travel through a vacuum.",`${isMediumNeeded4?"True":"False"}.`),
+      sq("igcse-u13-f5","Calculate the speed of sound",difficulty,`A sound travels ${distance5} m in ${time5} s. Find the speed of sound, using speed = distance/time.`,String(speed5),"Divide distance by time.",`${distance5}÷${time5}=${speed5} m/s.`),
+      sq("igcse-u13-f6","Recall the audible frequency range (true/false)",difficulty,`True or false: the approximate range of frequencies audible to humans is ${isAudibleRange6?"20 Hz to 20000 Hz":"2 Hz to 2000 Hz"}.`,isAudibleRange6?"true":"false","Humans can typically hear from about 20 Hz to 20000 Hz.",`${isAudibleRange6?"True":"False"}.`),
+    ], difficulty);
+  }
+  if (difficulty === "application") {
+    const harmOptions=[
+      { region:"ultraviolet", harm:"skin cancer and eye conditions", answer:["true"] },
+      { region:"X-rays", harm:"mutation or damage to cells", answer:["true"] },
+      { region:"microwaves", harm:"internal heating of body cells", answer:["true"] },
+      { region:"infrared", harm:"skin burns", answer:["true"] },
+    ];
+    const harmPick=harmOptions[r(0,harmOptions.length-1)];
+    const isSatellite2=r(0,1)===1;
+    const speed3=[300,320,330,340,350][r(0,4)],time3=r(2,6)/2,distance3=speed3*time3;
+    const isLongitudinal4=r(0,1)===1;
+    const isUltrasound5=r(0,1)===1;
+    const isAmplitudeLoud6=r(0,1)===1;
+    return validateUnitSet([
+      sq("igcse-u13-a1","Reason about harmful effects of EM radiation",difficulty,`True or false: excessive exposure to ${harmPick.region} can cause ${harmPick.harm}.`,harmPick.answer,"Match the EM region to its harmful effect.",`This is a correct harmful effect of ${harmPick.region}.`),
+      sq("igcse-u13-a2","Recall satellite communication methods (true/false)",difficulty,`True or false: communication with artificial satellites is mainly by ${isSatellite2?"microwaves":"gamma rays"}.`,isSatellite2?"true":"false","Satellite communication mainly uses microwaves.",`${isSatellite2?"True":"False"}.`),
+      sq("igcse-u13-a3","Calculate the speed of sound from an echo",difficulty,`An echo is heard ${time3} s after a sound is made, having travelled to a wall and back, a total distance of ${distance3} m. Find the speed of sound.`,String(speed3),"Divide the total distance by the time.",`${distance3}÷${time3}=${speed3} m/s.`),
+      sq("igcse-u13-a4","Reason about sound as a longitudinal wave (true/false)",difficulty,`True or false: sound is a ${isLongitudinal4?"longitudinal":"transverse"} wave, since the direction of vibration is parallel to the direction of travel.`,isLongitudinal4?"true":"false","Sound is a longitudinal wave.",`${isLongitudinal4?"True":"False"}.`),
+      sq("igcse-u13-a5","Define ultrasound (true/false)",difficulty,`True or false: ultrasound is defined as sound with a frequency ${isUltrasound5?"higher than 20 kHz":"lower than 20 Hz"}.`,isUltrasound5?"true":"false","Ultrasound is sound with a frequency higher than 20 kHz.",`${isUltrasound5?"True":"False"}.`),
+      sq("igcse-u13-a6","Reason about amplitude and loudness (true/false)",difficulty,`True or false: increasing the ${isAmplitudeLoud6?"amplitude":"frequency"} of a sound wave increases its loudness.`,isAmplitudeLoud6?"true":"false","Amplitude determines loudness; frequency determines pitch.",`${isAmplitudeLoud6?"True":"False"}.`),
+    ], difficulty);
+  }
+  const speed1=[300,320,330,340,350][r(0,4)],time1=r(2,6)/2,wrongDist1=speed1+time1,correctDist1=speed1*time1;
+  const isDigitalBetter2=r(0,1)===1;
+  const isSolidFastest3=r(0,1)===1;
+  const speed4=[300,320,330,340,350][r(0,4)],depth4=r(2,8)*speed4/2,time4=(2*depth4)/speed4;
+  const isCompression5=r(0,1)===1;
+  const isVacuumTravel6=r(0,1)===1;
+  return validateUnitSet([
+    sq("igcse-u13-r1","Correct a distance-calculation error",difficulty,`A learner finds the distance travelled by sound using speed plus time instead of multiplying, getting ${wrongDist1} m for a speed of ${speed1} m/s over ${time1} s. Enter the correct distance.`,String(correctDist1),"Multiply speed by time, don't add them.",`${speed1}×${time1}=${correctDist1} m.`),
+    sq("igcse-u13-r2","Reason about digital vs analogue signals",difficulty,`True or false: digital signals generally allow a ${isDigitalBetter2?"higher":"lower"} rate of data transmission and a ${isDigitalBetter2?"longer":"shorter"} range than analogue, due to accurate signal regeneration.`,isDigitalBetter2?"true":"false","Digital signals allow higher data rates and longer range due to signal regeneration.",`${isDigitalBetter2?"True":"False"}.`),
+    sq("igcse-u13-r3","Reason about sound speed in different media",difficulty,`True or false: sound generally travels ${isSolidFastest3?"fastest in solids, slower in liquids, and slowest in gases":"fastest in gases, slower in liquids, and slowest in solids"}.`,isSolidFastest3?"true":"false","Sound travels fastest in solids, then liquids, then gases.",`${isSolidFastest3?"True":"False"}.`),
+    sq("igcse-u13-r4","Calculate depth from a sonar pulse",difficulty,`A sonar pulse travels at ${speed4} m/s and takes ${time4} s to return after reflecting off the sea floor. Find the depth of the sea floor (remember the pulse travels there and back).`,String(depth4),"The pulse travels down and back, so divide the total distance by 2.",`(${speed4}×${time4})÷2=${depth4} m.`),
+    sq("igcse-u13-r5","Define compression in a sound wave (true/false)",difficulty,`True or false: in a sound wave, regions where particles are pushed closer together are called ${isCompression5?"compressions":"rarefactions"}.`,isCompression5?"true":"false","Regions of closer particles are compressions; regions of spread particles are rarefactions.",`${isCompression5?"True":"False"}.`),
+    sq("igcse-u13-r6","Reason about EM waves vs sound waves in a vacuum",difficulty,`True or false: electromagnetic waves can travel through a vacuum, ${isVacuumTravel6?"unlike sound waves, which need a medium":"just like sound waves also can"}.`,isVacuumTravel6?"true":"false","EM waves can travel through a vacuum; sound waves cannot.",`${isVacuumTravel6?"True":"False"}.`),
+  ], difficulty);
+};
+
 const igcseTopics: Record<string,(difficulty:"foundational"|"application"|"reasoning")=>PhysicsQuestion[]> = {
   "igcse-u1": structuredIgcseMeasurement,
   "igcse-u2": structuredMotion,
@@ -706,6 +1063,12 @@ const igcseTopics: Record<string,(difficulty:"foundational"|"application"|"reaso
   "igcse-u5": structuredMomentum,
   "igcse-u6": structuredEnergyWorkPower,
   "igcse-u7": structuredPressure,
+  "igcse-u8": structuredKineticModel,
+  "igcse-u9": structuredThermalProperties,
+  "igcse-u10": structuredThermalTransfer,
+  "igcse-u11": structuredGeneralWaveProperties,
+  "igcse-u12": structuredLight,
+  "igcse-u13": structuredEMSpectrumSound,
   "igcse-u14": structuredMagnetism,
   "igcse-u15": structuredElectricalQuantities,
   "igcse-u16": structuredElectricCircuits,
