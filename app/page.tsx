@@ -134,9 +134,9 @@ const igcsePhysicsUnits: PhysicsUnit[] = [
   { id:"igcse-u16", title:"4.3 Electric circuits", summary:"Circuit diagrams, series and parallel circuits", icon:"🔌", available:true },
   { id:"igcse-u17", title:"4.4 Electrical safety", summary:"Hazards, fuses, earthing and double insulation", icon:"⚠", available:true },
   { id:"igcse-u18", title:"4.5 Electromagnetic effects", summary:"Induction, generators, motors and transformers", icon:"🔄", available:true },
-  { id:"igcse-u19", title:"5.1 The nuclear model of the atom", summary:"Atomic structure, protons, neutrons and isotopes", icon:"⚛", available:false },
-  { id:"igcse-u20", title:"5.2 Radioactivity", summary:"Nuclear radiation, decay and half-life", icon:"☢", available:false },
-  { id:"igcse-u21", title:"6.1–6.2 Space physics", summary:"The Solar System, stars and the Universe", icon:"🌌", available:false },
+  { id:"igcse-u19", title:"5.1 The nuclear model of the atom", summary:"Atomic structure, protons, neutrons and isotopes", icon:"⚛", available:true },
+  { id:"igcse-u20", title:"5.2 Radioactivity", summary:"Nuclear radiation, decay and half-life", icon:"☢", available:true },
+  { id:"igcse-u21", title:"6.1–6.2 Space physics", summary:"The Solar System, stars and the Universe", icon:"🌌", available:true },
 ];
 const asPhysicsUnits: PhysicsUnit[] = [
   { id:"as-u1", title:"1. Physical quantities & units", summary:"SI units, errors and dimensional analysis", icon:"⚖", available:false },

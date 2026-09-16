@@ -1055,9 +1055,175 @@ const structuredEMSpectrumSound = (difficulty:"foundational"|"application"|"reas
   ], difficulty);
 };
 
+const structuredNuclearModel = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const isPositiveNucleus1=r(0,1)===1;
+    const isPositiveIon2=r(0,1)===1;
+    const protonNumber3=r(2,30),nucleonNumber3=protonNumber3+r(2,30),neutrons3=nucleonNumber3-protonNumber3;
+    const particleOptions=[
+      { name:"proton", charge:"+1" },
+      { name:"neutron", charge:"0" },
+      { name:"electron", charge:"-1" },
+    ];
+    const particlePick=particleOptions[r(0,particleOptions.length-1)];
+    const protonNumber5=r(2,20),nucleonNumber5=protonNumber5+r(2,20);
+    const isSameElement6=r(0,1)===1;
+    return validateUnitSet([
+      sq("igcse-u19-f1","Recall the structure of an atom (true/false)",difficulty,`True or false: an atom has a ${isPositiveNucleus1?"positively":"negatively"} charged nucleus, with electrons orbiting around it.`,isPositiveNucleus1?"true":"false","The nucleus is positively charged; electrons orbit around it.",`${isPositiveNucleus1?"True":"False"}.`),
+      sq("igcse-u19-f2","Recall how ions form (true/false)",difficulty,`True or false: an atom that loses electrons forms a ${isPositiveIon2?"positive":"negative"} ion.`,isPositiveIon2?"true":"false","Losing electrons leaves an overall positive charge.",`${isPositiveIon2?"True":"False"}.`),
+      sq("igcse-u19-f3","Calculate the number of neutrons",difficulty,`An atom has proton number ${protonNumber3} and nucleon number ${nucleonNumber3}. Find the number of neutrons.`,String(neutrons3),"Subtract proton number from nucleon number.",`${nucleonNumber3}−${protonNumber3}=${neutrons3}.`),
+      sq("igcse-u19-f4","Recall relative charges of particles",difficulty,`What is the relative charge of a ${particlePick.name}?`,[particlePick.charge],"Recall the relative charges of protons, neutrons and electrons.",`A ${particlePick.name} has relative charge ${particlePick.charge}.`),
+      sq("igcse-u19-f5","Read proton number from nuclide notation",difficulty,`An atom is represented as having nucleon number ${nucleonNumber5} and proton number ${protonNumber5} (written as ${nucleonNumber5} over ${protonNumber5} before the element symbol). How many protons does it have?`,String(protonNumber5),"The proton number is shown as the lower number in nuclide notation.",`The proton number is ${protonNumber5}.`),
+      sq("igcse-u19-f6","Define isotopes (true/false)",difficulty,`True or false: isotopes of an element have the ${isSameElement6?"same":"different"} number of protons but a different number of neutrons.`,isSameElement6?"true":"false","Isotopes share the same proton number but differ in neutron number.",`${isSameElement6?"True":"False"}.`),
+    ], difficulty);
+  }
+  if (difficulty === "application") {
+    const protonNumber1=r(2,30),nucleonNumber1=protonNumber1+r(2,30),neutrons1=nucleonNumber1-protonNumber1;
+    const isSmallNucleus2=r(0,1)===1;
+    const protonNumber3=r(2,20),chargeLost3=r(1,2),ionElectrons3=protonNumber3-chargeLost3;
+    const isFission4=r(0,1)===1;
+    const protonA5=r(2,20),neutronsA5=r(2,20),protonB5=protonA5,neutronsB5=neutronsA5+r(1,3);
+    const isGainElectron6=r(0,1)===1;
+    return validateUnitSet([
+      sq("igcse-u19-a1","Calculate neutrons in an applied context",difficulty,`An atom of an element has proton number ${protonNumber1} and nucleon number ${nucleonNumber1}. Find the number of neutrons in its nucleus.`,String(neutrons1),"Subtract proton number from nucleon number.",`${nucleonNumber1}−${protonNumber1}=${neutrons1}.`),
+      sq("igcse-u19-a2","Reason about alpha scattering evidence",difficulty,`True or false: the alpha particle scattering experiment provided evidence for a ${isSmallNucleus2?"very small, dense":"large, spread-out"} nucleus.`,isSmallNucleus2?"true":"false","Alpha scattering showed most particles pass straight through, implying a small, dense nucleus.",`${isSmallNucleus2?"True":"False"}.`),
+      sq("igcse-u19-a3","Calculate electrons remaining after ionisation",difficulty,`A neutral atom with ${protonNumber3} protons loses ${chargeLost3} electron${chargeLost3>1?"s":""}, forming an ion. Find the number of electrons remaining.`,String(ionElectrons3),"Subtract the lost electrons from the original number (equal to proton number).",`${protonNumber3}−${chargeLost3}=${ionElectrons3}.`),
+      sq("igcse-u19-a4","Distinguish fission from fusion (true/false)",difficulty,`True or false: ${isFission4?"nuclear fission":"nuclear fusion"} involves the splitting of a large nucleus into smaller nuclei.`,isFission4?"true":"false","Fission splits a nucleus; fusion joins nuclei together.",`${isFission4?"True":"False"}.`),
+      sq("igcse-u19-a5","Identify isotopes from proton and neutron counts",difficulty,`Atom A has ${protonA5} protons and ${neutronsA5} neutrons. Atom B has ${protonB5} protons and ${neutronsB5} neutrons. Are A and B isotopes of the same element? Answer yes or no.`,"yes","Isotopes share the same proton number.","Yes — both have the same proton number."),
+      sq("igcse-u19-a6","Reason about electron gain and ion charge",difficulty,`True or false: an atom that ${isGainElectron6?"gains":"loses"} one or more electrons forms a negative ion.`,isGainElectron6?"true":"false","Gaining electrons gives an overall negative charge.",`${isGainElectron6?"True":"False"}.`),
+    ], difficulty);
+  }
+  const protonNumber1=r(2,30),nucleonNumber1=protonNumber1+r(2,30),wrongNeutrons1=protonNumber1+nucleonNumber1,correctNeutrons1=nucleonNumber1-protonNumber1;
+  const isPositiveCharge2=r(0,1)===1;
+  const isEvidence3=r(0,1)===1;
+  const protonNumber4=r(2,20),electronsLost4=r(1,3),ionCharge4=`+${electronsLost4}`;
+  const protonA5=r(2,20),neutronsA5=r(2,20),protonB5=protonA5+1,neutronsB5=neutronsA5;
+  const isMoreMassive6=r(0,1)===1;
+  return validateUnitSet([
+    sq("igcse-u19-r1","Correct a neutron-calculation error",difficulty,`A learner finds the number of neutrons by adding proton number and nucleon number instead of subtracting, getting ${wrongNeutrons1} for proton number ${protonNumber1} and nucleon number ${nucleonNumber1}. Enter the correct number of neutrons.`,String(correctNeutrons1),"Subtract proton number from nucleon number, don't add them.",`${nucleonNumber1}−${protonNumber1}=${correctNeutrons1}.`),
+    sq("igcse-u19-r2","Reason about nuclear charge",difficulty,`True or false: the overall charge of a nucleus is ${isPositiveCharge2?"positive":"negative"}, since it contains protons and neutrons but no electrons.`,isPositiveCharge2?"true":"false","A nucleus contains only protons (positive) and neutrons (neutral), giving an overall positive charge.",`${isPositiveCharge2?"True":"False"}.`),
+    sq("igcse-u19-r3","Reason about alpha scattering results",difficulty,`True or false: most alpha particles passing through thin metal foil travel straight through with little or no deflection, providing evidence that atoms are ${isEvidence3?"mostly empty space":"solid throughout"}.`,isEvidence3?"true":"false","Most particles passing straight through implies mostly empty space around a tiny nucleus.",`${isEvidence3?"True":"False"}.`),
+    sq("igcse-u19-r4","Calculate the charge on an ion",difficulty,`A neutral atom with proton number ${protonNumber4} loses ${electronsLost4} electron${electronsLost4>1?"s":""}. Find the resulting charge on the ion (state as a signed number, e.g. +1).`,[ionCharge4],"Losing electrons leaves an excess of positive charge equal to the number lost.",`Losing ${electronsLost4} electron${electronsLost4>1?"s":""} gives a charge of ${ionCharge4}.`),
+    sq("igcse-u19-r5","Distinguish isotopes from different elements",difficulty,`Atom A has ${protonA5} protons and ${neutronsA5} neutrons. Atom B has ${protonB5} protons and ${neutronsB5} neutrons. Are A and B isotopes of the same element? Answer yes or no.`,"no","Isotopes must share the same proton number; these atoms have different proton numbers.","No — different proton numbers mean these are different elements."),
+    sq("igcse-u19-r6","Reason about nucleon number and mass",difficulty,`True or false: a nucleus with a ${isMoreMassive6?"greater":"smaller"} nucleon number has a greater relative mass.`,isMoreMassive6?"true":"false","Nucleon number is directly related to the relative mass of a nucleus.",`${isMoreMassive6?"True":"False"}.`),
+  ], difficulty);
+};
+
+const BG_SOURCES = ["radon gas in the air","rocks and buildings","food and drink","cosmic rays"];
+const structuredRadioactivity = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const bgSourcePick=BG_SOURCES[r(0,BG_SOURCES.length-1)];
+    const penetrationOptions=[
+      { type:"alpha", desc:"stopped by a sheet of paper or a few cm of air", answer:["alpha"] },
+      { type:"beta", desc:"stopped by a few mm of aluminium", answer:["beta"] },
+      { type:"gamma", desc:"only significantly reduced by thick lead or concrete", answer:["gamma"] },
+    ];
+    const penetrationPick=penetrationOptions[r(0,penetrationOptions.length-1)];
+    const isRandom3=r(0,1)===1;
+    const initialCount4=r(2,10)*100,remaining4=initialCount4/2;
+    const isChangeElement5=r(0,1)===1;
+    const isTimeTaken6=r(0,1)===1;
+    return validateUnitSet([
+      sq("igcse-u20-f1","Name a source of background radiation",difficulty,"Name one source that contributes to background radiation.",[bgSourcePick],"Recall the recognised sources of background radiation.",`${bgSourcePick} is a source of background radiation.`),
+      sq("igcse-u20-f2","Identify a radiation type from its penetration",difficulty,`Which type of radiation is ${penetrationPick.desc}?`,penetrationPick.answer,"Match the penetration description to alpha, beta, or gamma.",`This describes ${penetrationPick.type} radiation.`),
+      sq("igcse-u20-f3","Recall the nature of radioactive decay (true/false)",difficulty,`True or false: radioactive decay is ${isRandom3?"spontaneous and random":"predictable and controllable"} in direction and timing.`,isRandom3?"true":"false","Radioactive decay is spontaneous and random.",`${isRandom3?"True":"False"}.`),
+      sq("igcse-u20-f4","Calculate count rate after one half-life",difficulty,`A sample has an initial count rate of ${initialCount4} counts/s. After one half-life, find the count rate.`,String(remaining4),"Halve the count rate for each half-life that passes.",`${initialCount4}÷2=${remaining4} counts/s.`),
+      sq("igcse-u20-f5","Recall the effect of decay on the element (true/false)",difficulty,`True or false: during alpha or beta decay, the nucleus ${isChangeElement5?"changes to that of a different element":"stays the same element"}.`,isChangeElement5?"true":"false","Alpha and beta decay change the nucleus into a different element.",`${isChangeElement5?"True":"False"}.`),
+      sq("igcse-u20-f6","Define half-life (true/false)",difficulty,`True or false: half-life is defined as the ${isTimeTaken6?"time taken for half the nuclei in a sample to decay":"total time for all nuclei to decay"}.`,isTimeTaken6?"true":"false","Half-life is the time for half the nuclei in a sample to decay.",`${isTimeTaken6?"True":"False"}.`),
+    ], difficulty);
+  }
+  if (difficulty === "application") {
+    const initialCount1=r(2,10)*400,remaining1=initialCount1/4;
+    const applicationOptions=[
+      { use:"a household smoke alarm", type:"alpha", reason:"alpha radiation is easily absorbed by smoke particles but poorly penetrating, making it safe for this low-level use" },
+      { use:"sterilising medical equipment", type:"gamma", reason:"gamma radiation is highly penetrating, able to reach and sterilise the whole item" },
+      { use:"measuring the thickness of thin material", type:"beta", reason:"beta radiation is partially absorbed depending on thickness, ideal for this measurement" },
+    ];
+    const appPick=applicationOptions[r(0,applicationOptions.length-1)];
+    const isReduceTime3=r(0,1)===1;
+    const rawCount4=r(50,150),background4=r(5,20),corrected4=rawCount4-background4;
+    const isAlphaMostIonising5=r(0,1)===1;
+    const isGammaMostPenetrating6=r(0,1)===1;
+    return validateUnitSet([
+      sq("igcse-u20-a1","Calculate count rate after two half-lives",difficulty,`A sample has an initial count rate of ${initialCount1} counts/s. After 2 half-lives, find the count rate.`,String(remaining1),"Divide by 2 for each half-life that passes.",`${initialCount1}÷4=${remaining1} counts/s.`),
+      sq("igcse-u20-a2","Choose a radiation type for an application",difficulty,`Which type of radiation (alpha, beta, or gamma) is most suitable for ${appPick.use}, given that ${appPick.reason}?`,[appPick.type],"Match the properties of each radiation type to the requirements of the application.",`${appPick.type} radiation is most suitable here.`),
+      sq("igcse-u20-a3","Reason about reducing exposure time",difficulty,`True or false: ${isReduceTime3?"reducing":"increasing"} the time spent near a radioactive source reduces a person's exposure to radiation.`,isReduceTime3?"true":"false","Less time near a source means less exposure.",`${isReduceTime3?"True":"False"}.`),
+      sq("igcse-u20-a4","Calculate a corrected count rate",difficulty,`A detector records ${rawCount4} counts/s near a radioactive source, with a measured background radiation of ${background4} counts/s. Find the corrected count rate.`,String(corrected4),"Subtract the background radiation from the raw reading.",`${rawCount4}−${background4}=${corrected4} counts/s.`),
+      sq("igcse-u20-a5","Reason about ionising ability",difficulty,`True or false: alpha radiation is generally ${isAlphaMostIonising5?"more":"less"} ionising than beta or gamma radiation.`,isAlphaMostIonising5?"true":"false","Alpha radiation is the most strongly ionising of the three types.",`${isAlphaMostIonising5?"True":"False"}.`),
+      sq("igcse-u20-a6","Reason about penetrating ability",difficulty,`True or false: gamma radiation is generally ${isGammaMostPenetrating6?"more":"less"} penetrating than alpha or beta radiation.`,isGammaMostPenetrating6?"true":"false","Gamma radiation is the most penetrating of the three types.",`${isGammaMostPenetrating6?"True":"False"}.`),
+    ], difficulty);
+  }
+  const initialCount1=r(2,10)*800,correctRemaining1=initialCount1/8,wrongRemaining1=Math.round((initialCount1/(2*3))*100)/100;
+  const halfLifeValue2=r(2,10),elapsedTime2=halfLifeValue2*2,halfLivesElapsed2=elapsedTime2/halfLifeValue2;
+  const isBetaNeutron3=r(0,1)===1;
+  const isShielding4=r(0,1)===1;
+  const remaining5=r(50,100),background5=r(10,30),corrected5=remaining5*2,rawCount5=corrected5+background5;
+  const isCancerTreatment6=r(0,1)===1;
+  return validateUnitSet([
+    sq("igcse-u20-r1","Correct a half-life calculation error",difficulty,`A learner finds the count rate after 3 half-lives by dividing by (2×3) instead of 2^3, getting ${wrongRemaining1} for an initial count rate of ${initialCount1} counts/s. Enter the correct count rate.`,String(correctRemaining1),"Divide by 2 for each half-life separately (2^n), not by (2×n).",`${initialCount1}÷8=${correctRemaining1} counts/s.`),
+    sq("igcse-u20-r2","Calculate the number of half-lives elapsed",difficulty,`An isotope has a half-life of ${halfLifeValue2} hours. Find how many half-lives have elapsed after ${elapsedTime2} hours.`,String(halfLivesElapsed2),"Divide the elapsed time by the half-life.",`${elapsedTime2}÷${halfLifeValue2}=${halfLivesElapsed2}.`),
+    sq("igcse-u20-r3","Reason about beta decay",difficulty,`True or false: during beta decay, a neutron in the nucleus changes into a proton and ${isBetaNeutron3?"an electron is emitted":"a positron is emitted"}.`,isBetaNeutron3?"true":"false","In beta decay, a neutron becomes a proton and an electron.",`${isBetaNeutron3?"True":"False"}.`),
+    sq("igcse-u20-r4","Reason about shielding and radiation dose",difficulty,`True or false: increasing the ${isShielding4?"thickness of shielding":"exposure time"} between a person and a radioactive source reduces their radiation dose.`,"true","Both increasing shielding and reducing exposure time reduce radiation dose.","True — this reduces radiation dose."),
+    sq("igcse-u20-r5","Combine background correction with half-life",difficulty,`A detector records ${rawCount5} counts/s with background radiation of ${background5} counts/s. Find the corrected count rate, then find the count rate after one further half-life. Give the final value only.`,String(remaining5),"Subtract the background, then halve the result.",`(${rawCount5}−${background5})÷2=${remaining5} counts/s.`),
+    sq("igcse-u20-r6","Reason about gamma radiation in cancer treatment",difficulty,`True or false: gamma radiation is commonly used in the ${isCancerTreatment6?"diagnosis and treatment of cancer":"initial physical examination only, never treatment"}, due to its high penetrating ability.`,isCancerTreatment6?"true":"false","Gamma radiation is used in both diagnosis and treatment of cancer.",`${isCancerTreatment6?"True":"False"}.`),
+  ], difficulty);
+};
+
+const structuredSpacePhysics = (difficulty:"foundational"|"application"|"reasoning") => {
+  if (difficulty === "foundational") {
+    const isRotation1=r(0,1)===1;
+    const isSeasons2=r(0,1)===1;
+    const isMoonMonth3=r(0,1)===1;
+    const isInnerRocky4=r(0,1)===1;
+    const isLightYear5=r(0,1)===1;
+    const isMilkyWay6=r(0,1)===1;
+    return validateUnitSet([
+      sq("igcse-u21-f1","Recall the Earth's rotation (true/false)",difficulty,`True or false: the Earth rotates on its axis once approximately every ${isRotation1?"24 hours":"365 days"}, causing day and night.`,isRotation1?"true":"false","The Earth rotates once approximately every 24 hours.",`${isRotation1?"True":"False"}.`),
+      sq("igcse-u21-f2","Recall the Earth's orbital period (true/false)",difficulty,`True or false: the Earth orbits the Sun once approximately every ${isSeasons2?"365 days":"24 hours"}, causing the yearly cycle of seasons.`,isSeasons2?"true":"false","The Earth orbits the Sun once approximately every 365 days.",`${isSeasons2?"True":"False"}.`),
+      sq("igcse-u21-f3","Recall the Moon's orbital period (true/false)",difficulty,`True or false: the Moon takes approximately ${isMoonMonth3?"one month":"one year"} to orbit the Earth.`,isMoonMonth3?"true":"false","The Moon takes approximately one month to orbit the Earth.",`${isMoonMonth3?"True":"False"}.`),
+      sq("igcse-u21-f4","Recall inner planet composition (true/false)",difficulty,`True or false: the four planets nearest the Sun are ${isInnerRocky4?"small and rocky":"large and gaseous"}.`,isInnerRocky4?"true":"false","The four planets nearest the Sun are small and rocky.",`${isInnerRocky4?"True":"False"}.`),
+      sq("igcse-u21-f5","Recall what a light-year measures (true/false)",difficulty,`True or false: a light-year is a unit of ${isLightYear5?"distance":"time"}.`,isLightYear5?"true":"false","A light-year measures distance, not time.",`${isLightYear5?"True":"False"}.`),
+      sq("igcse-u21-f6","Recall the Sun's galaxy (true/false)",difficulty,`True or false: the Sun is a star located within the ${isMilkyWay6?"Milky Way":"Andromeda"} galaxy.`,isMilkyWay6?"true":"false","The Sun is a star in the Milky Way galaxy.",`${isMilkyWay6?"True":"False"}.`),
+    ], difficulty);
+  }
+  if (difficulty === "application") {
+    const period1=r(2,10),radius1=r(2,10)*period1,speed1=Math.round((2*3.14*radius1/period1)*100)/100;
+    const lightSpeed2=3*(10**8),time2=r(2,10)*100,distance2=lightSpeed2*time2;
+    const isDecrease3=r(0,1)===1;
+    const isRedshiftAway4=r(0,1)===1;
+    const isFusion5=r(0,1)===1;
+    const isFasterCloser6=r(0,1)===1;
+    return validateUnitSet([
+      sq("igcse-u21-a1","Calculate orbital speed",difficulty,`A planet orbits at radius ${radius1} million km with an orbital period of ${period1} years. Using v = 2πr/T and π=3.14, find its average orbital speed (in million km per year).`,String(speed1),"Multiply 2π by the radius, then divide by the period.",`(2×3.14×${radius1})÷${period1}=${speed1} million km/year.`),
+      sq("igcse-u21-a2","Calculate distance from the speed of light",difficulty,`Light travels at ${lightSpeed2} m/s. Find the distance light travels in ${time2} s.`,String(distance2),"Multiply the speed of light by the time.",`${lightSpeed2}×${time2}=${distance2} m.`),
+      sq("igcse-u21-a3","Reason about gravitational field strength and distance",difficulty,`True or false: the strength of a planet's gravitational field ${isDecrease3?"decreases":"increases"} as distance from the planet increases.`,isDecrease3?"true":"false","Gravitational field strength decreases with distance from a planet.",`${isDecrease3?"True":"False"}.`),
+      sq("igcse-u21-a4","Reason about redshift",difficulty,`True or false: redshift in light from a distant galaxy indicates that the galaxy is moving ${isRedshiftAway4?"away from":"towards"} the Earth.`,isRedshiftAway4?"true":"false","Redshift indicates a galaxy is moving away from Earth.",`${isRedshiftAway4?"True":"False"}.`),
+      sq("igcse-u21-a5","Recall how the Sun produces energy",difficulty,`True or false: the Sun is powered by nuclear ${isFusion5?"fusion":"fission"}, converting hydrogen into helium.`,isFusion5?"true":"false","The Sun is powered by nuclear fusion of hydrogen into helium.",`${isFusion5?"True":"False"}.`),
+      sq("igcse-u21-a6","Reason about orbital speed and distance from the Sun",difficulty,`True or false: a planet's orbital speed is ${isFasterCloser6?"faster":"slower"} when it is closer to the Sun.`,isFasterCloser6?"true":"false","Planets orbit faster when closer to the Sun.",`${isFasterCloser6?"True":"False"}.`),
+    ], difficulty);
+  }
+  const period1=r(2,10),radius1=r(2,10)*period1,wrongSpeed1=radius1+period1,correctSpeed1=Math.round((2*3.14*radius1/period1)*100)/100;
+  const lightSpeed2=3*(10**8),distance2=lightSpeed2*(r(2,10)*100),correctTime2=distance2/lightSpeed2;
+  const isElliptical3=r(0,1)===1;
+  const isFasterNearSun4=r(0,1)===1;
+  const isCMBR5=r(0,1)===1;
+  const isSunMostMass6=r(0,1)===1;
+  return validateUnitSet([
+    sq("igcse-u21-r1","Correct an orbital-speed calculation error",difficulty,`A learner finds orbital speed by adding radius and period instead of using v=2πr/T, getting ${wrongSpeed1} for a radius of ${radius1} million km and period of ${period1} years. Enter the correct orbital speed (million km/year), using π=3.14.`,String(correctSpeed1),"Use v=2πr/T, not simple addition.",`(2×3.14×${radius1})÷${period1}=${correctSpeed1} million km/year.`),
+    sq("igcse-u21-r2","Correct a light-travel-time calculation error",difficulty,`A learner finds the time for light to travel ${distance2} m by multiplying distance and speed instead of dividing, getting an enormous number. Enter the correct time, using speed = 3×10^8 m/s.`,String(correctTime2),"Divide distance by the speed of light, don't multiply.",`${distance2}÷${lightSpeed2}=${correctTime2} s.`),
+    sq("igcse-u21-r3","Reason about orbit shapes",difficulty,`True or false: planets, minor planets and comets ${isElliptical3?"generally have elliptical (not perfectly circular) orbits":"always have perfectly circular orbits"} around the Sun.`,isElliptical3?"true":"false","Orbits in the Solar System are generally elliptical.",`${isElliptical3?"True":"False"}.`),
+    sq("igcse-u21-r4","Reason about orbital speed via conservation of energy",difficulty,`True or false: an object in an elliptical orbit travels ${isFasterNearSun4?"faster":"slower"} when it is closer to the Sun, explained using conservation of energy.`,isFasterNearSun4?"true":"false","Conservation of energy means an object speeds up as it nears the Sun.",`${isFasterNearSun4?"True":"False"}.`),
+    sq("igcse-u21-r5","Reason about evidence for the Big Bang",difficulty,`True or false: the cosmic microwave background radiation (CMBR) is evidence that supports the ${isCMBR5?"Big Bang theory":"steady-state theory"} of the Universe's origin.`,isCMBR5?"true":"false","CMBR is key evidence supporting the Big Bang theory.",`${isCMBR5?"True":"False"}.`),
+    sq("igcse-u21-r6","Reason about the Sun's gravitational dominance",difficulty,`True or false: planets orbit the Sun because the Sun contains ${isSunMostMass6?"most of the mass":"the least mass"} in the Solar System, providing the dominant gravitational attraction.`,isSunMostMass6?"true":"false","The Sun's dominant mass explains why planets orbit it.",`${isSunMostMass6?"True":"False"}.`),
+  ], difficulty);
+};
+
 const igcseTopics: Record<string,(difficulty:"foundational"|"application"|"reasoning")=>PhysicsQuestion[]> = {
   "igcse-u1": structuredIgcseMeasurement,
   "igcse-u2": structuredMotion,
+  "igcse-u19": structuredNuclearModel,
+  "igcse-u20": structuredRadioactivity,
+  "igcse-u21": structuredSpacePhysics,
   "igcse-u3": structuredMassWeightDensity,
   "igcse-u4": structuredForces,
   "igcse-u5": structuredMomentum,
