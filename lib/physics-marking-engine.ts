@@ -10,6 +10,9 @@
 // misinterpretations (e.g. subtraction being read as scientific notation),
 // not just cosmetic formatting issues.
 
+import type { NumericRule, MarkingPoint, Scheme, Question, Answer, Grade } from "./physics-extraction-schema";
+export type { NumericRule, MarkingPoint, Scheme, Question, Answer, Grade } from "./physics-extraction-schema";
+
 // ============================================================
 // NORMALIZATION
 // ============================================================
@@ -183,14 +186,6 @@ export const sameDimensions = (a: Unit, b: Unit) => a.dims.every((x, i) => x ===
 // NUMERIC COMPARISON
 // ============================================================
 
-export type NumericRule = {
-  accepted: string[];
-  unitRequired: boolean;
-  relativeTolerance: number;
-  absoluteTolerance: number;
-  range: [number, number] | null;
-};
-
 /** Parses a final answer string into a {value, unit} pair. */
 export function parseQuantity(raw: string) {
   const text = finalExpression(raw);
@@ -257,24 +252,6 @@ export function compareNumeric(answer: string, rule: NumericRule): Comparison {
 // ============================================================
 // MARKING DECISION
 // ============================================================
-
-export type Answer = { questionId: string; mode: "typed" | "handwritten"; text: string; steps: Record<string, string>; file: string | null };
-export type Question = { id: string; marks: number; text: string; issues: string[] };
-export type MarkingPoint = {
-  id: string; marks: number; description: string; dependsOn: string[];
-  kind: "numeric" | "exact" | "manual"; numeric?: NumericRule; accepted: string[];
-};
-export type Scheme = {
-  marks: number; kind: "numeric" | "exact" | "manual" | "stepped"; expected: string;
-  notes: string[]; unresolvedRules: string[]; finalAnswerAwardsAll?: boolean;
-  numeric?: NumericRule; accepted: string[]; points: MarkingPoint[];
-};
-export type Grade = {
-  questionId: string; proposed: number | null; final: number | null;
-  status: "needs_review" | "proposed" | "self_practice"; reason: string;
-  points: { id: string; description: string; marks: number; hit: boolean }[];
-  expected: string; history: unknown[];
-};
 
 /**
  * Decides whether a question's mark scheme requires teacher review, based on
