@@ -10,7 +10,7 @@ import {
 } from "@clerk/nextjs";
 import { igcsePhysicsSyllabus } from "@/lib/physics-syllabus";
 type Role = "choose" | "teacher" | "student";
-type TeacherView = "dashboard" | "stage7" | "stage89" | "physics" | "papers" | "students" | "submissions";
+type TeacherView = "dashboard" | "stage7" | "stage89" | "physics" | "physicsExam" | "papers" | "students" | "submissions";
 type AssignmentSummary = {
   id: string;
   title: string;
@@ -373,6 +373,7 @@ function TeacherPortal({ switchRole }: { switchRole: () => void }) {
           ["stage7", "7", "Stage 7 mastery"],
           ["stage89", "8", "Stages 8 & 9"],
           ["physics", "⚛", "Physics practice"],
+          ["physicsExam", "📝", "Physics exam papers"],
           ["papers", "▤", "Papers & assignments"],
           ["submissions", "✓", "Marking queue"],
           ["students", "♙", "Students"],
@@ -399,6 +400,8 @@ function TeacherPortal({ switchRole }: { switchRole: () => void }) {
         <Stage89Teacher />
       ) : view === "physics" ? (
         <PhysicsTeacher />
+      ) : view === "physicsExam" ? (
+        <PhysicsExamTeacher />
       ) : view === "papers" ? (
         <Papers upload={() => setModal(true)} />
       ) : view === "submissions" ? (
@@ -907,6 +910,193 @@ function PastPaperPracticeCrop({source}:{source:PastPaperPracticeSource}){
 }
 
 type CrossStagePracticeUnit = LowerSecondaryUnit & { sourceStage: 7 | 8 | 9 };
+
+function PhysicsExamTeacher() {
+  const [papers, setPapers] = useState<
+    Array<{ id: string; title: string; syllabus: string; status: string; revision: number;
+      questions: { marks: number }[]; warnings: string[] }>
+  >([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [combined, setCombined] = useState(false);
+  const [reviewing, setReviewing] = useState<{
+    id: string; revision: number; title: string; syllabus: string; warnings: string[];
+    questions: Array<{ id: string; text: string; context: string; marks: number; topic: string; sourcePages: number[]; references: string[]; issues: string[] }>;
+    schemes: Array<{ questionId: string; raw: string }>;
+  } | null>(null);
+  const [editJson, setEditJson] = useState("");
+
+  async function load() {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/physics-exam");
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not load papers.");
+      setPapers(data.papers || []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not load papers.");
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => { load(); }, []);
+
+  function openReview(paper: typeof reviewing) {
+    setReviewing(paper);
+    if (paper) setEditJson(JSON.stringify({ questions: paper.questions, schemes: paper.schemes, warnings: paper.warnings, syllabus: paper.syllabus }, null, 2));
+  }
+
+  async function upload(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      const form = new FormData(e.currentTarget);
+      form.set("action", "extract");
+      form.set("combined", String(combined));
+      const response = await fetch("/api/physics-exam", { method: "POST", body: form });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Extraction failed.");
+      setUploadOpen(false);
+      await load();
+      openReview(data.paper);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Extraction failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function approve() {
+    if (!reviewing) return;
+    setBusy(true);
+    setError("");
+    try {
+      let extraction: unknown;
+      try { extraction = JSON.parse(editJson); }
+      catch { throw new Error("The extraction is not valid JSON."); }
+      const response = await fetch("/api/physics-exam", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "approve", paperId: reviewing.id, revision: reviewing.revision, extraction }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not publish this paper.");
+      setReviewing(null);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not publish this paper.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (reviewing) {
+    return (
+      <>
+        <div className="portal-heading">
+          <div>
+            <p>PHYSICS EXAM PAPERS</p>
+            <h1>Check the extraction</h1>
+            <h2>Compare every question, mark allocation, and rule with the source pages before publishing.</h2>
+          </div>
+          <button onClick={() => setReviewing(null)}>← Paper library</button>
+        </div>
+        {error && <p className="error-text">{error}</p>}
+        {reviewing.warnings.map((w, i) => <p key={i}>{w}</p>)}
+        <div className="extraction-grid">
+          {reviewing.questions.map((q) => (
+            <section className="panel" key={q.id}>
+              <h3>{q.id} <span className="badge">{q.marks} marks</span></h3>
+              <p>{q.context}</p>
+              <p>{q.text}</p>
+              <small>{q.topic} · PDF pages {q.sourcePages.join(", ")}</small>
+              {q.references.map((r) => <p className="reference" key={r}>{r}</p>)}
+              {q.issues.map((i) => <p className="error-text" key={i}>{i}</p>)}
+            </section>
+          ))}
+        </div>
+        <section className="panel">
+          <h2>Correct structured extraction</h2>
+          <p>Edit text, IDs, marks, accepted answers, and rules below. Clear an issue only after resolving it against the PDF.</p>
+          <label>Extraction JSON
+            <textarea className="json" spellCheck={false} value={editJson} onChange={(e) => setEditJson(e.target.value)} />
+          </label>
+          <button disabled={busy} className="primary" onClick={approve}>
+            {busy ? "Publishing…" : "I verified the paper — publish for practice"}
+          </button>
+        </section>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="portal-heading">
+        <div>
+          <p>PHYSICS EXAM PAPERS</p>
+          <h1>Exam papers</h1>
+          <h2>Upload a real Cambridge past paper and mark scheme for auto-assisted marking, reviewed by you before anything is published.</h2>
+        </div>
+        <button className="primary" onClick={() => setUploadOpen(true)}>＋ Upload paper</button>
+      </div>
+      {error && <p className="error-text">{error}</p>}
+      <section className="panel paper-table">
+        <header>
+          <div>
+            <h3>Your uploaded papers</h3>
+            <p>Draft papers need your review before students can see them</p>
+          </div>
+        </header>
+        {loading ? (
+          <p>Loading…</p>
+        ) : !papers.length ? (
+          <p>No papers uploaded yet. Upload a question paper and mark scheme to get started.</p>
+        ) : (
+          papers.map((paper) => (
+            <div className="paper-row" key={paper.id}>
+              <div>
+                <b>{paper.title}</b>
+                <small>{paper.syllabus} · {paper.questions.length} questions · {paper.questions.reduce((n, q) => n + q.marks, 0)} marks</small>
+              </div>
+              <span className={"badge " + (paper.status === "ready" ? "green" : "amber")}>
+                {paper.status === "ready" ? "Published" : "Needs review"}
+              </span>
+              {paper.status !== "ready" && (
+                <button onClick={() => openReview(paper as never)}>Review extraction →</button>
+              )}
+            </div>
+          ))
+        )}
+      </section>
+      {uploadOpen && (
+        <div className="portal-modal" onMouseDown={() => !busy && setUploadOpen(false)}>
+          <form onMouseDown={(e) => e.stopPropagation()} onSubmit={upload}>
+            <h3>Upload a paper</h3>
+            <label>Paper title<input name="title" placeholder="e.g. AS Physics · Questions 5–8" required /></label>
+            <label className="check">
+              <input type="checkbox" checked={combined} onChange={(e) => setCombined(e.target.checked)} />
+              One PDF contains both the question paper and mark scheme
+            </label>
+            <label className="file-drop">↑ {combined ? "Combined PDF" : "Question paper"}
+              <input name="questions" type="file" accept="application/pdf" required />
+            </label>
+            {!combined && (
+              <label className="file-drop">↑ Mark scheme
+                <input name="scheme" type="file" accept="application/pdf" required />
+              </label>
+            )}
+            <small>PDF · up to 25 MB each · scans supported</small>
+            {error && <p className="error-text">{error}</p>}
+            <button disabled={busy} className="primary full">{busy ? "Reading page images…" : "Extract questions →"}</button>
+            <small>Page images are sent to the configured OpenAI model. Allow a few minutes.</small>
+          </form>
+        </div>
+      )}
+    </>
+  );
+}
 
 function PhysicsStudent({ back }:{ back:()=>void }) {
   const [level, setLevel] = useState<"igcse"|"as">("igcse");
