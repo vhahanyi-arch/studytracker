@@ -210,6 +210,51 @@ async function initializeSchema() {
       PRIMARY KEY (user_id, objective_id, level)
     )
   `;
+  // Physics paper upload / auto-marking system (merged from the standalone
+  // physics-exam-studio prototype). Paper and Submission are stored as JSON
+  // payloads (matching the questions_json pattern used above for practice
+  // sessions) rather than fully normalized, since the app reads and writes
+  // these as whole objects; teacher_id/student_id/paper_id are pulled out as
+  // real indexed columns for ownership scoping, and title/syllabus/status/
+  // paper_revision/self_practice are pulled out as real columns since the
+  // paper-library view filters and displays these without needing to unpack
+  // the full JSON payload for every row.
+  await sql`
+    CREATE TABLE IF NOT EXISTS physics_exam_papers (
+      id UUID PRIMARY KEY,
+      teacher_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      syllabus TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'draft',
+      revision INTEGER NOT NULL DEFAULT 0,
+      payload JSONB NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`
+    CREATE INDEX IF NOT EXISTS physics_exam_papers_teacher_idx
+    ON physics_exam_papers (teacher_id)
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS physics_exam_submissions (
+      id UUID PRIMARY KEY,
+      paper_id UUID NOT NULL REFERENCES physics_exam_papers(id),
+      paper_revision INTEGER NOT NULL,
+      student_id TEXT NOT NULL,
+      self_practice BOOLEAN NOT NULL DEFAULT FALSE,
+      payload JSONB NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`
+    CREATE INDEX IF NOT EXISTS physics_exam_submissions_student_idx
+    ON physics_exam_submissions (student_id)
+  `;
+  await sql`
+    CREATE INDEX IF NOT EXISTS physics_exam_submissions_paper_idx
+    ON physics_exam_submissions (paper_id)
+  `;
 }
 
 export async function ensureSchema() {
