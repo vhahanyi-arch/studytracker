@@ -12,9 +12,11 @@ const nextConfig: NextConfig = {
   // @napi-rs/canvas ships a compiled native binary (js-binding.js), which
   // cannot be bundled into an ESM chunk the way pure-JS packages can.
   // Without this, Turbopack fails the build with "non-ecmascript placeable
-  // asset" when it tries to bundle it anyway. This tells Next.js to leave
-  // it as a real Node.js require/import at runtime instead.
-  serverExternalPackages: ["@napi-rs/canvas"],
+  // asset" when it tries to bundle it anyway. pdfjs-dist is included too as
+  // a defensive measure alongside the worker-registration fix in
+  // lib/physics-exam-extraction.ts -- this class of PDF-processing library
+  // has been observed needing both mitigations together on Vercel.
+  serverExternalPackages: ["@napi-rs/canvas", "pdfjs-dist"],
 };
 
 export default nextConfig;

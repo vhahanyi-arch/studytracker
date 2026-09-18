@@ -23,6 +23,18 @@ export type PageImage = { page: number; dataUrl: string };
 
 export async function renderPdf(buffer: Uint8Array, selected?: number[]): Promise<PageImage[]> {
   Object.assign(globalThis, { DOMMatrix, ImageData, Path2D });
+  // pdfjs-dist normally resolves its worker via a runtime-computed import
+  // path, which Vercel's serverless bundler cannot trace statically, so the
+  // worker file silently never makes it into the deployed function bundle
+  // ("Setting up fake worker failed: Cannot find module '.../pdf.worker.mjs'"
+  // in production, despite working locally). Importing the worker via its
+  // exact literal string specifier here IS traceable and gets bundled, and
+  // registering it on globalThis makes pdf.js use this main-thread handler
+  // directly instead of attempting its own untraceable dynamic import.
+  const pdfjsWorker = await import("pdfjs-dist/legacy/build/pdf.worker.mjs");
+  if (pdfjsWorker && (pdfjsWorker as { WorkerMessageHandler?: unknown }).WorkerMessageHandler) {
+    (globalThis as { pdfjsWorker?: unknown }).pdfjsWorker = pdfjsWorker;
+  }
   const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const doc = await getDocument({ data: buffer, useSystemFonts: true }).promise;
   try {
