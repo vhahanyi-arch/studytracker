@@ -1251,6 +1251,7 @@ function ReviewForm({ max, busy, defaultScore, onSave }: { max: number; busy: bo
 
 function PhysicsExamStudent({ back }: { back: () => void }) {
   type PaperSummary = { id: string; title: string; syllabus: string; status: string;
+    files: Array<{ role: string; file: { id: string; name: string } }>;
     questions: Array<{ id: string; text: string; context: string; marks: number; topic: string; sourcePages: number[]; references: string[] }>;
     schemes: Array<{ questionId: string; kind: string; points: Array<{ id: string; description: string; marks: number; kind: string }> }> };
   type Draft = { mode: "typed" | "handwritten"; text: string; steps: Record<string, string>; file: { id: string; name: string } | null; formula?: string; working?: string };
@@ -1392,6 +1393,11 @@ function PhysicsExamStudent({ back }: { back: () => void }) {
             <p>PHYSICS EXAM PAPERS</p>
             <h1>{openPaper.title}</h1>
             <h2>{openPaper.syllabus} · {openPaper.questions.length} questions · {openPaper.questions.reduce((n, q) => n + q.marks, 0)} marks</h2>
+            {openPaper.files.filter((f) => f.role !== "scheme").map((f) => (
+              <a key={f.file.id} href={"/api/physics-exam/files/" + f.file.id} target="_blank" rel="noreferrer" className="reference">
+                View full original question paper ↗
+              </a>
+            ))}
           </div>
           <button onClick={() => setOpenPaper(null)}>← Paper library</button>
         </div>
@@ -1405,6 +1411,13 @@ function PhysicsExamStudent({ back }: { back: () => void }) {
             {question?.context && <p>{question.context}</p>}
             <p>{question?.text}</p>
             {question && question.references.length > 0 && question.references.map((r) => <p className="reference" key={r}>{r}</p>)}
+            {question && openPaper.files.filter((f) => f.role !== "scheme").map((f) =>
+              question.sourcePages.map((p) => (
+                <a key={f.file.id + p} className="reference" href={"/api/physics-exam/files/" + f.file.id + "#page=" + p} target="_blank" rel="noreferrer" style={{ display: "inline-block", marginRight: "10px" }}>
+                  View original · p. {p} ↗
+                </a>
+              ))
+            )}
             <div className="setup-head" style={{ margin: "14px 0" }}>
               {(["typed", "handwritten"] as const).map((m) => (
                 <button key={m} className={draft.mode === m ? "primary" : ""} onClick={() => question && update(question.id, { mode: m })}>
