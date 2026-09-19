@@ -4637,3 +4637,18 @@ label {
   font-size: 11px;
   margin: 4px 0;
 }
+
+/* Physics exam papers: shared checkbox label style */
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+  margin: 10px 0;
+}
+.check input {
+  width: auto;
+  margin: 0;
+}
+

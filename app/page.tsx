@@ -143,7 +143,7 @@ const asPhysicsUnits: PhysicsUnit[] = [
   { id:"as-u2", title:"2. Kinematics", summary:"Motion graphs, equations of motion and projectiles", icon:"→", available:true },
   { id:"as-u3", title:"3. Dynamics", summary:"Newton's laws, momentum and collisions", icon:"⇒", available:true },
   { id:"as-u4", title:"4. Forces, density & pressure", summary:"Equilibrium, moments, density and pressure", icon:"↕", available:true },
-  { id:"as-u5", title:"5. Work, energy and power", summary:"Work, energy conservation, efficiency, power and energy changes", icon:"⚡", available:true },
+  { id:"as-u5", title:"5. Work, energy & power", summary:"Work done, energy conservation and efficiency", icon:"⚡", available:false },
   { id:"as-u6", title:"6. Deformation of solids", summary:"Hooke's law, stress, strain and the Young modulus", icon:"◆", available:false },
   { id:"as-u7", title:"7. Waves", summary:"Wave properties, the Doppler effect and EM waves", icon:"∿", available:false },
   { id:"as-u8", title:"8. Superposition", summary:"Interference, diffraction and stationary waves", icon:"≈", available:false },
@@ -1246,6 +1246,279 @@ function ReviewForm({ max, busy, defaultScore, onSave }: { max: number; busy: bo
       <label>Review note<input required placeholder="Evidence checked / reason for override" value={note} onChange={(e) => setNote(e.target.value)} /></label>
       <button disabled={busy} className="primary">Confirm mark</button>
     </form>
+  );
+}
+
+function PhysicsExamStudent({ back }: { back: () => void }) {
+  type PaperSummary = { id: string; title: string; syllabus: string; status: string;
+    questions: Array<{ id: string; text: string; context: string; marks: number; topic: string; sourcePages: number[]; references: string[] }>;
+    schemes: Array<{ questionId: string; kind: string; points: Array<{ id: string; description: string; marks: number; kind: string }> }> };
+  type Draft = { mode: "typed" | "handwritten"; text: string; steps: Record<string, string>; file: { id: string; name: string } | null; formula?: string; working?: string };
+  type Grade = { questionId: string; proposed: number | null; final: number | null; status: string; reason: string;
+    points: Array<{ id: string; description: string; marks: number; hit: boolean | null }>; expected: string };
+  type SubmissionResult = { id: string; grades: Grade[] };
+
+  const blank = (): Draft => ({ mode: "typed", text: "", steps: {}, file: null, formula: "", working: "" });
+
+  const [papers, setPapers] = useState<PaperSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [openPaper, setOpenPaper] = useState<PaperSummary | null>(null);
+  const [index, setIndex] = useState(0);
+  const [drafts, setDrafts] = useState<Record<string, Draft>>({});
+  const [wholePaperFiles, setWholePaperFiles] = useState<Array<{ id: string; name: string }>>([]);
+  const [name, setName] = useState("");
+  const [practice, setPractice] = useState(false);
+  const [result, setResult] = useState<{ paper: PaperSummary; submission: SubmissionResult } | null>(null);
+
+  async function load() {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/physics-exam");
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not load papers.");
+      setPapers(data.papers || []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not load papers.");
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => { load(); }, []);
+
+  function update(id: string, patch: Partial<Draft>) {
+    setDrafts((d) => ({ ...d, [id]: { ...(d[id] || blank()), ...patch } }));
+  }
+
+  async function attach(file: File): Promise<{ id: string; name: string } | null> {
+    setBusy(true);
+    try {
+      const form = new FormData();
+      form.set("action", "attachment");
+      form.set("file", file);
+      const response = await fetch("/api/physics-exam", { method: "POST", body: form });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not upload this file.");
+      return data.file;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not upload this file.");
+      return null;
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function useWholePaperMode(paper: PaperSummary) {
+    setDrafts(Object.fromEntries(paper.questions.map((q) => [q.id, { ...(drafts[q.id] || blank()), mode: "handwritten" as const }])));
+  }
+
+  async function submit() {
+    if (!openPaper) return;
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/physics-exam", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "submit", paperId: openPaper.id, name: name.trim() || "Student", selfPractice: practice,
+          wholePaperFiles: wholePaperFiles.map((f) => f.id),
+          answers: openPaper.questions.map((q) => {
+            const a = drafts[q.id] || blank();
+            return { questionId: q.id, mode: a.mode, text: a.text, steps: a.steps, fileId: a.file?.id ?? null, formula: a.formula || undefined, working: a.working || undefined };
+          }),
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not submit this paper.");
+      setResult({ paper: openPaper, submission: data.submission });
+      setOpenPaper(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not submit this paper.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const statusLabel: Record<string, string> = { needs_review: "Needs teacher review", proposed: "Proposed mark", self_practice: "Self-practice mark", confirmed: "Teacher confirmed" };
+
+  if (result) {
+    const totalMarks = result.paper.questions.reduce((n, q) => n + q.marks, 0);
+    const awarded = result.submission.grades.reduce((n, g) => n + (g.final ?? 0), 0);
+    return (
+      <>
+        <div className="portal-heading">
+          <div>
+            <p>PHYSICS EXAM PAPERS</p>
+            <h1>{result.paper.title}</h1>
+            <h2>Submitted — {awarded} / {totalMarks} confirmed so far</h2>
+          </div>
+          <button onClick={() => { setResult(null); load(); }}>← Back to papers</button>
+        </div>
+        <div className="error-text" style={{ background: "#eef1ff", color: "var(--purple)" }}>
+          Proposed marks are not final grades. Anything needing your teacher's judgment is excluded from the total until they confirm it.
+        </div>
+        {result.submission.grades.map((grade) => {
+          const question = result.paper.questions.find((q) => q.id === grade.questionId);
+          return (
+            <section className="answer-card" key={grade.questionId}>
+              <div className="section-heading">
+                <h3>{grade.questionId} {question?.topic ? "· " + question.topic : ""}</h3>
+                <span className={"badge " + (grade.status === "confirmed" ? "green" : "amber")}>{statusLabel[grade.status] || grade.status}</span>
+              </div>
+              {question && <p>{question.text}</p>}
+              <p>{grade.reason}</p>
+              <div className="grade-line">
+                Proposed: <strong>{grade.proposed === null ? "Needs review" : grade.proposed + " / " + (question?.marks ?? "?")}</strong>
+                <span>Final: <strong>{grade.final === null ? "Not confirmed" : grade.final + " / " + (question?.marks ?? "?")}</strong></span>
+              </div>
+            </section>
+          );
+        })}
+      </>
+    );
+  }
+
+  if (openPaper) {
+    const question = openPaper.questions[index];
+    const scheme = openPaper.schemes.find((s) => s.questionId === question?.id);
+    const draft = drafts[question?.id || ""] || blank();
+    const isNumeric = scheme?.kind === "numeric";
+    const isStepped = scheme?.kind === "stepped";
+    return (
+      <>
+        <div className="portal-heading">
+          <div>
+            <p>PHYSICS EXAM PAPERS</p>
+            <h1>{openPaper.title}</h1>
+            <h2>{openPaper.syllabus} · {openPaper.questions.length} questions · {openPaper.questions.reduce((n, q) => n + q.marks, 0)} marks</h2>
+          </div>
+          <button onClick={() => setOpenPaper(null)}>← Paper library</button>
+        </div>
+        {error && <p className="error-text">{error}</p>}
+        <div className="answer-layout">
+          <section className="answer-card">
+            <div className="section-heading">
+              <b>Question {question?.id}</b>
+              <span className="badge">{question?.marks} marks</span>
+            </div>
+            {question?.context && <p>{question.context}</p>}
+            <p>{question?.text}</p>
+            {question && question.references.length > 0 && question.references.map((r) => <p className="reference" key={r}>{r}</p>)}
+            <div className="setup-head" style={{ margin: "14px 0" }}>
+              {(["typed", "handwritten"] as const).map((m) => (
+                <button key={m} className={draft.mode === m ? "primary" : ""} onClick={() => question && update(question.id, { mode: m })}>
+                  {m === "typed" ? "Type an answer" : "Upload handwriting"}
+                </button>
+              ))}
+            </div>
+            {draft.mode === "typed" ? (
+              <>
+                {isNumeric ? (
+                  <>
+                    <label>Formula used<input value={draft.formula || ""} onChange={(e) => question && update(question.id, { formula: e.target.value })} placeholder="e.g. F = ma" /></label>
+                    <label>Working / substitution<textarea value={draft.working || ""} onChange={(e) => question && update(question.id, { working: e.target.value })} placeholder="Show your substitution and calculation steps." /></label>
+                    <label>Final answer<input value={draft.text} onChange={(e) => question && update(question.id, { text: e.target.value })} placeholder="Include units where needed." /></label>
+                    <p className="reference">Formula and working are for your own technique and for teacher review — only the final answer is auto-marked.</p>
+                  </>
+                ) : isStepped ? (
+                  <p className="reference">This question is marked point by point below — there is no single overall answer field.</p>
+                ) : (
+                  <label>Your answer<textarea value={draft.text} onChange={(e) => question && update(question.id, { text: e.target.value })} placeholder="Show working and include units where needed." /></label>
+                )}
+                {isStepped && scheme?.points.map((p, pi) => (
+                  <label key={p.id}>{p.kind === "numeric" ? p.description : "Step " + (pi + 1)} · {p.marks} mark
+                    {p.kind === "numeric" ? (
+                      <input value={draft.steps[p.id] || ""} onChange={(e) => question && update(question.id, { steps: { ...draft.steps, [p.id]: e.target.value } })} placeholder="Numeric answer for this step, with units." />
+                    ) : (
+                      <textarea value={draft.steps[p.id] || ""} onChange={(e) => question && update(question.id, { steps: { ...draft.steps, [p.id]: e.target.value } })} placeholder="Explain or state your evidence for this step." />
+                    )}
+                  </label>
+                ))}
+              </>
+            ) : (
+              <div>
+                <p>Handwritten answers always go to teacher review.</p>
+                <label className="file-drop">↑ Photo or scan
+                  <input type="file" disabled={busy} accept="application/pdf,image/png,image/jpeg" onChange={async (e) => {
+                    const f = e.target.files?.[0]; if (!f || !question) return;
+                    const uploaded = await attach(f); if (uploaded) update(question.id, { file: uploaded });
+                  }} />
+                </label>
+                {draft.file && <a href={"/api/physics-exam/files/" + draft.file.id} target="_blank" rel="noreferrer">{draft.file.name} ↗</a>}
+              </div>
+            )}
+            <div className="grade-line">
+              <span>{index + 1} of {openPaper.questions.length}</span>
+              <button disabled={!index} onClick={() => setIndex(index - 1)}>Previous</button>
+              <button disabled={index === openPaper.questions.length - 1} onClick={() => setIndex(index + 1)}>Next question →</button>
+            </div>
+          </section>
+          <aside className="panel">
+            <h3>Questions</h3>
+            {openPaper.questions.map((q, i) => (
+              <button key={q.id} className={index === i ? "primary" : ""} style={{ display: "block", width: "100%", marginBottom: "6px" }} onClick={() => setIndex(i)}>
+                {q.id} <small>· {q.marks} marks {drafts[q.id]?.text || drafts[q.id]?.file ? "· answered" : ""}</small>
+              </button>
+            ))}
+            <div className="file-drop" style={{ marginTop: "16px" }}>
+              <b>Handwrote the whole paper?</b>
+              <p className="reference">Upload a photo or scan of each page instead of answering question by question.</p>
+              <label className="file-drop">↑ Add a page
+                <input type="file" disabled={busy} accept="application/pdf,image/png,image/jpeg" onChange={async (e) => {
+                  const f = e.target.files?.[0]; if (!f) return;
+                  useWholePaperMode(openPaper);
+                  const uploaded = await attach(f);
+                  if (uploaded) setWholePaperFiles((files) => [...files, uploaded]);
+                  e.target.value = "";
+                }} />
+              </label>
+              {wholePaperFiles.length > 0 && (
+                <ul>{wholePaperFiles.map((f, i) => <li key={f.id}>Page {i + 1}: {f.name}</li>)}</ul>
+              )}
+            </div>
+            <label>Your name<input value={name} onChange={(e) => setName(e.target.value)} placeholder="Student" /></label>
+            <label className="check"><input type="checkbox" checked={practice} onChange={(e) => setPractice(e.target.checked)} /> Self-practice: accept supported automatic marks without teacher confirmation.</label>
+            <button disabled={busy} className="primary" onClick={submit}>{busy ? "Submitting…" : "Submit paper →"}</button>
+          </aside>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="portal-heading">
+        <div>
+          <p>PHYSICS EXAM PAPERS</p>
+          <h1>Exam papers</h1>
+          <h2>Papers your teacher has published for practice.</h2>
+        </div>
+        <button onClick={back}>← Back</button>
+      </div>
+      {error && <p className="error-text">{error}</p>}
+      <section className="panel paper-table">
+        {loading ? (
+          <p>Loading…</p>
+        ) : !papers.length ? (
+          <p>No papers available yet — check back once your teacher has published one.</p>
+        ) : (
+          papers.map((paper, i) => (
+            <article key={paper.id}>
+              <span>{i + 1}</span>
+              <div>
+                <b>{paper.title}</b>
+                <small>{paper.syllabus} · {paper.questions.length} questions · {paper.questions.reduce((n, q) => n + q.marks, 0)} marks</small>
+              </div>
+              <span></span>
+              <div>
+                <button onClick={() => { setOpenPaper(paper); setIndex(0); setDrafts({}); setWholePaperFiles([]); }}>Open paper →</button>
+              </div>
+            </article>
+          ))
+        )}
+      </section>
+    </>
   );
 }
 
@@ -6576,7 +6849,7 @@ function AnswerWorkspace({
 
 function StudentPortal({ switchRole }: { switchRole: () => void }) {
   const [started, setStarted] = useState(false);
-  const [studentArea, setStudentArea] = useState<"papers" | "stage7" | "stage89" | "physics">("papers");
+  const [studentArea, setStudentArea] = useState<"papers" | "stage7" | "stage89" | "physics" | "physicsExam">("papers");
   const [activeAssignment, setActiveAssignment] = useState<{
     id: string;
     title: string;
@@ -6637,6 +6910,9 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
       <button className={studentArea === "physics" ? "active" : ""} onClick={() => setStudentArea("physics")}>
         <span>⚛</span>Physics practice
       </button>
+      <button className={studentArea === "physicsExam" ? "active" : ""} onClick={() => setStudentArea("physicsExam")}>
+        <span>📝</span>Physics exam papers
+      </button>
     </nav>
   );
   if (activeAssignment)
@@ -6691,6 +6967,12 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
     return (
       <Shell role="Student" onSwitch={switchRole} nav={cleanNav}>
         <PhysicsStudent back={() => setStudentArea("papers")} />
+      </Shell>
+    );
+  if (studentArea === "physicsExam")
+    return (
+      <Shell role="Student" onSwitch={switchRole} nav={cleanNav}>
+        <PhysicsExamStudent back={() => setStudentArea("papers")} />
       </Shell>
     );
   return (
