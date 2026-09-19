@@ -104,3 +104,26 @@ export async function updateSubmission(submission: Submission): Promise<void> {
     UPDATE physics_exam_submissions SET payload=${JSON.stringify(submission)} WHERE id=${submission.id}
   `;
 }
+
+// Same enrollment-lookup pattern as teacherFor() in app/api/physics/practice/route.ts:
+// checks the direct enrollment table first, falling back to assignment-linkage.
+// Shared here (rather than duplicated per-route, as it was before) so the main
+// physics-exam route and the file-serving route can never drift out of sync on
+// which students are linked to which teacher -- that drift was a real bug: a
+// student linked only via the assignment fallback could see a paper but was
+// then incorrectly denied access to that paper's own uploaded file.
+export async function teacherFor(studentId: string): Promise<string | null> {
+  const enrollment = await sql`
+    SELECT teacher_id FROM lower_secondary_enrollments
+    WHERE student_id=${studentId}
+    ORDER BY enrolled_at DESC LIMIT 1
+  `;
+  if (enrollment.length) return String(enrollment[0].teacher_id);
+  const linked = await sql`
+    SELECT a.teacher_id FROM assignment_students ast
+    JOIN assignments a ON a.id=ast.assignment_id
+    WHERE ast.student_id=${studentId}
+    ORDER BY ast.assigned_at DESC LIMIT 1
+  `;
+  return linked.length ? String(linked[0].teacher_id) : null;
+}

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { sql, ensureSchema } from "@/lib/db";
 import { getFile } from "@/lib/physics-exam-storage";
+import { teacherFor } from "@/lib/physics-exam-repository";
 
 export const runtime = "nodejs";
 
@@ -12,7 +13,11 @@ export const runtime = "nodejs";
 // directly in SQL, scoped to papers/submissions the requester actually owns
 // or is otherwise entitled to see (teacher: their own papers and any
 // submission to them; student: their own submissions and papers from their
-// own teacher).
+// own teacher, using the shared teacherFor() lookup rather than checking
+// the enrollment table directly -- that used to be duplicated here with
+// only one of teacherFor's two fallback checks, which meant a student
+// linked to their teacher only via the assignment-linkage fallback could
+// see a paper but was then incorrectly denied access to its own file).
 async function canAccessFile(userId: string, role: unknown, fileId: string): Promise<boolean> {
   if (role === "teacher") {
     const rows = await sql`
@@ -27,16 +32,20 @@ async function canAccessFile(userId: string, role: unknown, fileId: string): Pro
     return rows.length > 0;
   }
   if (role === "student") {
-    const rows = await sql`
+    const ownSubmission = await sql`
       SELECT 1 FROM physics_exam_submissions
       WHERE student_id=${userId} AND payload::text LIKE ${"%" + fileId + "%"}
-      UNION
-      SELECT 1 FROM physics_exam_papers p
-      JOIN lower_secondary_enrollments e ON e.teacher_id = p.teacher_id
-      WHERE e.student_id=${userId} AND p.payload::text LIKE ${"%" + fileId + "%"}
       LIMIT 1
     `;
-    return rows.length > 0;
+    if (ownSubmission.length > 0) return true;
+    const myTeacherId = await teacherFor(userId);
+    if (!myTeacherId) return false;
+    const teacherPaper = await sql`
+      SELECT 1 FROM physics_exam_papers
+      WHERE teacher_id=${myTeacherId} AND payload::text LIKE ${"%" + fileId + "%"}
+      LIMIT 1
+    `;
+    return teacherPaper.length > 0;
   }
   return false;
 }

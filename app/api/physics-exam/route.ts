@@ -5,6 +5,7 @@ import { sql, ensureSchema } from '@/lib/db';
 import {
   papersForTeacher, papersForStudent, getPaperWithOwner, insertPaper, updatePaper,
   submissionsForStudent, submissionsForTeacher, getSubmissionWithOwner, insertSubmission, updateSubmission,
+  teacherFor,
 } from '@/lib/physics-exam-repository';
 import { demoPaper } from '@/lib/physics-exam-demo';
 import { approvePaper, makeSubmission, overrideGrade, SubmitSchema } from '@/lib/physics-exam-workflows';
@@ -14,23 +15,6 @@ import type { Paper, Answer } from '@/lib/physics-extraction-schema';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
-
-// Same enrollment-lookup pattern as teacherFor() in app/api/physics/practice/route.ts.
-async function teacherFor(studentId: string): Promise<string | null> {
-  const enrollment = await sql`
-    SELECT teacher_id FROM lower_secondary_enrollments
-    WHERE student_id=${studentId}
-    ORDER BY enrolled_at DESC LIMIT 1
-  `;
-  if (enrollment.length) return String(enrollment[0].teacher_id);
-  const linked = await sql`
-    SELECT a.teacher_id FROM assignment_students ast
-    JOIN assignments a ON a.id=ast.assignment_id
-    WHERE ast.student_id=${studentId}
-    ORDER BY ast.assigned_at DESC LIMIT 1
-  `;
-  return linked.length ? String(linked[0].teacher_id) : null;
-}
 
 export async function GET() {
   const { userId } = await auth();
