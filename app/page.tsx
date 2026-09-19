@@ -1122,7 +1122,7 @@ function PhysicsExamTeacher() {
         <section className="panel">
           <h2>Correct structured extraction</h2>
           <p>Edit text, IDs, marks, accepted answers, and rules below. Clear an issue only after resolving it against the PDF.</p>
-          <label>Extraction JSON
+          <label className="pe-field">Extraction JSON
             <textarea className="json" spellCheck={false} value={editJson} onChange={(e) => setEditJson(e.target.value)} />
           </label>
           <button disabled={busy} className="primary" onClick={approve}>
@@ -1416,18 +1416,18 @@ function PhysicsExamStudent({ back }: { back: () => void }) {
               <>
                 {isNumeric ? (
                   <>
-                    <label>Formula used<input value={draft.formula || ""} onChange={(e) => question && update(question.id, { formula: e.target.value })} placeholder="e.g. F = ma" /></label>
-                    <label>Working / substitution<textarea value={draft.working || ""} onChange={(e) => question && update(question.id, { working: e.target.value })} placeholder="Show your substitution and calculation steps." /></label>
-                    <label>Final answer<input value={draft.text} onChange={(e) => question && update(question.id, { text: e.target.value })} placeholder="Include units where needed." /></label>
+                    <label className="pe-field">Formula used<input value={draft.formula || ""} onChange={(e) => question && update(question.id, { formula: e.target.value })} placeholder="e.g. F = ma" /></label>
+                    <label className="pe-field">Working / substitution<textarea value={draft.working || ""} onChange={(e) => question && update(question.id, { working: e.target.value })} placeholder="Show your substitution and calculation steps." /></label>
+                    <label className="pe-field">Final answer<input value={draft.text} onChange={(e) => question && update(question.id, { text: e.target.value })} placeholder="Include units where needed." /></label>
                     <p className="reference">Formula and working are for your own technique and for teacher review — only the final answer is auto-marked.</p>
                   </>
                 ) : isStepped ? (
                   <p className="reference">This question is marked point by point below — there is no single overall answer field.</p>
                 ) : (
-                  <label>Your answer<textarea value={draft.text} onChange={(e) => question && update(question.id, { text: e.target.value })} placeholder="Show working and include units where needed." /></label>
+                  <label className="pe-field">Your answer<textarea value={draft.text} onChange={(e) => question && update(question.id, { text: e.target.value })} placeholder="Show working and include units where needed." /></label>
                 )}
                 {isStepped && scheme?.points.map((p, pi) => (
-                  <label key={p.id}>{p.kind === "numeric" ? p.description : "Step " + (pi + 1)} · {p.marks} mark
+                  <label key={p.id} className="pe-field">{p.kind === "numeric" ? p.description : "Step " + (pi + 1)} · {p.marks} mark
                     {p.kind === "numeric" ? (
                       <input value={draft.steps[p.id] || ""} onChange={(e) => question && update(question.id, { steps: { ...draft.steps, [p.id]: e.target.value } })} placeholder="Numeric answer for this step, with units." />
                     ) : (
@@ -1477,7 +1477,7 @@ function PhysicsExamStudent({ back }: { back: () => void }) {
                 <ul>{wholePaperFiles.map((f, i) => <li key={f.id}>Page {i + 1}: {f.name}</li>)}</ul>
               )}
             </div>
-            <label>Your name<input value={name} onChange={(e) => setName(e.target.value)} placeholder="Student" /></label>
+            <label className="pe-field">Your name<input value={name} onChange={(e) => setName(e.target.value)} placeholder="Student" /></label>
             <label className="check"><input type="checkbox" checked={practice} onChange={(e) => setPractice(e.target.checked)} /> Self-practice: accept supported automatic marks without teacher confirmation.</label>
             <button disabled={busy} className="primary" onClick={submit}>{busy ? "Submitting…" : "Submit paper →"}</button>
           </aside>

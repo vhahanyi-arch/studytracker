@@ -4652,3 +4652,36 @@ label {
   margin: 0;
 }
 
+
+/* Physics exam papers: form-field styling, scoped to a dedicated
+   .pe-field class rather than the generic .panel/.answer-card selectors
+   (which are reused elsewhere in the app for unrelated features) to
+   avoid any risk of overriding existing, unrelated label styling. */
+.pe-field {
+  display: block;
+  margin: 10px 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.pe-field input,
+.pe-field textarea,
+.pe-field select {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 11px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink);
+  background: #fff;
+  box-sizing: border-box;
+}
+.pe-field textarea {
+  min-height: 70px;
+  resize: vertical;
+  font-family: inherit;
+}
+
