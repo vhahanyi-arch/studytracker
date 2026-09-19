@@ -3,6 +3,7 @@ node_modules
 .vercel
 .env*.local
 *.log
+/tmp/9702/
 
 .vercel
 .env*

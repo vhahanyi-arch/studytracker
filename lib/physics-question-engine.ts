@@ -19,16 +19,20 @@ export function answerMatches(input:unknown,accepted:string[]) {
   if(!actual)return false;
   return accepted.some(expected=>{
     const clean=tidy(expected);
-    if(actual===clean)return true;
-    if (/[,<;]/.test(String(expected))) {
-      const sequence = (value: unknown) => String(value ?? "")
-        .replace(/[−–—]/g, "-")
-        .match(/-?\d+(?:\.\d+)?/g)?.map(Number) || [];
+    // Check numeric lists BEFORE tidy removes commas: "1, 2" must not match "12".
+    const sequence = (value: unknown): number[] | null => {
+      const text = String(value ?? "").trim().replace(/[−–—]/g, "-");
+      const number = "[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:e[+-]?\\d+)?";
+      if (!new RegExp(`^${number}(?:\\s*[,;<]\\s*${number})+$`, "i").test(text)) return null;
+      return text.split(/[,;<]/).map(Number);
+    };
+    const expectedSequence = sequence(expected);
+    if (expectedSequence) {
       const actualSequence = sequence(input);
-      const expectedSequence = sequence(expected);
-      if (actualSequence.length >= 2 && actualSequence.length === expectedSequence.length &&
-          actualSequence.every((value,index)=>Math.abs(value-expectedSequence[index])<0.0001)) return true;
+      return actualSequence !== null && actualSequence.length === expectedSequence.length &&
+        actualSequence.every((value,index)=>Number.isFinite(value) && Math.abs(value-expectedSequence[index])<0.0001);
     }
+    if(actual===clean)return true;
     const a=Number(actual),b=Number(clean);
     return Number.isFinite(a)&&Number.isFinite(b)&&Math.abs(a-b)<=Math.max(0.0001,Math.abs(b)*0.001);
   });
@@ -45,10 +49,16 @@ export function answerFormatFor(question: PhysicsQuestion) {
 }
 
 function validateUnitSet(questions: PhysicsQuestion[], difficulty: string) {
+  if (questions.length !== 6) throw new Error(`Expected 6 questions; received ${questions.length}.`);
   const prompts = new Set<string>();
+  const templates = new Set<string>();
   for (const question of questions) {
-    if (!question.templateId || !question.objective || question.difficulty !== difficulty)
+    if (!question.templateId?.trim() || !question.objective?.trim() || question.difficulty !== difficulty ||
+        !question.prompt.trim() || !question.hint.trim() || !question.solution.trim() ||
+        !question.answers.length || question.answers.some(answer=>!answer.trim() || !answerMatches(answer,question.answers)))
       throw new Error(`${question.templateId} is incomplete.`);
+    if (templates.has(question.templateId)) throw new Error(`${question.templateId} is duplicated.`);
+    templates.add(question.templateId);
     if (prompts.has(question.prompt)) throw new Error(`${question.templateId} generated a duplicate prompt.`);
     prompts.add(question.prompt);
   }
@@ -363,7 +373,501 @@ const igcseTopics: Record<string,(difficulty:"foundational"|"application"|"reaso
   "igcse-u18": structuredElectromagneticEffects,
 };
 
+
+
+// BEGIN AS TOPIC 1
+// Cambridge 9702, supplied 664565-2025-2027-syllabus.pdf, version 1, page 16.
+// Objective IDs refer to lib/as-physics-syllabus.json (12 objectives, sections 1.1–1.4).
+const structuredAsQuantities = (difficulty: "foundational"|"application"|"reasoning"): PhysicsQuestion[] => {
+  const choice = (id: string, objective: string, prompt: string, options: string[], correct: number, hint: string, solution: string): PhysicsQuestion => {
+    // Rotate choices and the key together; the semantic answer must also vary.
+    const offset = r(0, options.length - 1);
+    const rotated = options.slice(offset).concat(options.slice(0, offset));
+    const letter = String.fromCharCode(97 + (correct - offset + options.length) % options.length);
+    return {...sq(id, objective, difficulty,
+      `${prompt} ${rotated.map((option, i) => `(${String.fromCharCode(97+i)}) ${option}`).join(' ')}`,
+      letter, hint, solution), answerFormat: 'Enter the option letter (a, b, c or d).'};
+  };
+  const numeric = (id: string, objective: string, prompt: string, answer: number, hint: string, solution: string): PhysicsQuestion => ({
+    ...sq(id, objective, difficulty, prompt, String(answer), hint, solution),
+    answerFormat: 'Enter the number only, in the unit requested.'
+  });
+  if (difficulty === 'foundational') {
+    const magnitude = r(2, 20);
+    const quantity = r(0, 1) === 0 ? ['length', 'm'] : ['time', 's'];
+    const estimate: [string, string[]] = r(0, 1) === 0
+      ? ['the height of an adult', ['1.7 m', '0.017 m', '170 m', '1700 m']]
+      : ['the mass of an adult', ['70 kg', '0.07 kg', '7000 kg', '70000 kg']];
+    const base = [['mass', 'kg'], ['length', 'm'], ['time', 's'], ['current', 'A'], ['temperature', 'K']][r(0,4)];
+    const derived = [['force', 'kg m s^-2'], ['energy', 'kg m^2 s^-2'], ['pressure', 'kg m^-1 s^-2'], ['power', 'kg m^2 s^-3']];
+    const derivedIndex = r(0,3);
+    const prefix: [string, string, number] = ([['pico','p',-12],['nano','n',-9],['micro','μ',-6],['milli','m',-3],['centi','c',-2],['deci','d',-1],['kilo','k',3],['mega','M',6],['giga','G',9],['tera','T',12]] as [string, string, number][])[r(0,9)];
+    const scalar = r(0,1) === 0;
+    const example = scalar ? ['mass','energy','speed'][r(0,2)] : ['force','velocity','momentum'][r(0,2)];
+    return validateUnitSet([
+      choice('as-u1-f1','1.1.1',`A ${quantity[0]} is recorded as ${magnitude} ${quantity[1]}. Which gives its numerical magnitude followed by its unit?`,
+        [`${magnitude}; ${quantity[1]}`, `${quantity[1]}; ${magnitude}`, `${magnitude}; no unit`, `no magnitude; ${quantity[1]}`],0,
+        'A measurement combines a number with a unit.',`The magnitude is ${magnitude} and the unit is ${quantity[1]}.`),
+      choice('as-u1-f2','1.1.2',`Which is a reasonable estimate of ${estimate[0]}?`,estimate[1],0,
+        'Compare each order of magnitude with an everyday adult.',`${estimate[1][0]} is a reasonable adult value.`),
+      {...sq('as-u1-f3','1.2.1',difficulty,`Give the SI base unit for ${base[0]}. Write its name.`,
+        ({kg:['kilogram','kilograms'],m:['metre','meter','metres','meters'],s:['second','seconds'],A:['ampere','amp','amperes','amps'],K:['kelvin','kelvins']} as Record<string,string[]>)[base[1]],
+        'Recall the five base quantities required by this syllabus.',`The unit is ${base[1]}.`), answerFormat:'Enter the unit name.'},
+      choice('as-u1-f4','1.2.2',`Which is the SI base-unit expression for ${derived[derivedIndex][0]}?`,derived.map(x=>x[1]),derivedIndex,
+        'Use force = mass × acceleration, energy = force × distance, pressure = force / area, or power = energy / time.',`${derived[derivedIndex][0]} has units ${derived[derivedIndex][1]}.`),
+      numeric('as-u1-f5','1.2.4',`The prefix ${prefix[0]} (${prefix[1]}) means multiplication by 10^n. Enter n.`,prefix[2],
+        'Submultiples have negative powers; multiples have positive powers.',`${prefix[0]} means 10^${prefix[2]}.`),
+      {...sq('as-u1-f6','1.4.1',difficulty,`Is ${example} a scalar or vector?`,scalar?'scalar':'vector',
+        'A vector needs direction as well as magnitude.',`${example} is a ${scalar?'scalar: magnitude only':'vector: magnitude and direction'}.`),answerFormat:'Enter scalar or vector.'}
+    ],difficulty);
+  }
+  if (difficulty === 'application') {
+    const homogeneous = r(0,1) === 0;
+    const trueMass = r(20,80), zero = r(1,5), high = r(0,1) === 0;
+    const measured = trueMass + (high ? zero : -zero);
+    const ua = r(1,4), ub = r(1,4);
+    const east = 3*r(1,5), north = 4*(east/3), resultant = 5*(east/3);
+    const component = r(2,10), horizontal = r(0,1) === 0;
+    const accurate = r(0,1) === 0, centre = accurate ? 50 : 60;
+    return validateUnitSet([
+      {...sq('as-u1-a1','1.2.3',difficulty,`For speed v, acceleration a and time t, is v = ${homogeneous?'a t':'a t^2'} dimensionally homogeneous? Answer true or false.`,
+        homogeneous?'true':'false','Compare the SI base units of both sides.',homogeneous?'True: (m s^-2) s = m s^-1.':'False: (m s^-2) s^2 = m, whereas speed has units m s^-1.'),answerFormat:'Enter true or false.'},
+      numeric('as-u1-a2','1.3.1',`A balance reads ${zero} g ${high?'too high':'too low'} for every load. It displays ${measured} g. What is the corrected mass in g?`,trueMass,
+        'Undo the consistent offset.',`${measured} ${high?'-':'+'} ${zero} = ${trueMass} g. This is a systematic zero error.`),
+      numeric('as-u1-a3','1.3.3',`Lengths are A = 40 ± ${ua} mm and B = 20 ± ${ub} mm. Find the absolute uncertainty in A - B, in mm.`,ua+ub,
+        'Add absolute uncertainties for both a sum and a difference.',`The absolute uncertainty is ${ua} + ${ub} = ${ua+ub} mm.`),
+      numeric('as-u1-a4','1.4.2',`A displacement is ${east} m east followed by ${north} m north. Find the magnitude of the resultant displacement in m.`,resultant,
+        'These perpendicular components form a right triangle.',`The magnitude is sqrt(${east}^2 + ${north}^2) = ${resultant} m.`),
+      numeric('as-u1-a5','1.4.3',`A force of ${2*component} N acts at 60° above the horizontal. Find its ${horizontal?'horizontal':'vertical'} component in N. Use sin 60° = 0.866 and cos 60° = 0.5.`,horizontal?component:Number((component*1.732).toFixed(3)),
+        'Horizontal uses cosine; vertical uses sine.',`${2*component} × ${horizontal?'0.5':'0.866'} = ${horizontal?component:Number((component*1.732).toFixed(3))} N, using the supplied trigonometric value.`),
+      choice('as-u1-a6','1.3.2',`A reference length is 50.0 mm. Readings are ${centre-0.1}, ${centre.toFixed(1)} and ${centre+0.1} mm. Which description best fits?`,
+        ['precise and accurate','precise but inaccurate','accurate but imprecise','neither precise nor accurate'],accurate?0:1,
+        'Precision concerns spread; accuracy concerns closeness to the reference.',`The small spread means high precision; the readings are ${accurate?'close to':'far from'} the reference, so they are ${accurate?'accurate':'inaccurate'}.`)
+    ],difficulty);
+  }
+  const area = r(2,20), mass = area*r(2,5);
+  const random = r(0,1) === 0;
+  const percentM = r(1,3), percentV = r(1,3), m = r(1,5), v = r(2,8)*10;
+  const ax = r(2,8), ay = r(2,8), bx = r(2,8), by = r(2,8);
+  const scale = r(1,5), resolveEast = r(0,1) === 0;
+  const correctFormula = r(0,1) === 0;
+  return validateUnitSet([
+    choice('as-u1-r1','1.2.3',`A learner claims that checking dimensions proves E = ${correctFormula?'0.5':'2'} m v^2 is the correct kinetic-energy equation. Which evaluation is valid?`,
+      ['The formula is correct, but dimensions alone cannot establish its coefficient.', 'The coefficient is wrong even though the units match energy.', 'The right side has units of force.', 'The right side has units of power.'],correctFormula?0:1,
+      'Dimensions do not distinguish dimensionless coefficients.',`Both 0.5 m v^2 and 2 m v^2 have energy units kg m^2 s^-2; only 0.5 is the correct coefficient. The claim does not follow from dimensions.`),
+    numeric('as-u1-r2','1.2.4',`A sheet has mass ${mass} g and area ${area} cm^2. A learner divides both numbers by 1000 to obtain SI values. Correct the conversions and calculate mass per area in kg/m^2.`,mass/area*10,
+      'One gram is 0.001 kg; one square centimetre is 0.0001 square metre.',`The ratio is (${mass}/1000) / (${area}/10000) = ${mass/area*10} kg/m^2.`),
+    choice('as-u1-r3','1.3.1',`A timer's error is ${random?'an unpredictable positive or negative variation between readings':'a fixed positive offset on every reading'}. A learner proposes averaging many repeats without recalibration. Which assessment is correct?`,
+      ['Averaging reduces this random uncertainty, but does not make the result exact.', 'The fixed offset survives averaging; correct or recalibrate the timer.', 'Averaging always removes all measurement error.', 'Repeats make any measurement exact.'],random?0:1,
+      'Separate random scatter from systematic bias.',random?'Averaging reduces the random uncertainty described, but cannot guarantee an exact result.':'The systematic offset remains after averaging; calibration or correction is needed.'),
+    numeric('as-u1-r4','1.3.3',`Kinetic energy is E = 0.5 m v^2. Here m = ${m} kg with ${percentM}% uncertainty and v = ${v} m/s with ${percentV}% uncertainty. Using simple addition of percentage uncertainties, find the absolute uncertainty in E in J.`,(m*v*v/2)*(percentM+2*percentV)/100,
+      'First find E; its percentage uncertainty is the mass percentage plus twice the speed percentage.',`E = ${m*v*v/2} J; percentage uncertainty = ${percentM} + 2 × ${percentV} = ${percentM+2*percentV}%. Absolute uncertainty = ${(m*v*v/2)*(percentM+2*percentV)/100} J.`),
+    {...sq('as-u1-r5','1.4.2',difficulty,`Vectors A and B have (east, north) components (${ax}, ${ay}) m and (${bx}, ${by}) m. A learner adds components to find A - B. Correct the error: enter the east and north components of A - B, separated by a comma.`,
+      `${ax-bx}, ${ay-by}`,'Subtract corresponding signed components; retain negative values.',`A - B = (${ax} - ${bx}, ${ay} - ${by}) = (${ax-bx}, ${ay-by}) m.`),answerFormat:'Enter east, north as two signed numbers separated by a comma.'},
+    numeric('as-u1-r6','1.4.3',`A ${5*scale} N force points between east and north. Its east:north component ratio is 3:4. A learner splits it into two equal components. Find the correct ${resolveEast?'east':'north'} component in N.`,(resolveEast?3:4)*scale,
+      'Write the components as 3k and 4k, so the magnitude is 5k.',`5k = ${5*scale}, hence k = ${scale}; the ${resolveEast?'east':'north'} component is ${(resolveEast?3:4)*scale} N.`)
+  ],difficulty);
+};
+// END AS TOPIC 1
+
+// BEGIN AS TOPIC 2
+// Cambridge 9702, supplied 664565-2025-2027-syllabus.pdf, version 1, page 17.
+// Nine objectives, 2.1.1–2.1.9, transcribed in lib/as-physics-syllabus.json.
+const structuredAsKinematics = (difficulty: "foundational"|"application"|"reasoning"): PhysicsQuestion[] => {
+  const choice = (id: string, objective: string, prompt: string, options: string[], correct: number, hint: string, solution: string): PhysicsQuestion => {
+    const offset = r(0, options.length - 1);
+    const rotated = options.slice(offset).concat(options.slice(0, offset));
+    const letter = String.fromCharCode(97 + (correct - offset + options.length) % options.length);
+    return {...sq(id, objective, difficulty,
+      `${prompt} ${rotated.map((option,i)=>`(${String.fromCharCode(97+i)}) ${option}`).join(' ')}`,
+      letter, hint, solution), answerFormat:'Enter the option letter (a, b, c or d).'};
+  };
+  const numeric = (id: string, objective: string, prompt: string, answer: number, hint: string, solution: string): PhysicsQuestion => ({
+    ...sq(id, objective, difficulty, prompt, String(answer), hint, solution),
+    answerFormat:'Enter the number only, in the unit requested. Retain a negative sign where appropriate.'
+  });
+  if (difficulty === 'foundational') {
+    const definition = r(0,4);
+    const definitions = ['total path length travelled','change in position with direction','distance travelled per unit time','rate of change of displacement','rate of change of velocity'];
+    const names = ['distance','displacement','speed','velocity','acceleration'];
+    const graph = r(0,4);
+    const graphPrompts = [
+      'An object moves with constant positive velocity. Which describes its displacement–time graph?',
+      'An object moves with constant negative velocity. Which describes its distance-travelled–time graph?',
+      'An object moves with constant negative velocity. Which describes its velocity–time graph?',
+      'An object has constant positive acceleration. Which describes its acceleration–time graph?',
+      'An object moves with constant negative velocity. Which describes its speed–time graph?'
+    ];
+    const graphOptions = ['a straight line with positive gradient','a horizontal line below zero','a horizontal line above zero','a straight line with negative gradient'];
+    const velocity = r(1,8)*(r(0,1)===0?1:-1), duration = r(2,6);
+    const slope = r(1,6)*(r(0,1)===0?1:-1), startTime = r(1,3), interval = r(2,6), startPosition = r(-10,10);
+    const acceleration = r(1,4)*(r(0,1)===0?1:-1), graphTime = r(2,6), initial = r(5,10);
+    const u = r(1,10), a = r(1,4), t = r(2,5);
+    return validateUnitSet([
+      {...sq('as-u2-f1','2.1.1',difficulty,`Which quantity is defined as ${definitions[definition]}? Enter distance, displacement, speed, velocity or acceleration.`,names[definition],
+        'Distinguish total travel, directed change in position, and rates of change.',`${names[definition]} means ${definitions[definition]}.`),answerFormat:'Enter one of the five quantity names.'},
+      choice('as-u2-f2','2.1.2',graphPrompts[graph],graphOptions,[0,0,1,2,2][graph],
+        'The vertical-axis quantity determines whether constant motion gives a slope or a constant ordinate.',
+        [ 'Constant positive velocity gives a constant positive displacement–time gradient.',
+          'Distance travelled increases at a constant rate even when velocity is negative.',
+          'A constant negative velocity is represented by a horizontal line below zero.',
+          'Constant positive acceleration is represented by a horizontal line above zero.',
+          'Speed is the magnitude of velocity, so constant negative velocity gives a constant positive speed.' ][graph]),
+      numeric('as-u2-f3','2.1.3',`A velocity–time graph is horizontal at ${velocity} m/s from t = 0 s to t = ${duration} s. Find the signed displacement in m.`,velocity*duration,
+        'Signed area under a velocity–time graph is displacement.',`${velocity} × ${duration} = ${velocity*duration} m.`),
+      numeric('as-u2-f4','2.1.4',`A straight displacement–time graph joins (t = ${startTime} s, s = ${startPosition} m) to (t = ${startTime+interval} s, s = ${startPosition+slope*interval} m). Find the velocity in m/s.`,slope,
+        'Find change in displacement divided by change in time.',`(${startPosition+slope*interval} - (${startPosition})) / (${startTime+interval} - ${startTime}) = ${slope} m/s.`),
+      numeric('as-u2-f5','2.1.5',`A straight velocity–time graph joins (t = 0 s, v = ${initial} m/s) to (t = ${graphTime} s, v = ${initial+acceleration*graphTime} m/s). Find the acceleration in m/s^2.`,acceleration,
+        'The gradient is change in velocity divided by elapsed time.',`(${initial+acceleration*graphTime} - ${initial}) / ${graphTime} = ${acceleration} m/s^2.`),
+      numeric('as-u2-f6','2.1.7',`A trolley has initial velocity ${u} m/s and constant acceleration ${a} m/s^2 for ${t} s. Find its final velocity in m/s.`,u+a*t,
+        'Use v = u + at.',`${u} + ${a} × ${t} = ${u+a*t} m/s.`)
+    ],difficulty);
+  }
+  if (difficulty === 'application') {
+    // Construct distances from the total time so both average quantities are exact.
+    const legTime = r(2,5), outward = 2*legTime*r(2,6), backward = 2*legTime*r(1,5), speed = r(0,1)===0;
+    const u = r(1,6), a = r(1,4), time = r(2,6), v = u+a*time;
+    const step = r(0,1);
+    // h_mm = g_tenths * t_tenths^2 / 2; integer arithmetic avoids decimal artefacts.
+    const gTenths = [96,98,100][r(0,2)], tTenths = 2*r(1,3), heightMm = gTenths*tTenths*tTenths/2;
+    const flightTime = r(1,3), horizontalSpeed = r(2,10), height = 5*flightTime*flightTime;
+    const fallTime = r(1,4), fallHeight = 5*fallTime*fallTime;
+    return validateUnitSet([
+      numeric('as-u2-a1','2.1.1',`A runner travels ${outward} m east in ${legTime} s, then ${backward} m west in ${legTime} s. East is positive. Find the ${speed?'average speed':'average velocity'} for the whole journey in m/s.`,(outward+(speed?backward:-backward))/(2*legTime),
+        speed?'Divide total distance by total elapsed time.':'Divide signed displacement by total elapsed time.',
+        `(${outward} ${speed?'+':'-'} ${backward}) / ${2*legTime} = ${(outward+(speed?backward:-backward))/(2*legTime)} m/s.`),
+      numeric('as-u2-a2','2.1.3',`A velocity–time graph is a straight line from (0 s, ${u} m/s) to (${time} s, ${v} m/s). Find the displacement over this interval in m.`,(u+v)*time/2,
+        'Calculate the trapezium area, or use average velocity for constant acceleration.',`(${u} + ${v}) × ${time} / 2 = ${(u+v)*time/2} m.`),
+      choice('as-u2-a3','2.1.6',step===0
+        ? 'For constant acceleration, a = (v - u)/t gives v = u + at. Substituting this into s = (u + v)t/2 gives s = ut + which term?'
+        : 'For constant acceleration, s = ut + 0.5at^2. Substitute u = v - at and simplify: s = vt + which term?',
+        ['0.5at^2','-0.5at^2','at^2','-at^2'],step,
+        'Substitute, expand the brackets and combine the acceleration terms.',step===0
+          ? 's = (u + u + at)t/2 = ut + 0.5at^2.'
+          : 's = (v - at)t + 0.5at^2 = vt - 0.5at^2.'),
+      numeric('as-u2-a4','2.1.8',`In a free-fall experiment an electromagnet releases a ball from rest and starts an electronic timer; a contact plate stops it. The bottom of the ball falls ${heightMm} mm in ${tTenths*100} ms. Neglect air resistance and timing delay. Estimate g in m/s^2.`,gTenths/10,
+        'Convert both measurements to SI units, then use h = 0.5gt^2.',`h = ${heightMm/1000} m and t = ${tTenths/10} s, so g = 2h/t^2 = ${gTenths/10} m/s^2.`),
+      numeric('as-u2-a5','2.1.9',`A ball leaves a horizontal platform ${height} m above level ground at ${horizontalSpeed} m/s horizontally. Take g = 10 m/s^2 and neglect air resistance. Find its horizontal range before impact in m.`,horizontalSpeed*flightTime,
+        'Use vertical free fall to find time, then horizontal distance = horizontal speed × time.',`t = sqrt(2 × ${height} / 10) = ${flightTime} s; range = ${horizontalSpeed} × ${flightTime} = ${horizontalSpeed*flightTime} m.`),
+      numeric('as-u2-a6','2.1.7',`A stone is released from rest ${fallHeight} m above the ground. Take g = 10 m/s^2 and neglect air resistance. Find its speed immediately before impact in m/s.`,10*fallTime,
+        'Eliminate time using v^2 = u^2 + 2as.',`v = sqrt(2 × 10 × ${fallHeight}) = ${10*fallTime} m/s.`)
+    ],difficulty);
+  }
+  const accel = 2*r(1,3), positiveTime = r(1,5), negativeTime = r(1,5);
+  const startV = accel*positiveTime, endV = -accel*negativeTime, distance = r(0,1)===0;
+  const derivation = r(0,1);
+  const braking = r(2,5), factor = r(1,3), speed = 2*braking*factor, reactionTenths = 5*r(1,3);
+  const vx = 2*r(2,8), vy = 10*r(1,3);
+  const early = r(0,1)===0;
+  const totalTime = 2*r(2,4), upwardSpeed = 5*r(1,3), cliffHeight = 5*totalTime*totalTime-upwardSpeed*totalTime;
+  return validateUnitSet([
+    numeric('as-u2-r1','2.1.3',`A velocity–time graph is a straight line from (0 s, ${startV} m/s) to (${positiveTime+negativeTime} s, ${endV} m/s). A learner ignores the sign change. Find the correct ${distance?'total distance travelled':'signed displacement'} in m.`,(startV*positiveTime+(distance?-endV:endV)*negativeTime)/2,
+      'Find the zero-velocity time and the areas of the two triangles. Distance adds their magnitudes; displacement adds signed areas.',
+      `Velocity is zero at ${positiveTime} s. Areas have magnitudes ${startV*positiveTime/2} m and ${-endV*negativeTime/2} m. The answer is ${(startV*positiveTime+(distance?-endV:endV)*negativeTime)/2} m.`),
+    choice('as-u2-r2','2.1.6',derivation===0
+      ? 'For nonzero constant acceleration a, combine t = (v - u)/a with s = (u + v)t/2. Expanding 2as = (v - u)(v + u) gives 2as = which expression?'
+      : 'For nonzero constant acceleration a, substitute t = (v - u)/a into s = (u + v)t/2 and expand the numerator. Which expression equals s?',
+      ['v^2 - u^2','(v^2 - u^2)/(2a)','v^2 + u^2','(v - u)^2/(2a)'],derivation,
+      'Use the difference of two squares after eliminating time.',derivation===0
+        ? '(v - u)(v + u) = v^2 - u^2, hence v^2 = u^2 + 2as.'
+        : 's = (u + v)(v - u)/(2a) = (v^2 - u^2)/(2a).'),
+    numeric('as-u2-r3','2.1.7',`A car travels at ${speed} m/s during a reaction time of ${reactionTenths/10} s, then brakes with constant deceleration of magnitude ${braking} m/s^2 until rest. A learner treats it as moving at its initial speed during braking. Find the correct total stopping distance in m.`,speed*reactionTenths/10+speed*speed/(2*braking),
+      'Add the constant-speed reaction distance to the uniformly decelerated braking distance.',`Reaction distance = ${speed*reactionTenths/10} m. Braking distance = ${speed}^2 / (2 × ${braking}) = ${speed*speed/(2*braking)} m. Total = ${speed*reactionTenths/10+speed*speed/(2*braking)} m.`),
+    numeric('as-u2-r4','2.1.9',`A projectile leaves level ground with horizontal velocity ${vx} m/s and upward velocity ${vy} m/s. A learner uses the initial resultant speed as the horizontal speed. Take g = 10 m/s^2 and neglect air resistance. Find the correct horizontal range when it returns to its launch height, in m.`,vx*2*vy/10,
+      'The vertical motion sets flight time; only the horizontal component determines range.',`Time to the top = ${vy/10} s, total time = ${2*vy/10} s. Range = ${vx} × ${2*vy/10} = ${vx*2*vy/10} m.`),
+    choice('as-u2-r5','2.1.8',`A ball is released from rest above a contact plate. Its fall distance h is measured correctly and air resistance is negligible. The stop signal occurs at impact, but the timer starts ${early?'before release':'after release, while the ball is still falling'}. Using g = 2h/t^2, which explains the resulting bias?`,
+      ['The measured time is too long, so g is underestimated.','The measured time is too short, so g is overestimated.','The measured time is too long, so g is overestimated.','The measured time is too short, so g is underestimated.'],early?0:1,
+      'Consider how the start error changes t, then how t appears in the denominator.',early
+        ? 'Starting before release includes extra time; the larger denominator makes the calculated g too small.'
+        : 'Starting after release misses part of the fall; the smaller denominator makes the calculated g too large.'),
+    numeric('as-u2-r6','2.1.7',`A ball is thrown vertically upwards at ${upwardSpeed} m/s from a cliff ${cliffHeight} m above the ground. Upward is positive. Take g = 10 m/s^2 and neglect air resistance. A learner chooses the positive square root for the impact velocity. Find the correct signed velocity at impact in m/s.`,upwardSpeed-10*totalTime,
+      'Use signed displacement -h and acceleration -g; at impact the ball is moving downwards.',`v^2 = ${upwardSpeed}^2 + 2 × (-10) × (-${cliffHeight}) = ${(upwardSpeed-10*totalTime)**2}. The downward root is ${upwardSpeed-10*totalTime} m/s.`)
+  ],difficulty);
+};
+// END AS TOPIC 2
+
+// BEGIN AS TOPIC 3
+// Cambridge 9702, user-supplied 664565-2025-2027-syllabus.pdf, version 1, pp. 17–18.
+// Thirteen objectives, sections 3.1–3.3; provenance in lib/as-physics-syllabus.json.
+const structuredAsDynamics = (difficulty: "foundational"|"application"|"reasoning"): PhysicsQuestion[] => {
+  const choice = (id: string, objective: string, prompt: string, options: string[], correct: number, hint: string, solution: string): PhysicsQuestion => {
+    const offset=r(0,options.length-1), rotated=options.slice(offset).concat(options.slice(0,offset));
+    const letter=String.fromCharCode(97+(correct-offset+options.length)%options.length);
+    return {...sq(id,objective,difficulty,`${prompt} ${rotated.map((text,i)=>`(${String.fromCharCode(97+i)}) ${text}`).join(' ')}`,
+      letter,hint,solution),answerFormat:'Enter the option letter (a, b, c or d).'};
+  };
+  const numeric = (id: string, objective: string, prompt: string, answer: number, hint: string, solution: string): PhysicsQuestion => ({
+    ...sq(id,objective,difficulty,prompt,String(answer),hint,solution),
+    answerFormat:'Enter the number only, in the unit requested. Retain a negative sign where appropriate.'
+  });
+  if(difficulty==='foundational') {
+    const light=r(1,4), heavy=light+r(1,4), aHeavier=r(0,1)===0;
+    const mass=r(1,8), acceleration=r(1,5)*(r(0,1)===0?1:-1);
+    const momentumMass=r(1,6), velocity=r(1,8)*(r(0,1)===0?1:-1);
+    const weightMass=r(1,10), gTenths=[16,98,100][r(0,2)];
+    const law=r(0,2);
+    const lawStatements=[
+      'With zero resultant force, an object continues moving with constant velocity.',
+      'For a fixed mass, doubling the resultant force doubles the acceleration in the force direction.',
+      'When cart A pushes cart B, cart B simultaneously exerts an equal and opposite force on cart A.'
+    ];
+    const resistanceCase=r(0,5), east=resistanceCase%2===0, friction=resistanceCase>=4, faster=resistanceCase<2;
+    return validateUnitSet([
+      choice('as-u3-f1','3.1.1',`Cart A has mass ${aHeavier?heavy:light} kg and cart B has mass ${aHeavier?light:heavy} kg. Which has greater inertia (resistance to a change in motion)?`,
+        ['cart A','cart B','both have the same inertia','neither has inertia'],aHeavier?0:1,
+        'Mass measures inertia.',`Cart ${aHeavier?'A':'B'} has the greater mass, so it has greater inertia.`),
+      numeric('as-u3-f2','3.1.2',`A ${mass} kg object experiences a resultant horizontal force of ${mass*acceleration} N. Right is positive. Find its signed acceleration in m/s^2.`,acceleration,
+        'Use a = F/m; acceleration has the same direction as the resultant force.',`${mass*acceleration} / ${mass} = ${acceleration} m/s^2.`),
+      numeric('as-u3-f3','3.1.3',`An object of mass ${momentumMass} kg has velocity ${velocity} m/s, with east positive. Find its signed linear momentum in kg m/s.`,momentumMass*velocity,
+        'Momentum is mass multiplied by velocity.',`${momentumMass} × ${velocity} = ${momentumMass*velocity} kg m/s.`),
+      numeric('as-u3-f4','3.1.6',`An object has mass ${weightMass} kg where the acceleration of free fall is ${gTenths/10} m/s^2. Find the magnitude of its weight in N.`,weightMass*gTenths/10,
+        'Weight is the gravitational force: W = mg.',`${weightMass} × ${gTenths/10} = ${weightMass*gTenths/10} N, directed downwards.`),
+      {...sq('as-u3-f5','3.1.5',difficulty,`Which of Newton's laws is illustrated? ${lawStatements[law]} Enter first, second or third.`,
+        [['first','1st','1'],['second','2nd','2'],['third','3rd','3']][law],
+        'The first law concerns zero resultant force, the second links force to acceleration, and the third concerns interaction pairs.',
+        `This is Newton's ${['first','second','third'][law]} law.`),answerFormat:'Enter first, second or third.'},
+      choice('as-u3-f6','3.2.1',friction
+        ? `A box slides ${east?'east':'west'} across a stationary horizontal floor. In which direction does the sliding friction from the floor act on the box?`
+        : `An object moves ${east?'east':'west'} through a fluid (air or water) at rest and its speed ${faster?'increases':'decreases'}. Assume drag increases with speed. Which gives the drag direction and the change in its magnitude?`,
+        friction?['east','west','vertically upwards','there is no friction']:['east; increases','east; decreases','west; increases','west; decreases'],friction?(east?1:0):(east?2:0)+(faster?0:1),
+        friction?'Sliding friction opposes the relative sliding of the surfaces.':'Drag opposes motion relative to the fluid and grows with speed.',
+        friction?`The box slides ${east?'east':'west'}, so sliding friction acts ${east?'west':'east'}.`:`Drag acts ${east?'west':'east'} and its magnitude ${faster?'increases':'decreases'}.`)
+    ],difficulty);
+  }
+  if(difficulty==='application') {
+    // Construct mass as a multiple of contact time so the average force is exact.
+    const timeTenths=r(1,5), forceScale=r(1,4), massTenths=timeTenths*forceScale, rebound=r(2,8), u=rebound+r(0,4);
+    const weight=10*r(2,5), excess=5*r(1,2), greater=r(0,1)===0, drag=weight+(greater?excess:-excess);
+    const zeroResultant=r(0,1)===0;
+    const mA=r(1,4), mB=r(1,4), factor=r(1,3), initial=(mA+mB)*factor, final=mA*factor;
+    const isolated=r(0,1)===0;
+    const approachingA=r(1,8), approachingB=r(1,8);
+    return validateUnitSet([
+      numeric('as-u3-a1','3.1.4',`A ${massTenths/10} kg ball moving along a horizontal guide approaches a passive stationary wall at +${u} m/s and rebounds at -${rebound} m/s. The contact lasts ${timeTenths/10} s. Find the average horizontal resultant force on the ball during contact in N, taking its initial direction as positive.`,-(u+rebound)*forceScale,
+        'Use average force = (final momentum - initial momentum) / contact time.',`F = (${massTenths/10} × (-${rebound}) - ${massTenths/10} × ${u}) / ${timeTenths/10} = ${-(u+rebound)*forceScale} N.`),
+      choice('as-u3-a2','3.2.2',`An object is currently falling downwards. Its weight is ${weight} N downwards and its air resistance is ${drag} N upwards; these are the only forces. Which describes its acceleration and the immediate change in its speed?`,
+        ['upwards; speed decreases','downwards; speed increases','upwards; speed increases','downwards; speed decreases'],greater?0:1,
+        'Compare the opposing forces; acceleration need not point in the direction of velocity.',`The resultant is ${excess} N ${greater?'upwards':'downwards'}, so the falling object ${greater?'slows down':'speeds up'}.`),
+      {...sq('as-u3-a3','3.2.3',difficulty,`A vehicle reaches a constant terminal speed on a level road while its engine continues to exert a nonzero driving force. True or false: ${zeroResultant?'the resultant horizontal force is zero':'the resistive force is zero'}.`,
+        zeroResultant?'true':'false','At terminal speed the driving and resistive forces balance.',
+        zeroResultant?'True: constant velocity means zero acceleration and zero resultant horizontal force.':'False: a nonzero resistive force balances the nonzero driving force.'),answerFormat:'Enter true or false.'},
+      numeric('as-u3-a4','3.3.2',`Cart A of mass ${mA} kg moves at ${initial} m/s to the right and collides with stationary cart B of mass ${mB} kg. They stick together. External horizontal impulse is negligible. Find their common velocity in m/s, with right positive.`,final,
+        'Conserve total horizontal momentum; include both masses after they stick.',`${mA} × ${initial} = (${mA} + ${mB})v, so v = ${final} m/s.`),
+      choice('as-u3-a5','3.3.1',`Two carts interact over a finite time interval. For the system containing both carts, the net external horizontal force is ${isolated?'zero throughout':'constant and nonzero throughout'}. Which statement about total horizontal momentum is correct?`,
+        ['It is conserved because the net external impulse is zero.','It changes because the net external impulse is nonzero.','It must change because the carts exert forces on each other.','It is always conserved even with a nonzero external impulse.'],isolated?0:1,
+        'Internal interaction forces cancel for the combined system; external impulse changes total momentum.',isolated
+          ? 'Zero external impulse means unchanged total horizontal momentum.'
+          : 'A constant nonzero external force over a finite interval gives a nonzero external impulse and changes total horizontal momentum.'),
+      numeric('as-u3-a6','3.3.3',`Two equal-mass carts approach each other on a straight track: A moves right at ${approachingA} m/s and B moves left at ${approachingB} m/s. Their collision is elastic and external impulse is negligible. Find their relative speed of separation in m/s.`,approachingA+approachingB,
+        'For an elastic collision, relative speed of separation equals relative speed of approach.',`The approach speed is ${approachingA} + ${approachingB} = ${approachingA+approachingB} m/s; separation speed is the same. Total kinetic energy is also conserved.`)
+    ],difficulty);
+  }
+  const earthPair=r(0,1)===0;
+  const moreDrag=r(0,1)===0;
+  const mass=r(1,4), u=2*r(1,5), speedB=2*r(1,5), common=(u-speedB)/2;
+  const energyBefore=mass*(u*u+speedB*speedB)/2, energyAfter=mass*common*common;
+  const eastFactor=r(2,6), northFactor=r(2,6);
+  const largerA=r(0,1)===0, baseMass=1, k=r(1,5);
+  const mA=baseMass*(largerA?2:1), mB=baseMass*(largerA?1:2), vA=largerA?k:-k, vB=largerA?4*k:2*k;
+  // Equal-mass 2-D elastic collision: outgoing velocity vectors are perpendicular.
+  // A: (9n/5, ±12n/5); B: (16n/5, ∓12n/5); speeds 3n and 4n, initial speed 5n.
+  const n=r(1,5), above=r(0,1)===0, ax=9*n/5, ay=(above?12:-12)*n/5, bx=16*n/5, by=-ay;
+  return validateUnitSet([
+    choice('as-u3-r1','3.1.5',`A book rests on a table. Consider the ${earthPair?'downward gravitational force of Earth on the book':'upward contact force of the table on the book'}. Which force is its Newton's third-law partner, rather than another force acting on the same book?`,
+      ['upward gravitational force of the book on Earth','downward contact force of the book on the table','upward contact force of the table on the book','downward gravitational force of Earth on the book'],earthPair?0:1,
+      'The partner acts on the other interacting object and is the same kind of force.',earthPair
+        ? 'The partner is the upward gravitational force exerted by the book on Earth. Weight and the table force on the book are not a third-law pair.'
+        : 'The partner is the downward contact force exerted by the book on the table. Both forces act on different objects.'),
+    choice('as-u3-r2','3.2.3',`An object is falling at terminal speed. Without changing its mass, a change in its shape ${moreDrag?'increases':'decreases'} drag at every given nonzero speed. Assume drag increases with speed and a new terminal speed is reached. Which gives its acceleration immediately after the change, its eventual terminal speed compared with before, and the drag at that new terminal speed?`,
+      ['upwards; lower; equal to weight','downwards; higher; equal to weight','upwards; higher; zero','downwards; lower; zero'],moreDrag?0:1,
+      'Velocity cannot change instantly. Compare drag and weight just after the shape change, then apply force balance at the new terminal speed.',moreDrag
+        ? 'Initially drag exceeds weight, so acceleration is upwards. The object slows to a lower terminal speed where drag again equals weight.'
+        : 'Initially drag is below weight, so acceleration is downwards. The object speeds up to a higher terminal speed where drag again equals weight.'),
+    numeric('as-u3-r3','3.3.4',`Two carts each of mass ${mass} kg move towards each other at ${u} m/s rightwards and ${speedB} m/s leftwards. They stick together, with negligible external horizontal impulse. A learner claims momentum conservation also guarantees kinetic-energy conservation. Calculate the kinetic energy lost in J.`,energyBefore-energyAfter,
+      'Find the common velocity from signed momentum, then subtract final kinetic energy from initial kinetic energy.',`Common velocity = (${u} - ${speedB})/2 = ${common} m/s (right is positive). Initial KE = ${energyBefore} J; final KE = ${energyAfter} J; loss = ${energyBefore-energyAfter} J. Momentum is conserved but kinetic energy decreases.`),
+    {...sq('as-u3-r4','3.3.2',difficulty,`In a horizontal plane, a 2 kg puck moving east at ${3*eastFactor} m/s collides with a 1 kg puck moving north at ${3*northFactor} m/s. They stick together with negligible external horizontal impulse. Find the east and north components of their common velocity in m/s, in that order.`,
+      `${2*eastFactor}, ${northFactor}`,'Conserve momentum separately in the east and north directions; divide each total by the combined mass.',
+      `East: 2 × ${3*eastFactor} / 3 = ${2*eastFactor} m/s. North: 1 × ${3*northFactor} / 3 = ${northFactor} m/s.`),answerFormat:'Enter east, north as two numbers separated by a comma.'},
+    {...sq('as-u3-r5','3.3.3',difficulty,`Cart A of mass ${mA} kg moves right at ${3*k} m/s into stationary cart B of mass ${mB} kg. The one-dimensional collision is elastic, with negligible external impulse. Find the final signed velocities of A and B in m/s, in that order, taking right as positive.`,
+      `${vA}, ${vB}`,'Use both momentum conservation and relative speed of separation = relative speed of approach.',
+      `Momentum: ${mA}vA + ${mB}vB = ${mA*3*k}. Elasticity: vB - vA = ${3*k}. Thus vA = ${vA} m/s and vB = ${vB} m/s. Both momentum and kinetic energy are conserved.`),answerFormat:'Enter vA, vB as two signed numbers separated by a comma.'},
+    {...sq('as-u3-r6','3.3.2',difficulty,`Two 1 kg smooth pucks collide elastically in a horizontal plane with negligible external impulse. Initially A moves east at ${5*n} m/s and B is stationary. Afterwards A has (east, north) velocity components (${ax}, ${ay}) m/s. A learner ignores the north component when finding B's velocity. Find B's correct (east, north) velocity components in m/s.`,
+      `${bx}, ${by}`,'Conserve both components of total momentum, including the initially zero north component.',
+      `B has east component ${5*n} - ${ax} = ${bx} m/s and north component 0 - (${ay}) = ${by} m/s. Final speeds are ${3*n} and ${4*n} m/s, so final KE = ${(9+16)*n*n/2} J equals the initial KE.`),answerFormat:'Enter east, north as two signed numbers separated by a comma.'}
+  ],difficulty);
+};
+// END AS TOPIC 3
+
+// BEGIN AS TOPIC 4
+// Cambridge 9702, supplied 664565-2025-2027-syllabus.pdf, version 1, pp. 18–19.
+// Thirteen objectives in 4.1–4.3; source hash and wording in as-physics-syllabus.json.
+const structuredAsForces = (difficulty: "foundational"|"application"|"reasoning"): PhysicsQuestion[] => {
+  const choice = (id: string, objective: string, prompt: string, options: string[], correct: number, hint: string, solution: string): PhysicsQuestion => {
+    const offset=r(0,options.length-1), rotated=options.slice(offset).concat(options.slice(0,offset));
+    return {...sq(id,objective,difficulty,`${prompt} ${rotated.map((s,i)=>`(${String.fromCharCode(97+i)}) ${s}`).join(' ')}`,
+      String.fromCharCode(97+(correct-offset+options.length)%options.length),hint,solution),answerFormat:'Enter the option letter (a, b, c or d).'};
+  };
+  const numeric = (id: string, objective: string, prompt: string, answer: number, hint: string, solution: string): PhysicsQuestion => ({
+    ...sq(id,objective,difficulty,prompt,String(answer),hint,solution),
+    answerFormat:'Enter the number only, in the unit requested. Retain a negative sign where appropriate.'
+  });
+  if(difficulty==='foundational') {
+    const start=r(1,10), half=r(2,12), force=r(2,20), distanceTenths=r(1,9);
+    const separated=r(0,1)===0, coupleForce=r(2,15), separationCm=5*r(1,10);
+    const densityTenths=[8,12,25,78][r(0,3)], volume=10*r(1,10), areaHundredths=r(1,5), pressureHundreds=r(1,20);
+    return validateUnitSet([
+      numeric('as-u4-f1','4.1.1',`A uniform thin rod in a uniform gravitational field extends from x = ${start} cm to x = ${start+2*half} cm. At what x coordinate in cm may its whole weight be treated as acting?`,start+half,
+        'The weight acts at the centre of gravity; a uniform rod has its centre at its midpoint.',`The centre of gravity is at (${start} + ${start+2*half})/2 = ${start+half} cm.`),
+      numeric('as-u4-f2','4.1.2',`A force of ${force} N has a perpendicular distance of ${distanceTenths/10} m from a pivot to its line of action. Find the magnitude of its moment about the pivot in N m.`,force*distanceTenths/10,
+        'Moment = force × perpendicular distance from the pivot.',`${force} × ${distanceTenths/10} = ${force*distanceTenths/10} N m.`),
+      {...sq('as-u4-f3','4.1.3',difficulty,`True or false: two equal and opposite parallel forces acting on a rigid body along ${separated?'different lines of action form a couple':'the same line of action form a couple'}.`,separated?'true':'false',
+        'A couple has zero resultant force but a nonzero turning effect.',separated?'True: the separated lines of action give a torque and no resultant force.':'False: on the same line, both the resultant force and resultant torque are zero.'),answerFormat:'Enter true or false.'},
+      numeric('as-u4-f4','4.1.4',`A couple consists of two opposite forces, each ${coupleForce} N. The perpendicular separation of their lines of action is ${separationCm} cm. Find the torque magnitude in N m.`,coupleForce*separationCm/100,
+        'Use one force multiplied by the full perpendicular separation.',`${coupleForce} × (${separationCm}/100) = ${coupleForce*separationCm/100} N m.`),
+      numeric('as-u4-f5','4.3.1',`A sample has mass ${densityTenths*volume/10} g and volume ${volume} cm^3. Find its density in g/cm^3.`,densityTenths/10,
+        'Density is mass per unit volume.',`${densityTenths*volume/10} / ${volume} = ${densityTenths/10} g/cm^3.`),
+      numeric('as-u4-f6','4.3.2',`A normal force of ${pressureHundreds*areaHundredths} N acts uniformly over an area of ${areaHundredths/100} m^2. Find the pressure in Pa.`,100*pressureHundreds,
+        'Pressure is normal force per unit area.',`${pressureHundreds*areaHundredths} / ${areaHundredths/100} = ${100*pressureHundreds} Pa.`)
+    ],difficulty);
+  }
+  if(difficulty==='application') {
+    const leftTenths=r(1,5), rightTenths=r(1,5), factor=r(2,8), state=r(0,3), scale=r(1,6), deriveForce=r(0,1)===0;
+    const rho=[800,1000,1200][r(0,2)], upperTenths=r(0,5), differenceTenths=r(1,10);
+    const topDepthCm=r(10,30), blockHeightCm=2*r(1,10), areaCm2=10*r(1,5);
+    return validateUnitSet([
+      numeric('as-u4-a1','4.2.1',`A weightless horizontal beam is pivoted at O. A downward force of ${rightTenths*factor} N acts ${leftTenths/10} m to the left of O. What downward force in N must act ${rightTenths/10} m to the right of O for rotational equilibrium?`,leftTenths*factor,
+        'Clockwise and anticlockwise moments must balance.',`${rightTenths*factor} × ${leftTenths/10} = F × ${rightTenths/10}, so F = ${leftTenths*factor} N.`),
+      choice('as-u4-a2','4.2.2',`A rigid body moves in a plane and has ${state%2===0?'zero':'nonzero'} resultant force and ${state<2?'zero':'nonzero'} resultant torque about its centre of mass. Which describes its motion at that instant?`,
+        ['neither linear nor angular acceleration: equilibrium','linear acceleration only','angular acceleration only','both linear and angular acceleration'],state,
+        'Equilibrium requires both resultant force and resultant torque to be zero.',['Both resultants are zero, so the body is in equilibrium; it need not be at rest.','Nonzero resultant force causes linear acceleration, but the torque is zero.','Zero resultant force gives no linear acceleration, but nonzero torque causes angular acceleration.','Both resultants are nonzero, so there is both linear and angular acceleration.'][state]),
+      {...sq('as-u4-a3','4.2.3',difficulty,`Three coplanar forces acting at one point keep a particle in equilibrium. Two forces are ${3*scale} N east and ${4*scale} N north. Complete their closed head-to-tail vector triangle: give the signed (east, north) components of the third force in N.`,
+        `${-3*scale}, ${-4*scale}`,'The third vector must close the triangle, cancelling both known components.',`The third force is (${-3*scale}, ${-4*scale}) N, so both component sums are zero.`),answerFormat:'Enter east, north as two signed numbers separated by a comma.'},
+      choice('as-u4-a4','4.3.3',deriveForce
+        ? 'A stationary liquid column has area A, height Δh, density ρ and mass ρAΔh. In deriving hydrostatic pressure, the pressure-force difference balances its weight. Which expression is that force difference?'
+        : 'A stationary liquid column has area A, height Δh and density ρ. Its pressure-force difference is ρAgΔh. Divide by A and simplify: which expression is the pressure difference?',
+        ['ρAgΔh','ρgΔh','ρg/Δh','ρAΔh/g'],deriveForce?0:1,
+        'Use mass = density × volume, weight = mg, then pressure = force / area.',deriveForce?'The weight is (ρAΔh)g = ρAgΔh.':'Δp = (ρAgΔh)/A = ρgΔh; the area cancels.'),
+      numeric('as-u4-a5','4.3.4',`A liquid of density ${rho} kg/m^3 is at rest. Two points are ${upperTenths/10} m and ${(upperTenths+differenceTenths)/10} m below its surface. Take g = 10 m/s^2. Find the pressure at the deeper point minus that at the shallower point in Pa.`,rho*differenceTenths,
+        'Use the depth difference, not the total depth: Δp = ρgΔh.',`Δh = ${differenceTenths/10} m; Δp = ${rho} × 10 × ${differenceTenths/10} = ${rho*differenceTenths} Pa.`),
+      numeric('as-u4-a6','4.3.5',`A fully submerged rectangular block has horizontal top and bottom faces each of area ${areaCm2} cm^2. Liquid gauge pressure is ${100*topDepthCm} Pa at the top and ${100*(topDepthCm+blockHeightCm)} Pa at the bottom. Forces on opposite vertical faces cancel. Find the net upward force from the liquid in N.`,blockHeightCm*areaCm2/100,
+        'Upthrust comes from the larger pressure at the bottom. Subtract the top-face force from the bottom-face force.',`F = (${100*(topDepthCm+blockHeightCm)} - ${100*topDepthCm}) × (${areaCm2}/10000) = ${blockHeightCm*areaCm2/100} N upwards.`)
+    ],difficulty);
+  }
+  const length=2*r(1,4), beamWeight=2*r(5,20), loadFactor=r(2,6), load=length*loadFactor, x=r(1,length-1);
+  const right=beamWeight/2+loadFactor*x, left=beamWeight+load-right;
+  const forceHalf=r(5,20), armTenths=r(2,10), upward=r(0,1)===0;
+  const coupleForce=10*r(1,8), separationCm=10*r(1,5), leftUp=r(0,1)===0, torque=(leftUp?-1:1)*coupleForce*separationCm/100;
+  const scale=r(1,8), liquidRho=[800,1000][r(0,1)], totalCm3=100*r(2,10), percent=25*r(1,3);
+  const objectRho=[2000,2500,3000][r(0,2)], litres=r(1,4), fluidRho=[800,1000][r(0,1)];
+  return validateUnitSet([
+    {...sq('as-u4-r1','4.2.1',difficulty,`A uniform horizontal beam of length ${length} m and weight ${beamWeight} N is supported at both ends. An extra downward load of ${load} N acts ${x} m from the left end. A learner ignores the beam's own weight. Find the correct upward reactions at the left and right supports in N, in that order.`,
+      `${left}, ${right}`,'Take moments about one support, including the beam weight at its midpoint, then use vertical force balance.',`Right reaction × ${length} = ${beamWeight} × ${length/2} + ${load} × ${x}. Right = ${right} N. Left = ${beamWeight} + ${load} - ${right} = ${left} N.`),answerFormat:'Enter left, right as two numbers separated by a comma.'},
+    numeric('as-u4-r2','4.1.2',`A light horizontal rod extends ${armTenths/10} m to the right of a pivot. A ${2*forceHalf} N force acts at its free end at 30° ${upward?'above':'below'} the horizontal. A learner uses the full force as perpendicular to the rod. Using sin 30° = 0.5, find the correct signed moment in N m, with anticlockwise positive.`,(upward?1:-1)*forceHalf*armTenths/10,
+      'Use the perpendicular force component, then assign the rotation sign.',`Perpendicular force magnitude = ${forceHalf} N; moment = ${(upward?1:-1)*forceHalf*armTenths/10} N m (${upward?'anticlockwise':'clockwise'}).`),
+    numeric('as-u4-r3','4.1.4',`Two vertical forces each of magnitude ${coupleForce} N form a couple on a horizontal bar. The force at x = 1 m acts ${leftUp?'upwards':'downwards'} and the force at x = ${(100+separationCm)/100} m acts ${leftUp?'downwards':'upwards'}. A learner adds their moment magnitudes about x = 0. Find the correct net torque in N m, with anticlockwise positive.`,torque,
+      'The two moments have opposite signs. A couple torque is one force times the separation of the lines of action.',`The resultant force is zero. The separation is ${separationCm/100} m; signed torque = ${torque} N m.`),
+    {...sq('as-u4-r4','4.2.3',difficulty,`A small ring is in equilibrium under a downward load of ${3*scale} N and tensions in two light cables. One cable pulls horizontally left; the other pulls up and right at angle θ to the horizontal, with sin θ = 0.6 and cos θ = 0.8. Use a closed force triangle to find the horizontal-cable and inclined-cable tensions in N, in that order.`,
+      `${4*scale}, ${5*scale}`,'The inclined tension supplies the whole upward component; its horizontal component balances the other tension.',`Inclined tension = ${3*scale}/0.6 = ${5*scale} N; horizontal tension = 0.8 × ${5*scale} = ${4*scale} N. The force triangle closes.`),answerFormat:'Enter horizontal, inclined as two numbers separated by a comma.'},
+    numeric('as-u4-r5','4.3.6',`A block of total volume ${totalCm3} cm^3 is held with ${percent}% of its volume immersed in a liquid of density ${liquidRho} kg/m^3. Take g = 10 m/s^2 and neglect air buoyancy. A learner uses the whole block volume in Archimedes' principle. Find the correct upthrust in N.`,liquidRho*totalCm3*percent/10000000,
+      'Use only the displaced liquid volume, and convert cubic centimetres to cubic metres.',`Displaced volume = ${totalCm3*percent/100} cm^3. F = ${liquidRho} × 10 × (${totalCm3*percent/100}/1000000) = ${liquidRho*totalCm3*percent/10000000} N.`),
+    numeric('as-u4-r6','4.3.6',`A solid of mass ${objectRho*litres/1000} kg and volume ${litres*1000} cm^3 is fully immersed in a liquid of density ${fluidRho} kg/m^3, suspended at rest from a vertical string. Take g = 10 m/s^2. A learner adds upthrust to weight to find the tension. Find the correct string tension in N.`,(objectRho-fluidRho)*litres/100,
+      'At rest, tension plus upthrust balances weight. Use displaced volume for the upthrust.',`Weight = ${objectRho*litres/100} N; upthrust = ${fluidRho*litres/100} N; tension = ${(objectRho-fluidRho)*litres/100} N.`)
+  ],difficulty);
+};
+// END AS TOPIC 4
+
+// BEGIN AS TOPIC 5
+// Cambridge 9702, supplied 664565-2025-2027-syllabus.pdf, version 1, p. 19.
+// Eleven objectives in 5.1–5.2; source hash and wording in as-physics-syllabus.json.
+const structuredAsEnergy = (difficulty: "foundational"|"application"|"reasoning"): PhysicsQuestion[] => {
+  const choice = (id: string, objective: string, prompt: string, options: string[], correct: number, hint: string, solution: string): PhysicsQuestion => {
+    const offset=r(0,options.length-1), rotated=options.slice(offset).concat(options.slice(0,offset));
+    return {...sq(id,objective,difficulty,`${prompt} ${rotated.map((s,i)=>`(${String.fromCharCode(97+i)}) ${s}`).join(' ')}`,
+      String.fromCharCode(97+(correct-offset+options.length)%options.length),hint,solution),answerFormat:'Enter the option letter (a, b, c or d).'};
+  };
+  const numeric = (id: string, objective: string, prompt: string, answer: number, hint: string, solution: string): PhysicsQuestion => ({
+    ...sq(id,objective,difficulty,prompt,String(answer),hint,solution),
+    answerFormat:'Enter the number only, in the unit requested. Retain a negative sign where appropriate.'
+  });
+  if(difficulty==='foundational') {
+    const force=r(2,20), distance=r(1,8), direction=r(0,2), conserved=r(0,1)===0;
+    const efficiency=25*r(1,3), input=4*r(5,20), quicker=r(0,1)===0;
+    const mass=r(1,10), startHeight=10*r(1,3), heightChange=r(1,8)*(r(0,1)===0?1:-1);
+    const kineticMass=r(1,5), speed=2*r(1,10);
+    return validateUnitSet([
+      numeric('as-u5-f1','5.1.1',`An object is displaced ${distance} m east while a constant force of ${force} N acts ${['east','west','north'][direction]}. Find the work done by this force in J.`,[force*distance,-force*distance,0][direction],
+        'Only the force component along displacement does work; an opposing component does negative work.',`Work = ${[force*distance,-force*distance,0][direction]} J because the force is ${['along','opposite to','perpendicular to'][direction]} the displacement.`),
+      {...sq('as-u5-f2','5.1.2',difficulty,`True or false: in an isolated system, friction converts some kinetic energy into internal energy, so ${conserved?'total energy remains constant':'some of the total energy is destroyed'}.`,conserved?'true':'false',
+        'Energy can change form while total energy is conserved.',conserved?'True: internal energy is included in the conserved total.':'False: the energy is transferred to internal energy, not destroyed.'),answerFormat:'Enter true or false.'},
+      numeric('as-u5-f3','5.1.3',`A device receives ${input} J of total input energy and delivers ${input*efficiency/100} J of useful output energy. Find its efficiency as a percentage.`,efficiency,
+        'Efficiency = useful output energy / total input energy.',`(${input*efficiency/100} / ${input}) × 100 = ${efficiency}%.`),
+      choice('as-u5-f4','5.1.5',`Machines A and B perform the same amount of work. A takes ${quicker?'less':'more'} time than B. Which has the greater average power?`,
+        ['machine A','machine B','both have equal average power','not enough information'],quicker?0:1,
+        'Power is work done per unit time.',`For equal work, the machine taking less time has greater average power: ${quicker?'A':'B'}.`),
+      numeric('as-u5-f5','5.2.2',`A ${mass} kg object moves from height ${startHeight} m to height ${startHeight+heightChange} m in a uniform gravitational field. Take g = 10 m/s^2. Find its signed change in gravitational potential energy in J.`,10*mass*heightChange,
+        'Use ΔE = mg × (final height - initial height).',`${mass} × 10 × (${startHeight+heightChange} - ${startHeight}) = ${10*mass*heightChange} J.`),
+      numeric('as-u5-f6','5.2.4',`An object of mass ${kineticMass} kg moves at speed ${speed} m/s. Find its kinetic energy in J.`,kineticMass*speed*speed/2,
+        'Kinetic energy = 0.5 × mass × speed squared.',`0.5 × ${kineticMass} × ${speed}^2 = ${kineticMass*speed*speed/2} J.`)
+    ],difficulty);
+  }
+  if(difficulty==='application') {
+    const power=50*r(1,10), time=2*r(2,10), inputPower=100*r(2,15), efficiency=20*r(1,4), duration=r(2,10);
+    const rearrange=r(0,1)===0, raising=r(0,1)===0, fromRest=r(0,1)===0;
+    const finalSpeed=2*r(2,10), drop=finalSpeed*finalSpeed/20;
+    return validateUnitSet([
+      numeric('as-u5-a1','5.1.6',`A motor does ${power*time} J of mechanical work in ${time} s. Find its average mechanical output power in W.`,power,
+        'Divide the work done by the elapsed time.',`${power*time} / ${time} = ${power} W.`),
+      numeric('as-u5-a2','5.1.4',`A device receives constant input power ${inputPower} W and has efficiency ${efficiency}%. It operates for ${duration} s. Find the energy transferred to non-useful forms in J.`,inputPower*(100-efficiency)*duration/100,
+        'Find total input energy, then multiply by the fraction that is not useful.',`Input energy = ${inputPower*duration} J; non-useful fraction = ${(100-efficiency)/100}. Non-useful energy = ${inputPower*(100-efficiency)*duration/100} J.`),
+      choice('as-u5-a3','5.1.7',rearrange
+        ? 'A constant nonzero force F acts along motion at constant speed v. From P = W/t, W = Fs and s/t = v, obtain P = Fv. Rearrange this to give v: which expression is correct?'
+        : 'A constant nonzero force F acts along motion at constant speed v. Substitute W = Fs into P = W/t, then use s/t = v. Which expression equals P?',
+        ['Fv','P/F','F/v','Pv'],rearrange?1:0,
+        'Power = Fs/t = F(s/t).',rearrange?'P = Fv, so v = P/F.':'P = Fs/t = Fv.'),
+      choice('as-u5-a4','5.2.1',raising
+        ? 'A mass m is raised slowly through a height Δh in a uniform field g. The upward lifting force equals mg. Using W = Fs, which expression gives the gain in gravitational potential energy?'
+        : 'A mass m is lowered slowly through a positive distance Δh in a uniform field g. Gravity does positive work mgΔh. Which expression gives the signed change in gravitational potential energy?',
+        ['mgΔh','-mgΔh','mg/Δh','mΔh/g'],raising?0:1,
+        'Potential-energy change is minus the work done by gravity; during slow lifting it equals the work supplied by the lifting force.',raising?'W = (mg)Δh, so ΔE_P = mgΔh.':'Gravity does W = (mg)Δh, so ΔE_P = -mgΔh.'),
+      choice('as-u5-a5','5.2.3',fromRest
+        ? 'A resultant force accelerates a mass m from rest to speed v. Using v^2 = 2as and W = Fs = mas, which expression is its final kinetic energy?'
+        : 'A constant resultant force accelerates a mass m from speed u to speed v along a straight line. Substitute s = (v^2 - u^2)/(2a) into W = mas. Which expression is the work done?',
+        fromRest?['0.5mv^2','mv^2','0.5mv','m/v^2']:['0.5m(v^2 - u^2)','0.5m(v - u)^2','m(v^2 - u^2)','m(v - u)'],0,
+        'Eliminate a and s using the constant-acceleration equation.',fromRest?'W = ma × v^2/(2a) = 0.5mv^2, the kinetic energy gained from rest.':'W = ma × (v^2 - u^2)/(2a) = 0.5m(v^2 - u^2).'),
+      numeric('as-u5-a6','5.1.2',`A particle starts from rest and slides down a fixed frictionless track through a vertical drop of ${drop} m. Take g = 10 m/s^2 and neglect air resistance. Find its speed after the drop in m/s.`,finalSpeed,
+        'Loss of gravitational potential energy equals gain of kinetic energy.',`mg × ${drop} = 0.5mv^2, so v = sqrt(20 × ${drop}) = ${finalSpeed} m/s.`)
+    ],difficulty);
+  }
+  const halfForce=r(5,30), distance=r(2,12), forward=r(0,1)===0;
+  const firstEfficiency=[40,50,60,80][r(0,3)], secondEfficiency=25*r(1,3), inputEnergy=10000*r(1,10);
+  // Construct a lift with useful speed 0.5 m/s: m = useful power / (g × speed).
+  const powerFactor=r(1,8), efficiencyStep=r(1,3), liftTime=2*r(2,10), liftMass=5*powerFactor*efficiencyStep;
+  const carMass=100*r(5,15), resistance=100*r(1,5), carSpeed=r(5,20);
+  const speedAtHeight=2*r(1,10), launchSpeed=speedAtHeight+2*r(1,5), height=(launchSpeed*launchSpeed-speedAtHeight*speedAtHeight)/20, ascending=r(0,1)===0;
+  const brakingMass=100*r(2,12), finalSpeed=r(2,10), brakingDistance=3*finalSpeed;
+  return validateUnitSet([
+    numeric('as-u5-r1','5.1.1',`An object is displaced ${distance} m horizontally to the right. A constant force of ${2*halfForce} N makes an angle of ${forward?60:120}° with that displacement. A learner uses W = Fs without considering the angle. Using cos ${forward?60:120}° = ${forward?'0.5':'-0.5'}, find the correct signed work done by this force in J.`,(forward?1:-1)*halfForce*distance,
+      'Use the force component along the displacement: W = Fs cos θ.',`${2*halfForce} × ${distance} × ${forward?'0.5':'(-0.5)'} = ${(forward?1:-1)*halfForce*distance} J.`),
+    numeric('as-u5-r2','5.1.4',`Two energy converters operate in sequence. The first has efficiency ${firstEfficiency}% and all of its useful output feeds a second converter of efficiency ${secondEfficiency}%. The first receives ${inputEnergy} J. A learner adds the efficiencies. Find the useful output energy from the second converter in J.`,inputEnergy*firstEfficiency*secondEfficiency/10000,
+      'Multiply the efficiency fractions, because the second acts only on the useful output of the first.',`First useful output = ${inputEnergy*firstEfficiency/100} J; final useful output = ${inputEnergy*firstEfficiency*secondEfficiency/10000} J.`),
+    numeric('as-u5-r3','5.1.6',`A motor draws constant electrical power ${100*powerFactor} W with efficiency ${25*efficiencyStep}%. Its useful output lifts a ${liftMass} kg load at constant speed through ${liftTime/2} m. Take g = 10 m/s^2. A learner treats the electrical input as entirely useful. Find the correct time in s.`,liftTime,
+      'First calculate useful lifting power; then divide mgΔh by that power.',`Useful power = ${25*powerFactor*efficiencyStep} W; gravitational energy gain = ${liftMass*10*liftTime/2} J; time = ${liftTime} s.`),
+    numeric('as-u5-r4','5.1.7',`A ${carMass} kg vehicle travels steadily up a slope at ${carSpeed} m/s. The slope has sin θ = 0.1 and resistive forces total ${resistance} N down the slope. Take g = 10 m/s^2. A learner uses only resistance in P = Fv. Find the correct mechanical driving power in W.`,(carMass+resistance)*carSpeed,
+      'At steady speed the driving force balances resistance plus the component of weight down the slope.',`Down-slope weight component = ${carMass} N. Driving force = ${carMass+resistance} N, so P = ${carMass+resistance} × ${carSpeed} = ${(carMass+resistance)*carSpeed} W.`),
+    numeric('as-u5-r5','5.2.2',`A particle is projected vertically upwards at ${launchSpeed} m/s. It later passes a point ${height} m above launch level while ${ascending?'ascending':'descending'}. Take g = 10 m/s^2 and neglect air resistance. A learner adds the potential-energy gain to the initial kinetic energy. Find the correct signed velocity at this point in m/s, with upward positive.`,(ascending?1:-1)*speedAtHeight,
+      'Kinetic energy decreases by the potential-energy gain. Choose the velocity sign from the stated direction of motion.',`v^2 = ${launchSpeed}^2 - 20 × ${height} = ${speedAtHeight*speedAtHeight}; the ${ascending?'upward':'downward'} velocity is ${(ascending?1:-1)*speedAtHeight} m/s.`),
+    numeric('as-u5-r6','5.2.4',`A ${brakingMass} kg vehicle on a level road slows from ${2*finalSpeed} m/s to ${finalSpeed} m/s over ${brakingDistance} m under a constant horizontal resultant braking force. A learner assumes halving speed halves kinetic energy. Find the signed braking force in N, taking the direction of travel as positive.`,-brakingMass*finalSpeed/2,
+      'Use the change in kinetic energy, then W = Fs. The force opposes the displacement.',`ΔE_K = 0.5 × ${brakingMass} × (${finalSpeed}^2 - ${2*finalSpeed}^2) = ${-3*brakingMass*finalSpeed*finalSpeed/2} J. Force = ${-3*brakingMass*finalSpeed*finalSpeed/2} / ${brakingDistance} = ${-brakingMass*finalSpeed/2} N.`)
+  ],difficulty);
+};
+// END AS TOPIC 5
+
 const asTopics: Record<string,(difficulty:"foundational"|"application"|"reasoning")=>PhysicsQuestion[]> = {
+  "as-u1": structuredAsQuantities,
+  "as-u2": structuredAsKinematics,
+  "as-u3": structuredAsDynamics,
+  "as-u4": structuredAsForces,
+  "as-u5": structuredAsEnergy,
 };
 
 export function supportsPhysicsUnit(level: string, chapter: string) {
