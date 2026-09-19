@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist, Geist_Mono, Source_Serif_4, Public_Sans } from 'next/font/google';
 import './globals.css';
 
 const geistSans = Geist({
@@ -10,6 +10,21 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
+  subsets: ['latin'],
+});
+
+// Fonts for the physics-exam-papers design pilot (scoped via the .pe-redesign
+// class in globals.css) -- Source Serif 4 for headings, Public Sans for body
+// text. Declared here rather than a CSS @import so Next.js can self-host and
+// optimize them, and exposed as CSS variables the same way the existing
+// Geist fonts already are.
+const sourceSerif = Source_Serif_4({
+  variable: '--font-source-serif',
+  subsets: ['latin'],
+});
+
+const publicSans = Public_Sans({
+  variable: '--font-public-sans',
   subsets: ['latin'],
 });
 
@@ -38,7 +53,7 @@ export default function RootLayout({
   return (
     <ClerkProvider><html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${sourceSerif.variable} ${publicSans.variable} antialiased`}
       >
         {children}
       </body>

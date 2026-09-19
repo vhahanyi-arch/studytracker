@@ -401,7 +401,7 @@ function TeacherPortal({ switchRole }: { switchRole: () => void }) {
       ) : view === "physics" ? (
         <PhysicsTeacher />
       ) : view === "physicsExam" ? (
-        <PhysicsExamTeacher />
+        <div className="pe-redesign"><PhysicsExamTeacher /></div>
       ) : view === "papers" ? (
         <Papers upload={() => setModal(true)} />
       ) : view === "submissions" ? (
@@ -6985,7 +6985,7 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
   if (studentArea === "physicsExam")
     return (
       <Shell role="Student" onSwitch={switchRole} nav={cleanNav}>
-        <PhysicsExamStudent back={() => setStudentArea("papers")} />
+        <div className="pe-redesign"><PhysicsExamStudent back={() => setStudentArea("papers")} /></div>
       </Shell>
     );
   return (

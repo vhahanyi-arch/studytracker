@@ -4685,3 +4685,52 @@ label {
   font-family: inherit;
 }
 
+
+/* ============================================================
+   DESIGN PILOT: Physics exam papers section only.
+   Scoped to .pe-redesign so it doesn't affect the rest of the app.
+   Grounded in the subject matter -- Cambridge exam papers and
+   marking, not a generic SaaS dashboard palette.
+   ============================================================ */
+
+.pe-redesign {
+  /* Override the shared design-token variables within this scope only.
+     Existing rules throughout the app already reference var(--purple),
+     var(--ink) etc., so this cascades to every button/badge/panel
+     inside .pe-redesign automatically, without rewriting their CSS. */
+  --ink: #17212e;
+  --paper: #f2f4f6;
+  --purple: #a6323d;      /* the marking-red accent, reusing the existing variable name */
+  --muted: #5b6472;
+  --line: #dce1e6;
+  background: var(--paper);
+  font-family: var(--font-public-sans), Arial, sans-serif;
+}
+
+.pe-redesign h1,
+.pe-redesign h2.pe-heading,
+.pe-redesign h3 {
+  font-family: var(--font-source-serif), Georgia, serif;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.pe-redesign .portal-heading p {
+  /* Replace the tracked-out all-caps eyebrow with a plain, quiet label */
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--font-public-sans), Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.pe-redesign .badge.green {
+  background: #e7efe9;
+  color: #3d6b4f;
+}
+.pe-redesign .badge.amber {
+  background: #f6e9ea;
+  color: var(--purple);
+}
+
