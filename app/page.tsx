@@ -1156,8 +1156,9 @@ function PhysicsExamTeacher() {
         ) : !papers.length ? (
           <p>No papers uploaded yet. Upload a question paper and mark scheme to get started.</p>
         ) : (
-          papers.map((paper) => (
-            <div className="paper-row" key={paper.id}>
+          papers.map((paper, i) => (
+            <article key={paper.id}>
+              <span>{i + 1}</span>
               <div>
                 <b>{paper.title}</b>
                 <small>{paper.syllabus} · {paper.questions.length} questions · {paper.questions.reduce((n, q) => n + q.marks, 0)} marks</small>
@@ -1165,10 +1166,12 @@ function PhysicsExamTeacher() {
               <span className={"badge " + (paper.status === "ready" ? "green" : "amber")}>
                 {paper.status === "ready" ? "Published" : "Needs review"}
               </span>
-              {paper.status !== "ready" && (
-                <button onClick={() => openReview(paper)}>Review extraction →</button>
-              )}
-            </div>
+              <div>
+                {paper.status !== "ready" && (
+                  <button onClick={() => openReview(paper)}>Review extraction →</button>
+                )}
+              </div>
+            </article>
           ))
         )}
       </section>
@@ -1184,17 +1187,21 @@ function PhysicsExamTeacher() {
         ) : !submissions.length ? (
           <p>No submissions yet.</p>
         ) : (
-          submissions.map((submission) => {
+          submissions.map((submission, i) => {
             const paper = papers.find((p) => p.id === submission.paperId);
             const resolved = submission.grades.filter((g) => g.final !== null).length;
             return (
-              <div className="paper-row" key={submission.id}>
+              <article key={submission.id}>
+                <span>{i + 1}</span>
                 <div>
                   <b>{submission.name}</b>
                   <small>{paper?.title || "Paper"} · {resolved}/{submission.grades.length} resolved</small>
                 </div>
-                <button onClick={() => setReviewingSubmission(submission)}>Review →</button>
-              </div>
+                <span></span>
+                <div>
+                  <button onClick={() => setReviewingSubmission(submission)}>Review →</button>
+                </div>
+              </article>
             );
           })
         )}

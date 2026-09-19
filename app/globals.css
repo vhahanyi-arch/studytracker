@@ -4528,3 +4528,112 @@ label {
   .question-upload-list article { grid-template-columns: 1fr auto; }
   .question-upload-list article > span { grid-column: 1 / -1; }
 }
+
+/* Physics exam papers: teacher UI additions */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--line);
+  color: var(--muted);
+}
+.badge.green {
+  background: #e3f6ea;
+  color: #1e8e4c;
+}
+.badge.amber {
+  background: #fdf1dd;
+  color: #b7791f;
+}
+.file-drop {
+  display: block;
+  border: 1.5px dashed var(--line);
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  margin: 10px 0;
+  cursor: pointer;
+}
+.file-drop input {
+  display: block;
+  margin-top: 8px;
+}
+.error-text {
+  color: #c0392b;
+  background: #fdecea;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  margin: 8px 0;
+}
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.extraction-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  margin: 16px 0;
+}
+.reference {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 4px 0;
+}
+.feedback-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 12px 0;
+}
+.feedback-grid h4 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.grade-line {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  margin-top: 10px;
+  font-size: 13px;
+}
+.review-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.review-form label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.review-form input {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.audit {
+  color: var(--muted);
+  font-size: 11px;
+  margin: 4px 0;
+}
