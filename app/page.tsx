@@ -139,10 +139,10 @@ const igcsePhysicsUnits: PhysicsUnit[] = [
   { id:"igcse-u21", title:"6.1–6.2 Space physics", summary:"The Solar System, stars and the Universe", icon:"🌌", available:false },
 ];
 const asPhysicsUnits: PhysicsUnit[] = [
-  { id:"as-u1", title:"1. Physical quantities & units", summary:"SI units, errors and dimensional analysis", icon:"⚖", available:false },
-  { id:"as-u2", title:"2. Kinematics", summary:"Motion graphs, equations of motion and projectiles", icon:"→", available:false },
-  { id:"as-u3", title:"3. Dynamics", summary:"Newton's laws, momentum and collisions", icon:"⇒", available:false },
-  { id:"as-u4", title:"4. Forces, density & pressure", summary:"Equilibrium, moments, density and pressure", icon:"↕", available:false },
+  { id:"as-u1", title:"1. Physical quantities & units", summary:"SI units, errors and dimensional analysis", icon:"⚖", available:true },
+  { id:"as-u2", title:"2. Kinematics", summary:"Motion graphs, equations of motion and projectiles", icon:"→", available:true },
+  { id:"as-u3", title:"3. Dynamics", summary:"Newton's laws, momentum and collisions", icon:"⇒", available:true },
+  { id:"as-u4", title:"4. Forces, density & pressure", summary:"Equilibrium, moments, density and pressure", icon:"↕", available:true },
   { id:"as-u5", title:"5. Work, energy & power", summary:"Work done, energy conservation and efficiency", icon:"⚡", available:false },
   { id:"as-u6", title:"6. Deformation of solids", summary:"Hooke's law, stress, strain and the Young modulus", icon:"◆", available:false },
   { id:"as-u7", title:"7. Waves", summary:"Wave properties, the Doppler effect and EM waves", icon:"∿", available:false },
@@ -912,21 +912,27 @@ function PastPaperPracticeCrop({source}:{source:PastPaperPracticeSource}){
 type CrossStagePracticeUnit = LowerSecondaryUnit & { sourceStage: 7 | 8 | 9 };
 
 function PhysicsExamTeacher() {
-  const [papers, setPapers] = useState<
-    Array<{ id: string; title: string; syllabus: string; status: string; revision: number;
-      questions: { marks: number }[]; warnings: string[] }>
-  >([]);
+  type PaperSummary = { id: string; title: string; syllabus: string; status: string; revision: number;
+    questions: Array<{ id: string; text: string; context: string; marks: number; topic: string; sourcePages: number[]; references: string[]; issues: string[] }>;
+    schemes: Array<{ questionId: string; raw: string }>; warnings: string[] };
+  type Grade = { questionId: string; proposed: number | null; final: number | null; status: string; reason: string;
+    points: Array<{ id: string; description: string; marks: number; hit: boolean | null }>; expected: string;
+    history: Array<{ score: number; note: string; at: string }> };
+  type Answer = { questionId: string; mode: string; text: string; steps: Record<string, string>;
+    file: { id: string; name: string } | null; formula?: string; working?: string };
+  type Submission = { id: string; paperId: string; name: string; selfPractice: boolean; createdAt: string;
+    answers: Answer[]; grades: Grade[]; wholePaperFiles?: Array<{ id: string; name: string }> };
+
+  const [papers, setPapers] = useState<PaperSummary[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [uploadOpen, setUploadOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [combined, setCombined] = useState(false);
-  const [reviewing, setReviewing] = useState<{
-    id: string; revision: number; title: string; syllabus: string; warnings: string[];
-    questions: Array<{ id: string; text: string; context: string; marks: number; topic: string; sourcePages: number[]; references: string[]; issues: string[] }>;
-    schemes: Array<{ questionId: string; raw: string }>;
-  } | null>(null);
+  const [reviewing, setReviewing] = useState<PaperSummary | null>(null);
   const [editJson, setEditJson] = useState("");
+  const [reviewingSubmission, setReviewingSubmission] = useState<Submission | null>(null);
 
   async function load() {
     setLoading(true);
@@ -935,6 +941,7 @@ function PhysicsExamTeacher() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Could not load papers.");
       setPapers(data.papers || []);
+      setSubmissions(data.submissions || []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load papers.");
     } finally {
@@ -942,6 +949,25 @@ function PhysicsExamTeacher() {
     }
   }
   useEffect(() => { load(); }, []);
+
+  async function saveReview(submissionId: string, questionId: string, score: number, note: string) {
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/physics-exam", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "review", submissionId, questionId, score, note }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not save this mark.");
+      setReviewingSubmission(data.submission);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save this mark.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   function openReview(paper: typeof reviewing) {
     setReviewing(paper);
@@ -990,6 +1016,82 @@ function PhysicsExamTeacher() {
     } finally {
       setBusy(false);
     }
+  }
+
+  if (reviewingSubmission) {
+    const paper = papers.find((p) => p.id === reviewingSubmission.paperId);
+    return (
+      <>
+        <div className="portal-heading">
+          <div>
+            <p>PHYSICS EXAM PAPERS</p>
+            <h1>{reviewingSubmission.name}'s answers</h1>
+            <h2>{paper?.title || "Paper"}</h2>
+          </div>
+          <button onClick={() => setReviewingSubmission(null)}>← Submissions</button>
+        </div>
+        {error && <p className="error-text">{error}</p>}
+        {reviewingSubmission.wholePaperFiles && reviewingSubmission.wholePaperFiles.length > 0 && (
+          <section className="panel">
+            <h4>Whole-paper handwritten submission</h4>
+            <ul>
+              {reviewingSubmission.wholePaperFiles.map((f, i) => (
+                <li key={f.id}><a href={"/api/physics-exam/files/" + f.id} target="_blank" rel="noreferrer">Page {i + 1}: {f.name} ↗</a></li>
+              ))}
+            </ul>
+          </section>
+        )}
+        {reviewingSubmission.grades.map((grade) => {
+          const question = paper?.questions.find((q) => q.id === grade.questionId);
+          const answer = reviewingSubmission.answers.find((a) => a.questionId === grade.questionId);
+          const needsInput = grade.status === "needs_review" || (grade.status === "proposed" && grade.final === null);
+          return (
+            <section className="panel" key={grade.questionId}>
+              <div className="section-heading">
+                <h3>{grade.questionId} {question?.topic ? "· " + question.topic : ""}</h3>
+                <span className={"badge " + (grade.status === "confirmed" ? "green" : "amber")}>
+                  {{ needs_review: "Needs teacher review", proposed: "Proposed mark", self_practice: "Self-practice mark", confirmed: "Teacher confirmed" }[grade.status] || grade.status}
+                </span>
+              </div>
+              {question && <p>{question.text}</p>}
+              <div className="feedback-grid">
+                <div>
+                  <h4>Student answer</h4>
+                  {answer?.formula && <p><small>Formula:</small> {answer.formula}</p>}
+                  {answer?.working && <p><small>Working:</small> {answer.working}</p>}
+                  <p>{answer?.text || "No typed answer"}</p>
+                  {answer && Object.entries(answer.steps).map(([id, v]) => <p key={id}>{id}: {v}</p>)}
+                  {answer?.file && <a href={"/api/physics-exam/files/" + answer.file.id} target="_blank" rel="noreferrer">Open handwritten answer ↗</a>}
+                </div>
+                <div>
+                  <h4>Expected answer</h4>
+                  <p>{grade.expected}</p>
+                </div>
+              </div>
+              <p>{grade.reason}</p>
+              {grade.points.map((p) => (
+                <p key={p.id}>{p.hit ? "✓" : "○"} {p.description} · {p.hit ? p.marks : 0}/{p.marks}</p>
+              ))}
+              <div className="grade-line">
+                Proposed: <strong>{grade.proposed === null ? "Needs review" : grade.proposed + " / " + (question?.marks ?? "?")}</strong>
+                <span>Final: <strong>{grade.final === null ? "Not confirmed" : grade.final + " / " + (question?.marks ?? "?")}</strong></span>
+              </div>
+              {needsInput && question && (
+                <ReviewForm
+                  max={question.marks}
+                  busy={busy}
+                  defaultScore={grade.final ?? grade.proposed ?? 0}
+                  onSave={(score, note) => saveReview(reviewingSubmission.id, grade.questionId, score, note)}
+                />
+              )}
+              {grade.history.map((h, i) => (
+                <p key={i} className="audit">{new Date(h.at).toLocaleString()} · {h.score}/{question?.marks ?? "?"} · {h.note}</p>
+              ))}
+            </section>
+          );
+        })}
+      </>
+    );
   }
 
   if (reviewing) {
@@ -1064,10 +1166,37 @@ function PhysicsExamTeacher() {
                 {paper.status === "ready" ? "Published" : "Needs review"}
               </span>
               {paper.status !== "ready" && (
-                <button onClick={() => openReview(paper as never)}>Review extraction →</button>
+                <button onClick={() => openReview(paper)}>Review extraction →</button>
               )}
             </div>
           ))
+        )}
+      </section>
+      <section className="panel paper-table">
+        <header>
+          <div>
+            <h3>Submissions</h3>
+            <p>Student work awaiting your review</p>
+          </div>
+        </header>
+        {loading ? (
+          <p>Loading…</p>
+        ) : !submissions.length ? (
+          <p>No submissions yet.</p>
+        ) : (
+          submissions.map((submission) => {
+            const paper = papers.find((p) => p.id === submission.paperId);
+            const resolved = submission.grades.filter((g) => g.final !== null).length;
+            return (
+              <div className="paper-row" key={submission.id}>
+                <div>
+                  <b>{submission.name}</b>
+                  <small>{paper?.title || "Paper"} · {resolved}/{submission.grades.length} resolved</small>
+                </div>
+                <button onClick={() => setReviewingSubmission(submission)}>Review →</button>
+              </div>
+            );
+          })
         )}
       </section>
       {uploadOpen && (
@@ -1095,6 +1224,21 @@ function PhysicsExamTeacher() {
         </div>
       )}
     </>
+  );
+}
+
+function ReviewForm({ max, busy, defaultScore, onSave }: { max: number; busy: boolean; defaultScore: number; onSave: (score: number, note: string) => void }) {
+  const [score, setScore] = useState(String(defaultScore));
+  const [note, setNote] = useState("");
+  return (
+    <form
+      className="review-form"
+      onSubmit={(e) => { e.preventDefault(); onSave(Number(score), note); }}
+    >
+      <label>Teacher mark<input required type="number" min="0" max={max} step="1" value={score} onChange={(e) => setScore(e.target.value)} /></label>
+      <label>Review note<input required placeholder="Evidence checked / reason for override" value={note} onChange={(e) => setNote(e.target.value)} /></label>
+      <button disabled={busy} className="primary">Confirm mark</button>
+    </form>
   );
 }
 
