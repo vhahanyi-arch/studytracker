@@ -143,7 +143,7 @@ const asPhysicsUnits: PhysicsUnit[] = [
   { id:"as-u2", title:"2. Kinematics", summary:"Motion graphs, equations of motion and projectiles", icon:"→", available:true },
   { id:"as-u3", title:"3. Dynamics", summary:"Newton's laws, momentum and collisions", icon:"⇒", available:true },
   { id:"as-u4", title:"4. Forces, density & pressure", summary:"Equilibrium, moments, density and pressure", icon:"↕", available:true },
-  { id:"as-u5", title:"5. Work, energy & power", summary:"Work done, energy conservation and efficiency", icon:"⚡", available:false },
+  { id:"as-u5", title:"5. Work, energy and power", summary:"Work, energy conservation, efficiency, power and energy changes", icon:"⚡", available:true },
   { id:"as-u6", title:"6. Deformation of solids", summary:"Hooke's law, stress, strain and the Young modulus", icon:"◆", available:true },
   { id:"as-u7", title:"7. Waves", summary:"Wave properties, the Doppler effect and EM waves", icon:"∿", available:false },
   { id:"as-u8", title:"8. Superposition", summary:"Interference, diffraction and stationary waves", icon:"≈", available:false },

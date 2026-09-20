@@ -1,5 +1,7 @@
 # AS Physics 9702 — Work, energy and power checkpoint
 
+Historical Topic 5 checkpoint. The current status is in the [Topic 6 verification report](as-physics-deformation-verification.md), including the small-value marking fix and shared-page recovery. Topics 1–6 are now enabled.
+
 Topic 5 is implemented as `structuredAsEnergy` in `lib/physics-question-engine.ts`,
 registered as `as-u5` in `asTopics`, and enabled in `app/page.tsx` after production
 verification. The existing architecture is preserved: six questions per tier,

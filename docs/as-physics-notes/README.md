@@ -9,6 +9,7 @@ Based on the supplied Cambridge International AS & A Level Physics 9702 syllabus
 | 3 | [Dynamics](topic-3-dynamics.md) | 17–18 | 13 |
 | 4 | [Forces, density and pressure](topic-4-forces-density-and-pressure.md) | 18–19 | 13 |
 | 5 | [Work, energy and power](topic-5-work-energy-and-power.md) | 19 | 11 |
+| 6 | [Deformation of solids](topic-6-deformation-of-solids.md) | 20 | 10 |
 
 Each reference separates concepts from formulas, identifies the syllabus objectives, and gives symbols, SI units and conditions of use. Formula tables include equations explicitly required and direct mathematical expressions of required definitions or methods. Derived applications and cross-topic formulas are labelled; they are not additional syllabus objectives.
 

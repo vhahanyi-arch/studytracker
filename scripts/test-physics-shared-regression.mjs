@@ -8,6 +8,22 @@ const math=Object.assign(Object.create(Math),{random:()=>{seed=(Math.imul(seed,1
 const exports={};
 vm.runInNewContext(fs.readFileSync('tmp/9702/compiled/physics-question-engine.js','utf8'),{exports,Math:math});
 const tiers=['foundational','application','reasoning'];
+// Numeric tolerance must scale with the answer, including very small strain values.
+let numericToleranceChecks=0;
+for(const expected of [1e-9,.0001,.0008,.1,1,100,1e9,-.0001,-100]) {
+  for(const factor of [1,.9995,1.0005,.999,1.001]) {
+    assert.ok(exports.answerMatches(String(expected*factor),[String(expected)]),`Within tolerance: ${expected} × ${factor}`);numericToleranceChecks++;
+  }
+  for(const actual of [0,-expected,expected*.9989,expected*1.0011,expected*1.1]) {
+    assert.ok(!exports.answerMatches(String(actual),[String(expected)]),`Outside tolerance: ${actual} vs ${expected}`);numericToleranceChecks++;
+  }
+}
+for(const [actual,expected] of [['0',true],['-0',true],['0.00001',false],['-0.00001',false]]) {
+  assert.equal(exports.answerMatches(actual,['0']),expected);numericToleranceChecks++;
+}
+for(const actual of ['', 'NaN', 'Infinity', 'a hundred']) {
+  assert.ok(!exports.answerMatches(actual,['100']));numericToleranceChecks++;
+}
 let sets=0,questions=0;
 const decimals=new Map();
 const units = [
@@ -41,4 +57,4 @@ function visit(node) {
 }
 visit(ast);
 assert.equal([...decimals.keys()].filter(id=>id.startsWith('as-')).length,0);
-console.log(JSON.stringify({units,sets,questions,sharedValidatorAndSelfMatchingFailures:0,asIdenticalBranchChecks:conditionals,asUglyDecimalTemplates:0,legacyUglyDecimalTemplates:[...decimals]},null,2));
+console.log(JSON.stringify({units,sets,questions,numericToleranceChecks,sharedValidatorAndSelfMatchingFailures:0,asIdenticalBranchChecks:conditionals,asUglyDecimalTemplates:0,legacyUglyDecimalTemplates:[...decimals]},null,2));
