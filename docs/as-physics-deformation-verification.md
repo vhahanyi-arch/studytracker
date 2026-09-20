@@ -1,5 +1,7 @@
 # AS Physics 9702 — Deformation of solids checkpoint
 
+Historical Topic 6 checkpoint. The latest status is in the [Topic 7 verification report](as-physics-waves-verification.md). Topics 1–7 are now enabled.
+
 Topic 6 is implemented as `structuredAsDeformation`, registered as `as-u6`, and enabled in `app/page.tsx`. It uses the existing `sq`, `validateUnitSet`, `answerMatches` and public generation API: six questions per tier, 18 templates in total. The accompanying [revision notes and formula sheet](as-physics-notes/topic-6-deformation-of-solids.md) cover all ten objectives. No push or deployment was performed.
 
 ## Source and coverage
