@@ -144,7 +144,7 @@ const asPhysicsUnits: PhysicsUnit[] = [
   { id:"as-u3", title:"3. Dynamics", summary:"Newton's laws, momentum and collisions", icon:"⇒", available:true },
   { id:"as-u4", title:"4. Forces, density & pressure", summary:"Equilibrium, moments, density and pressure", icon:"↕", available:true },
   { id:"as-u5", title:"5. Work, energy & power", summary:"Work done, energy conservation and efficiency", icon:"⚡", available:false },
-  { id:"as-u6", title:"6. Deformation of solids", summary:"Hooke's law, stress, strain and the Young modulus", icon:"◆", available:false },
+  { id:"as-u6", title:"6. Deformation of solids", summary:"Hooke's law, stress, strain and the Young modulus", icon:"◆", available:true },
   { id:"as-u7", title:"7. Waves", summary:"Wave properties, the Doppler effect and EM waves", icon:"∿", available:false },
   { id:"as-u8", title:"8. Superposition", summary:"Interference, diffraction and stationary waves", icon:"≈", available:false },
   { id:"as-u9", title:"9. Electricity", summary:"Current, resistance, resistivity and power", icon:"⏚", available:false },
@@ -1024,7 +1024,7 @@ function PhysicsExamTeacher() {
       <>
         <div className="portal-heading">
           <div>
-            <p>PHYSICS EXAM PAPERS</p>
+            <p>Physics exam papers</p>
             <h1>{reviewingSubmission.name}'s answers</h1>
             <h2>{paper?.title || "Paper"}</h2>
           </div>
@@ -1099,7 +1099,7 @@ function PhysicsExamTeacher() {
       <>
         <div className="portal-heading">
           <div>
-            <p>PHYSICS EXAM PAPERS</p>
+            <p>Physics exam papers</p>
             <h1>Check the extraction</h1>
             <h2>Compare every question, mark allocation, and rule with the source pages before publishing.</h2>
           </div>
@@ -1137,7 +1137,7 @@ function PhysicsExamTeacher() {
     <>
       <div className="portal-heading">
         <div>
-          <p>PHYSICS EXAM PAPERS</p>
+          <p>Physics exam papers</p>
           <h1>Exam papers</h1>
           <h2>Upload a real Cambridge past paper and mark scheme for auto-assisted marking, reviewed by you before anything is published.</h2>
         </div>
@@ -1163,9 +1163,11 @@ function PhysicsExamTeacher() {
                 <b>{paper.title}</b>
                 <small>{paper.syllabus} · {paper.questions.length} questions · {paper.questions.reduce((n, q) => n + q.marks, 0)} marks</small>
               </div>
-              <span className={"badge " + (paper.status === "ready" ? "green" : "amber")}>
-                {paper.status === "ready" ? "Published" : "Needs review"}
-              </span>
+              <div>
+                <span className={"badge " + (paper.status === "ready" ? "green" : "amber")}>
+                  {paper.status === "ready" ? "Published" : "Needs review"}
+                </span>
+              </div>
               <div>
                 {paper.status !== "ready" && (
                   <button onClick={() => openReview(paper)}>Review extraction →</button>
@@ -1350,7 +1352,7 @@ function PhysicsExamStudent({ back }: { back: () => void }) {
       <>
         <div className="portal-heading">
           <div>
-            <p>PHYSICS EXAM PAPERS</p>
+            <p>Physics exam papers</p>
             <h1>{result.paper.title}</h1>
             <h2>Submitted — {awarded} / {totalMarks} confirmed so far</h2>
           </div>
@@ -1390,7 +1392,7 @@ function PhysicsExamStudent({ back }: { back: () => void }) {
       <>
         <div className="portal-heading">
           <div>
-            <p>PHYSICS EXAM PAPERS</p>
+            <p>Physics exam papers</p>
             <h1>{openPaper.title}</h1>
             <h2>{openPaper.syllabus} · {openPaper.questions.length} questions · {openPaper.questions.reduce((n, q) => n + q.marks, 0)} marks</h2>
             {openPaper.files.filter((f) => f.role !== "scheme").map((f) => (
@@ -1503,7 +1505,7 @@ function PhysicsExamStudent({ back }: { back: () => void }) {
     <>
       <div className="portal-heading">
         <div>
-          <p>PHYSICS EXAM PAPERS</p>
+          <p>Physics exam papers</p>
           <h1>Exam papers</h1>
           <h2>Papers your teacher has published for practice.</h2>
         </div>
