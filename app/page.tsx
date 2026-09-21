@@ -203,9 +203,92 @@ function RolePortal() {
       </div>
     );
   const role = user?.publicMetadata.role;
+  // A teacher types the first password and reads it out, so it is shared from
+  // the moment it is created. Nothing else loads until it has been replaced.
+  if (user?.publicMetadata.mustChangePassword) return <FirstPasswordChange />;
   if (role === "teacher") return <TeacherPortal switchRole={() => {}} />;
   if (role === "student") return <StudentPortal switchRole={() => {}} />;
   return <RoleSetup />;
+}
+
+function FirstPasswordChange() {
+  const [password, setPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const tooShort = password.length > 0 && password.length < 8;
+  const mismatch = confirmation.length > 0 && password !== confirmation;
+  const ready = password.length >= 8 && password === confirmation;
+
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!ready) return;
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/account/password", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "The password could not be changed.");
+      window.location.reload();
+    } catch (problem) {
+      setError(problem instanceof Error ? problem.message : "The password could not be changed.");
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="portal-choice">
+      <header>
+        <Logo />
+        <UserButton />
+      </header>
+      <section>
+        <div className="choice-copy">
+          <p>CHOOSE YOUR PASSWORD</p>
+          <h1>Set a password only you know.</h1>
+          <h2>
+            Your teacher chose the password you just used, so it is not private.
+            Pick a new one to finish setting up your account.
+          </h2>
+        </div>
+        <form className="password-setup" onSubmit={submit}>
+          <label htmlFor="new-password">
+            New password
+            <input
+              id="new-password"
+              type="password"
+              value={password}
+              autoComplete="new-password"
+              onChange={(event) => setPassword(event.target.value)}
+              required
+            />
+          </label>
+          {tooShort && <small>Use at least 8 characters.</small>}
+          <label htmlFor="confirm-password">
+            Enter it again
+            <input
+              id="confirm-password"
+              type="password"
+              value={confirmation}
+              autoComplete="new-password"
+              onChange={(event) => setConfirmation(event.target.value)}
+              required
+            />
+          </label>
+          {mismatch && <small>The two passwords do not match yet.</small>}
+          {error && <p className="error-text">{error}</p>}
+          <button className="primary" disabled={!ready || busy}>
+            {busy ? "Saving…" : "Save password and continue"}
+          </button>
+        </form>
+      </section>
+    </div>
+  );
 }
 
 function RoleSetup() {
@@ -4785,8 +4868,11 @@ function Students() {
   const [open, setOpen] = useState(false),
     [message, setMessage] = useState(""),
     [accounts, setAccounts] = useState<
-      Array<{ id: string; name: string; username: string }>
+      Array<{ id: string; name: string; username: string; mustChangePassword?: boolean }>
     >([]);
+  const [resetting, setResetting] = useState<string | null>(null);
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetMessage, setResetMessage] = useState("");
   const loadAccounts = () =>
     fetch("/api/admin/users")
       .then((r) => r.json())
@@ -4809,6 +4895,24 @@ function Students() {
       e.currentTarget.reset();
       loadAccounts();
     } else setMessage(result.error || "The account could not be created.");
+  }
+  async function resetStudentPassword(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setResetMessage("Resetting…");
+    const response = await fetch("/api/admin/users", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ studentId: resetting, password: resetPassword }),
+    });
+    const result = await response.json();
+    if (response.ok) {
+      setResetMessage(
+        `New password set for ${result.username}. They will be asked to choose their own when they next sign in.`,
+      );
+      setResetPassword("");
+      setResetting(null);
+      loadAccounts();
+    } else setResetMessage(result.error || "The password could not be reset.");
   }
   return (
     <>
@@ -4843,10 +4947,52 @@ function Students() {
               <b>{student.name}</b>
               <small>Username: {student.username}</small>
             </div>
-            <em>Active</em>
+            <em>{student.mustChangePassword ? "Password not set" : "Active"}</em>
+            <button
+              type="button"
+              className="reset-password-button"
+              onClick={() => {
+                setResetting(student.id);
+                setResetPassword("");
+                setResetMessage("");
+              }}
+            >
+              Reset password
+            </button>
           </article>
         ))}
+        {resetMessage && !resetting && <p className="roster-note">{resetMessage}</p>}
       </section>
+      {resetting && (
+        <div className="portal-modal" onMouseDown={() => setResetting(null)}>
+          <form onMouseDown={(e) => e.stopPropagation()} onSubmit={resetStudentPassword}>
+            <button type="button" className="x" onClick={() => setResetting(null)}>
+              ×
+            </button>
+            <small>RESET PASSWORD</small>
+            <h2>{accounts.find((s) => s.id === resetting)?.name}</h2>
+            <label htmlFor="reset-password">
+              Temporary password
+              <input
+                id="reset-password"
+                type="text"
+                minLength={8}
+                required
+                value={resetPassword}
+                onChange={(event) => setResetPassword(event.target.value)}
+              />
+            </label>
+            <p className="roster-note">
+              Read this out to the student. They will be asked to choose their own
+              password the next time they sign in.
+            </p>
+            {resetMessage && <p>{resetMessage}</p>}
+            <button className="primary" disabled={resetPassword.length < 8}>
+              Set temporary password
+            </button>
+          </form>
+        </div>
+      )}
       {open && (
         <div className="portal-modal" onMouseDown={() => setOpen(false)}>
           <form onMouseDown={(e) => e.stopPropagation()} onSubmit={addStudent}>

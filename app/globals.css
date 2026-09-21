@@ -4884,3 +4884,50 @@ h1, h2, h3 {
   background: var(--paper);
   color: var(--muted);
 }
+
+/* Account setup: forced first password change, and the teacher-side reset. */
+.password-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 380px;
+  margin: 0 auto;
+  padding: 1rem 0 3rem;
+}
+.password-setup label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 800;
+  font-size: 12px;
+}
+.password-setup input {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 10px;
+  background: #fff;
+}
+.password-setup small {
+  margin-top: -6px;
+  color: var(--muted);
+}
+.password-setup button {
+  margin-top: 4px;
+}
+.roster-note {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 10px 17px;
+}
+/* Overrides the 7px .student-table article button rule, which is scaled for a
+   different table's inline actions. */
+.student-table article button.reset-password-button {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fff;
+  padding: 7px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--purple);
+  white-space: nowrap;
+}
