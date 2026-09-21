@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, staging, reconcile]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Marking engine tests
+        run: pnpm test
+
+      - name: Question content regression
+        run: pnpm test:content
+
+      - name: Production build
+        # Placeholder values only. The build imports modules that construct a
+        # Neon client and read Clerk keys at module scope, so these must parse,
+        # but nothing here connects to a real service.
+        env:
+          DATABASE_URL: postgres://build:build@localhost:5432/build
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2ktYnVpbGQtcGxhY2Vob2xkZXIk
+          CLERK_SECRET_KEY: sk_test_ci_build_placeholder
+        run: pnpm build

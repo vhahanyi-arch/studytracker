@@ -1,0 +1,10 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';
+import {normalizeMath,finalExpression} from '@/lib/physics-marking-engine';
+import {parseQuantity} from '@/lib/physics-marking-engine';
+const forms=['× 10⁻³','x10^-3','*10^-3','×10-3','□ 10−3','  10^-3',' 10^-3','×10^(-3)','e-3','E-3'];
+for(let i=1;i<=120;i++)for(const form of forms)test('scientific notation '+i+' '+form,()=>assert.ok(Math.abs(parseQuantity(i+form+' N').value-i*.001)<1e-12));
+for(const symbol of ['×','□','*','·','x'])test('multiplication '+symbol,()=>assert.equal(normalizeMath('5'+symbol+'2'),'5*2'));
+test('missing multiplication in working',()=>assert.equal(normalizeMath('5  2'),'5*2'));
+test('final equals only',()=>assert.equal(finalExpression('F = ma = 5 × 2 = 10 N'),'10 N'));
+test('last result on new line',()=>assert.equal(finalExpression('F = ma\nF = 10 N'),'10 N'));
+test('avoid stripping unit case',()=>assert.notEqual(normalizeMath('mN'),normalizeMath('MN')));

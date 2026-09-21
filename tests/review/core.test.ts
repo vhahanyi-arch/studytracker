@@ -1,0 +1,11 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';
+import {demoPaper} from '@/lib/physics-exam-demo';import {markAnswer} from '@/lib/physics-marking-engine';
+const p=demoPaper(),a={questionId:'5(a)',mode:'typed' as const,text:'10 N',steps:{},file:null};
+test('ordinary auto-mark is a proposal',()=>{const g=markAnswer(p.questions[0],p.schemes[0],a);assert.equal(g.proposed,1);assert.equal(g.final,null);assert.equal(g.status,'proposed');});
+test('self practice finalizes supported result',()=>assert.equal(markAnswer(p.questions[0],p.schemes[0],a,true).final,1));
+test('explanations never auto-mark',()=>assert.equal(markAnswer(p.questions[1],p.schemes[1],a,true).proposed,null));
+test('handwriting always manual',()=>assert.equal(markAnswer(p.questions[0],p.schemes[0],{...a,mode:'handwritten'},true).proposed,null));
+test('unknown short term needs review',()=>assert.equal(markAnswer(p.questions[2],p.schemes[2],{...a,text:'energy in the spring'}).proposed,null));
+test('explicit accepted term works',()=>assert.equal(markAnswer(p.questions[2],p.schemes[2],{...a,text:' Elastic Potential Energy. '}).proposed,1));
+test('missing scheme reviews',()=>assert.equal(markAnswer(p.questions[0],undefined,a).status,'needs_review'));
+test('unresolved extraction reviews',()=>assert.equal(markAnswer({...p.questions[0],issues:['unclear exponent']},p.schemes[0],a).status,'needs_review'));

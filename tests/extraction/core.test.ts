@@ -1,0 +1,14 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';
+import {demoPaper} from '@/lib/physics-exam-demo';import {validateExtraction,canonicalId} from '@/lib/physics-exam-extraction-validation';
+import type {Extraction} from '@/lib/physics-extraction-schema';
+const fixture=():Extraction=>{const p=demoPaper();return {questions:p.questions,schemes:p.schemes,warnings:[],syllabus:'0625'};};
+test('partial starts at five',()=>assert.equal(validateExtraction(fixture()).questions[0].id,'5(a)'));
+test('canonical numbering',()=>assert.equal(canonicalId('Q 03 (b) (ii)'),'3(b)(ii)'));
+test('unaligned page order uses ID',()=>{const f=fixture();f.schemes.reverse();assert.ok(validateExtraction(f).questions.every(q=>!q.issues.length));});
+test('duplicate questions fail',()=>{const f=fixture();f.questions.push(f.questions[0]);assert.throws(()=>validateExtraction(f));});
+test('duplicate scheme rows fail',()=>{const f=fixture();f.schemes.push(f.schemes[0]);assert.throws(()=>validateExtraction(f));});
+test('missing scheme is issue',()=>{const f=fixture();f.schemes=[];assert.ok(validateExtraction(f).questions.every(q=>q.issues.length));});
+test('mark mismatch issue',()=>{const f=fixture();f.schemes[0].marks=10;assert.ok(validateExtraction(f).questions[0].issues.length);});
+test('parent child double count issue',()=>{const f=fixture();f.questions.push({...f.questions[0],id:'5'});assert.ok(validateExtraction(f).questions.at(-1)!.issues.length);});
+test('figure context retained',()=>{const f=fixture();f.questions[0].references=['Figure 5.1'];assert.deepEqual(validateExtraction(f).questions[0].references,['Figure 5.1']);});
+test('invalid number rejects',()=>assert.throws(()=>canonicalId('Question potato')));

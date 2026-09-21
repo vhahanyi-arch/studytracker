@@ -1,0 +1,13 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';
+import {demoPaper} from '@/lib/physics-exam-demo';import {markAnswer} from '@/lib/physics-marking-engine';
+const p=demoPaper(),q=p.questions[3],s=p.schemes[3],a={questionId:q.id,mode:'typed' as const,text:'',steps:{B1:'0.01 m²',A1:'1 J'},file:null};
+test('both points supported',()=>assert.equal(markAnswer(q,s,a).proposed,2));
+test('one supported point',()=>assert.equal(markAnswer(q,s,{...a,steps:{B1:'0.01 m²',A1:'2 J'}}).proposed,1));
+test('dependency blocks answer mark',()=>assert.equal(markAnswer(q,s,{...a,steps:{B1:'0.02 m²',A1:'1 J'}}).proposed,0));
+test('missing evidence must review',()=>assert.equal(markAnswer(q,s,{...a,steps:{}}).status,'needs_review'));
+test('cyclic dependency reviews',()=>{const x=structuredClone(s);x.points[0].dependsOn=['A1'];assert.equal(markAnswer(q,x,a).status,'needs_review');});
+test('duplicate point reviews',()=>{const x=structuredClone(s);x.points[1].id='B1';assert.equal(markAnswer(q,x,a).status,'needs_review');});
+test('unimplemented ECF reviews',()=>assert.equal(markAnswer(q,{...s,unresolvedRules:['accept ecf']},a).status,'needs_review'));
+test('multi-mark incorrect final routes working review',()=>assert.equal(markAnswer({...p.questions[0],marks:2},{...p.schemes[0],marks:2,finalAnswerAwardsAll:true},{...a,text:'20 N'}).status,'needs_review'));
+test('explicit compensatory rule awards all',()=>assert.equal(markAnswer({...p.questions[0],marks:2},{...p.schemes[0],marks:2,finalAnswerAwardsAll:true},{...a,text:'10 N'}).proposed,2));
+test('no implicit all-marks rule',()=>assert.equal(markAnswer({...p.questions[0],marks:2},{...p.schemes[0],marks:2},{...a,text:'10 N'}).status,'needs_review'));

@@ -1,0 +1,12 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';
+import {demoPaper} from '@/lib/physics-exam-demo';import {makeSubmission,overrideGrade,approvePaper} from '@/lib/physics-exam-workflows';
+const p=demoPaper(),answers=p.questions.map(q=>({questionId:q.id,mode:'typed' as const,text:'10 N',steps:{},file:null}));
+test('cannot submit draft',()=>assert.throws(()=>makeSubmission({...p,status:'draft'},'A',false,answers)));
+test('must submit complete question set',()=>assert.throws(()=>makeSubmission(p,'A',false,answers.slice(1))));
+test('duplicate answers reject',()=>assert.throws(()=>makeSubmission(p,'A',false,[...answers.slice(0,3),answers[0]])));
+test('missing handwritten attachment rejects',()=>assert.throws(()=>makeSubmission(p,'A',false,answers.map(a=>({...a,mode:'handwritten'})))));
+test('teacher override records audit and preserves proposal',()=>{const s=makeSubmission(p,'A',false,answers);const result=overrideGrade(s,'5(a)',0,'Unit is not legible in the reviewed response.',p);assert.equal(result.grades[0].final,0);assert.equal(result.grades[0].proposed,1);assert.equal(result.grades[0].history.length,1);assert.equal(s.grades[0].final,null);});
+for(const n of [-1,.5,2,NaN])test('invalid override '+n,()=>assert.throws(()=>overrideGrade(makeSubmission(p,'A',false,answers),'5(a)',n,'note',p)));
+test('override requires reason',()=>assert.throws(()=>overrideGrade(makeSubmission(p,'A',false,answers),'5(a)',1,' ',p)));
+test('empty extraction cannot publish',()=>assert.throws(()=>approvePaper(p,{questions:[],schemes:[],warnings:[],syllabus:'0625'})));
+test('valid extraction can publish',()=>assert.equal(approvePaper({...p,status:'draft'},{questions:p.questions,schemes:p.schemes,warnings:[],syllabus:'0625'}).status,'ready'));
