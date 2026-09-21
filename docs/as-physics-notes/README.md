@@ -13,6 +13,7 @@ Based on the supplied Cambridge International AS & A Level Physics 9702 syllabus
 | 7 | [Waves](topic-7-waves.md) | 20–21 | 16 |
 | 8 | [Superposition](topic-8-superposition.md) | 22 | 12 |
 | 9 | [Electricity](topic-9-electricity.md) | 23 | 15 |
+| 10 | [D.C. circuits](topic-10-dc-circuits.md) | 24; symbols 61–62 | 16 |
 
 Each reference separates concepts from formulas, identifies the syllabus objectives, and gives symbols, SI units and conditions of use. Formula tables include equations explicitly required and direct mathematical expressions of required definitions or methods. Derived applications and cross-topic formulas are labelled; they are not additional syllabus objectives.
 

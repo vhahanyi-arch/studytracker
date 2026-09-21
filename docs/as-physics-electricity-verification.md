@@ -64,4 +64,4 @@ node scripts/test-physics-shared-regression.mjs
 node $topicCompiler --noEmit --strict --incremental false
 ```
 
-The fixed seed is recorded in the test script. `--before-enable` skips only the UI availability assertion during initial production verification. Topics 1–9 are enabled; next: Topic 10, D.C. circuits.
+The fixed seed is recorded in the test script. `--before-enable` skips only the UI availability assertion during initial production verification. At this checkpoint, Topics 1–9 were enabled. Topic 10 is now recorded in the [D.C. circuits checkpoint](as-physics-circuits-verification.md).
