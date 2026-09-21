@@ -33,6 +33,9 @@ import {
   removeCloudAnswerDraft,
 } from '@/lib/answer-drafts';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { DrawingPad } from '@/components/DrawingPad';
+import { QuestionImage } from '@/components/QuestionImage';
+import { type PaperQuestion, displayCrop } from '@/lib/paper-questions';
 
 export default function Home() {
   return (
@@ -2206,40 +2209,6 @@ function FileReview({
       </section>
     </div>
   );
-}
-
-type PaperQuestion = {
-  id?: string;
-  position?: number;
-  label: string;
-  marks: number | null;
-  page_number: number;
-  crop_x: number;
-  crop_y: number;
-  crop_width: number;
-  crop_height: number;
-  response_type?: "typed" | "drawing" | "multiple_choice";
-  answer_slots?: number;
-  response_layout?: "answer" | "working" | "formula";
-  expected_answer?: string | null;
-  mark_scheme_notes?: string | null;
-  topic?: string | null;
-  draft_answer?: string | null;
-  draft_accepted_answer?: string | null;
-  draft_confidence?: "high" | "medium" | "review" | null;
-  extracted_question_text?: string | null;
-};
-
-const QUESTION_CROP_TOP_PADDING = 0.02;
-function displayCrop(question: PaperQuestion) {
-  const extraTop = Math.min(QUESTION_CROP_TOP_PADDING, question.crop_y);
-  const y = Math.max(0, question.crop_y - extraTop);
-  return {
-    x: question.crop_x,
-    y,
-    width: question.crop_width,
-    height: Math.min(1 - y, question.crop_height + extraTop),
-  };
 }
 
 type HomeworkDraft = {
@@ -5759,188 +5728,7 @@ function PdfAnnotator({
   );
 }
 
-function DrawingPad({
-  onChange,
-  background,
-}: {
-  onChange: (image: string) => void;
-  background?: string;
-}) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const drawing = useRef(false);
-  const restoreBackground = () => {
-    const canvas = canvasRef.current!;
-    const context = canvas.getContext("2d")!;
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    if (!background) return;
-    const image = new Image();
-    image.onload = () => {
-      const scale = Math.min(
-        canvas.width / image.width,
-        canvas.height / image.height,
-      );
-      const width = image.width * scale;
-      const height = image.height * scale;
-      context.drawImage(
-        image,
-        (canvas.width - width) / 2,
-        (canvas.height - height) / 2,
-        width,
-        height,
-      );
-    };
-    image.src = background;
-  };
-  useEffect(restoreBackground, [background]);
-  const point = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current!;
-    const rect = canvas.getBoundingClientRect();
-    return {
-      x: ((e.clientX - rect.left) * canvas.width) / rect.width,
-      y: ((e.clientY - rect.top) * canvas.height) / rect.height,
-    };
-  };
-  const start = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current!;
-    canvas.setPointerCapture(e.pointerId);
-    const ctx = canvas.getContext("2d")!;
-    const p = point(e);
-    ctx.beginPath();
-    ctx.moveTo(p.x, p.y);
-    ctx.strokeStyle = "#29263c";
-    ctx.lineWidth = 3;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    drawing.current = true;
-  };
-  const move = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!drawing.current) return;
-    const ctx = canvasRef.current!.getContext("2d")!;
-    const p = point(e);
-    ctx.lineTo(p.x, p.y);
-    ctx.stroke();
-  };
-  const stop = () => {
-    if (!drawing.current) return;
-    drawing.current = false;
-    onChange(canvasRef.current!.toDataURL("image/png"));
-  };
-  const clear = () => {
-    restoreBackground();
-    onChange(background || "");
-  };
-  return (
-    <div className="drawing-pad">
-      <div>
-        <b>
-          {background ? "Draw your answer on the question" : "Freehand drawing"}
-        </b>
-        <small>Mouse, touchscreen or stylus</small>
-        <button type="button" onClick={clear}>
-          Clear
-        </button>
-      </div>
-      <canvas
-        ref={canvasRef}
-        width={900}
-        height={360}
-        onPointerDown={start}
-        onPointerMove={move}
-        onPointerUp={stop}
-        onPointerCancel={stop}
-      />
-    </div>
-  );
-}
 
-const renderedQuestionCache = new Map<string, string>();
-
-function QuestionImage({
-  assignmentId,
-  pdf,
-  question,
-  onRendered,
-}: {
-  assignmentId: string;
-  pdf: any;
-  question: PaperQuestion;
-  onRendered?: (image: string) => void;
-}) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [message, setMessage] = useState("Loading question…");
-  useEffect(() => {
-    if (!pdf) return;
-    setMessage("Loading question…");
-    const visibleCanvas = canvasRef.current;
-    if (visibleCanvas) {
-      visibleCanvas
-        .getContext("2d")
-        ?.clearRect(0, 0, visibleCanvas.width, visibleCanvas.height);
-    }
-    let cancelled = false;
-    (async () => {
-      const cacheKey = `top-pad-v1:${assignmentId}:${question.id || question.position}:${question.page_number}:${question.crop_x}:${question.crop_y}:${question.crop_width}:${question.crop_height}`;
-      const cached = renderedQuestionCache.get(cacheKey);
-      if (cached) {
-        const image = new Image();
-        await new Promise<void>((resolve, reject) => {
-          image.onload = () => resolve();
-          image.onerror = () => reject();
-          image.src = cached;
-        });
-        if (cancelled) return;
-        const target = canvasRef.current!;
-        target.width = image.width;
-        target.height = image.height;
-        target.getContext("2d")!.drawImage(image, 0, 0);
-        onRendered?.(cached);
-        setMessage("");
-        return;
-      }
-      const page = await pdf.getPage(question.page_number);
-      const viewport = page.getViewport({ scale: 1.7 });
-      const source = document.createElement("canvas");
-      source.width = viewport.width;
-      source.height = viewport.height;
-      await page.render({
-        canvas: source,
-        canvasContext: source.getContext("2d")!,
-        viewport,
-      }).promise;
-      if (cancelled) return;
-      const visibleCrop = displayCrop(question);
-      const sx = Math.round(visibleCrop.x * source.width);
-      const sy = Math.round(visibleCrop.y * source.height);
-      const sw = Math.max(1, Math.round(visibleCrop.width * source.width));
-      const sh = Math.max(1, Math.round(visibleCrop.height * source.height));
-      const target = canvasRef.current!;
-      target.width = sw;
-      target.height = sh;
-      target.getContext("2d")!.drawImage(source, sx, sy, sw, sh, 0, 0, sw, sh);
-      const rendered = target.toDataURL("image/webp", 0.92);
-      renderedQuestionCache.set(cacheKey, rendered);
-      onRendered?.(rendered);
-      setMessage("");
-    })().catch(() => setMessage("This question could not be displayed."));
-    return () => {
-      cancelled = true;
-    };
-  }, [assignmentId, pdf, question]);
-  // The question is a cropped bitmap of the original paper, so without a name
-  // a screen reader reports nothing at all. extracted_question_text is already
-  // stored per question and already sent to the client, so use it when it is
-  // there and say plainly when it is not, rather than leaving silence.
-  const marks = question.marks ? `, ${question.marks} mark${question.marks === 1 ? "" : "s"}` : "";
-  const description = question.extracted_question_text?.trim()
-    ? `Question ${question.label}${marks}. ${question.extracted_question_text.trim()}`
-    : `Question ${question.label}${marks}. Shown as an image from the question paper; no text version is available.`;
-  return (
-    <div className="question-image">
-      {message && <p>{message}</p>}
-      <canvas ref={canvasRef} role="img" aria-label={description} />
-    </div>
-  );
-}
 
 function AnswerWorkspace({
   assignment,
