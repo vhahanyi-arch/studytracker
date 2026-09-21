@@ -205,6 +205,36 @@ function RolePortal() {
   const role = user?.publicMetadata.role;
   if (role === "teacher") return <TeacherPortal switchRole={() => {}} />;
   if (role === "student") return <StudentPortal switchRole={() => {}} />;
+  return <RoleSetup />;
+}
+
+function RoleSetup() {
+  const [claimable, setClaimable] = useState<boolean | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/setup/claim-teacher")
+      .then((response) => (response.ok ? response.json() : { claimable: false }))
+      .then((result) => setClaimable(Boolean(result.claimable)))
+      .catch(() => setClaimable(false));
+  }, []);
+
+  const claim = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/setup/claim-teacher", { method: "POST" });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "The role could not be assigned.");
+      // Re-read the session so the new role is visible, then re-render.
+      window.location.reload();
+    } catch (problem) {
+      setError(problem instanceof Error ? problem.message : "The role could not be assigned.");
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="portal-choice">
       <header>
@@ -213,16 +243,32 @@ function RolePortal() {
       </header>
       <section>
         <div className="choice-copy">
-          <p>ACCOUNT SETUP REQUIRED</p>
-          <h1>Your account is signed in.</h1>
+          <p>ACCOUNT SETUP</p>
+          <h1>
+            {claimable
+              ? "Set up your teacher account."
+              : "Your account has no role yet."}
+          </h1>
           <h2>
-            A teacher or student role has not yet been assigned. The
-            administrator can assign the first teacher role in Clerk.
+            {claimable === null
+              ? "Checking this workspace…"
+              : claimable
+                ? "This workspace has no teacher yet, and yours is the first account on it. Claim the teacher role to create classes and student accounts."
+                : "A teacher has already been set up for this workspace. Ask your teacher to create a student account for you, then sign in with the username they give you."}
           </h2>
         </div>
+        {claimable && (
+          <div style={{ display: "flex", justifyContent: "center", padding: "1rem 0 2rem" }}>
+            <button className="primary" onClick={claim} disabled={busy}>
+              {busy ? "Setting up…" : "Claim the teacher role"}
+            </button>
+          </div>
+        )}
+        {error && <p className="error-text">{error}</p>}
         <aside>
-          Set Public metadata to <b>{'{"role":"teacher"}'}</b> for the teacher
-          account, then refresh this page.
+          {claimable
+            ? "Only the first account on this workspace can do this. Every later account must be created by the teacher."
+            : "Signed in with the wrong account? Use the avatar above to switch."}
         </aside>
       </section>
     </div>
