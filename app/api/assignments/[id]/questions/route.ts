@@ -26,11 +26,23 @@ export async function GET(
   const viewer = await viewerFor(id);
   if (!viewer)
     return NextResponse.json({ error: "Access denied." }, { status: 403 });
-  const questions = await sql`
-    SELECT id, position, label, marks, page_number, crop_x, crop_y, crop_width, crop_height, response_type, answer_slots, response_layout, expected_answer, mark_scheme_notes, topic,
-      draft_answer, draft_accepted_answer, draft_confidence, extracted_question_text
-    FROM assignment_questions WHERE assignment_id = ${id} ORDER BY position
-  `;
+  // Students are served the same rows without the answer key. Marking runs
+  // server-side from the database, and every client-side reader of these
+  // fields (QuestionSetup, FileReview, Submissions) is teacher-only, so
+  // withholding them costs the student UI nothing -- whereas sending them
+  // put the expected answers, the mark scheme notes and the AI's proposed
+  // answer in the network response of the paper the student was about to sit.
+  const questions =
+    viewer.role === "teacher"
+      ? await sql`
+          SELECT id, position, label, marks, page_number, crop_x, crop_y, crop_width, crop_height, response_type, answer_slots, response_layout, expected_answer, mark_scheme_notes, topic,
+            draft_answer, draft_accepted_answer, draft_confidence, extracted_question_text
+          FROM assignment_questions WHERE assignment_id = ${id} ORDER BY position
+        `
+      : await sql`
+          SELECT id, position, label, marks, page_number, crop_x, crop_y, crop_width, crop_height, response_type, answer_slots, response_layout, topic, extracted_question_text
+          FROM assignment_questions WHERE assignment_id = ${id} ORDER BY position
+        `;
   return NextResponse.json(questions);
 }
 

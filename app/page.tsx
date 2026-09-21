@@ -32,6 +32,7 @@ import {
   writeCloudAnswerDraft,
   removeCloudAnswerDraft,
 } from '@/lib/answer-drafts';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 export default function Home() {
   return (
@@ -1884,7 +1885,7 @@ function Papers({ upload }: { upload: () => void }) {
             <h3>Cambridge paper library</h3>
             <p>Saved papers and pilot assignments</p>
           </div>
-          <input placeholder="Search papers…" />
+          <input aria-label="Search papers" placeholder="Search papers…" />
         </header>
         {message && <p>{message}</p>}
         {assignments.filter(assignment=>!assignment.is_practice_library).map((assignment) => (
@@ -1975,6 +1976,7 @@ function Papers({ upload }: { upload: () => void }) {
             <h2>{managing.title}</h2>
             <p>Select every student who should receive this paper.</p>
             <input
+              aria-label="Search students"
               className="student-manager-search"
               value={studentSearch}
               onChange={(event) => setStudentSearch(event.target.value)}
@@ -4431,13 +4433,13 @@ function QuestionSetup({
                           >
                             {generatingDraft === index ? "Reading and solving…" : item.draft_answer ? "↻ Generate again" : "✦ Generate draft answer"}
                           </button>
-                          {item.draft_answer && <textarea value={item.draft_answer} onChange={(event)=>updateReviewItem(index,{draft_answer:event.target.value || null})}/>} 
+                          {item.draft_answer && <textarea aria-label="Proposed answer extracted from the paper" value={item.draft_answer} onChange={(event)=>updateReviewItem(index,{draft_answer:event.target.value || null})}/>} 
                           {item.draft_accepted_answer && (
                             <button className="use-draft-answer" onClick={()=>updateReviewItem(index,{expected_answer:item.draft_accepted_answer})}>
                               Use proposed answer “{item.draft_accepted_answer}” for marking
                             </button>
                           )}
-                          {item.extracted_question_text && <details><summary>Review or correct recognised question text</summary><textarea className="recognised-homework-text" value={item.extracted_question_text} onChange={(event)=>updateReviewItem(index,{extracted_question_text:event.target.value || null})}/><button className="recalculate-homework-text" onClick={()=>recalculateCorrectedHomeworkText(index)}>Recalculate corrected text</button></details>}
+                          {item.extracted_question_text && <details><summary>Review or correct recognised question text</summary><textarea aria-label="Recognised question text" className="recognised-homework-text" value={item.extracted_question_text} onChange={(event)=>updateReviewItem(index,{extracted_question_text:event.target.value || null})}/><button className="recalculate-homework-text" onClick={()=>recalculateCorrectedHomeworkText(index)}>Recalculate corrected text</button></details>}
                         </section>
                       )}
                       <label className="scheme-guidance">
@@ -4850,6 +4852,7 @@ function Submissions() {
   const [remarking, setRemarking] = useState(false);
   const [handwrittenPage, setHandwrittenPage] = useState(0);
   const [queueAction, setQueueAction] = useState("");
+  const [confirmPublishAll, setConfirmPublishAll] = useState(false);
   const [message, setMessage] = useState("Loading submissions…");
   const load = () =>
     fetch("/api/submissions")
@@ -4950,7 +4953,7 @@ function Submissions() {
   const publishAllReady = async () => {
     const ready = submissions.filter((submission) => submission.status === "reviewed");
     if (!ready.length) return;
-    if (!window.confirm(`Publish ${ready.length} teacher-approved result${ready.length === 1 ? "" : "s"} to students now?`)) return;
+    setConfirmPublishAll(false);
     setQueueAction("all-ready");
     setMessage(`Publishing ${ready.length} approved result${ready.length === 1 ? "" : "s"}…`);
     const results = await Promise.all(
@@ -5359,12 +5362,29 @@ function Submissions() {
           <button
             className="primary"
             disabled={queueAction === "all-ready"}
-            onClick={publishAllReady}
+            onClick={() => setConfirmPublishAll(true)}
           >
             {queueAction === "all-ready" ? "Publishing…" : `Publish all ready (${queueCounts.ready})`}
           </button>
         )}
       </div>
+      {confirmPublishAll && (
+        <ConfirmDialog
+          eyebrow="PUBLISH RESULTS"
+          title="Publish these results to students?"
+          description="Each student below will be able to see their marks and feedback straight away. Publishing cannot be undone from here."
+          items={submissions
+            .filter((submission) => submission.status === "reviewed")
+            .map(
+              (submission) =>
+                `${submission.student_name} — ${submission.total_final ?? submission.total_proposed ?? 0} marks`,
+            )}
+          confirmLabel="Publish results"
+          busy={queueAction === "all-ready"}
+          onConfirm={publishAllReady}
+          onCancel={() => setConfirmPublishAll(false)}
+        />
+      )}
       <div className="marking-queue-stats">
         <button className={queueFilter === "attention" ? "active" : ""} onClick={() => setQueueFilter("attention")}>
           <small>NEEDS REVIEW</small><b>{queueCounts.attention}</b><span>Teacher check required</span>
@@ -5385,7 +5405,7 @@ function Submissions() {
             </h3>
             <p>Automatic proposals remain private until teacher approval.</p>
           </div>
-          <select value={queueFilter} onChange={(event) => setQueueFilter(event.target.value as typeof queueFilter)}>
+          <select aria-label="Filter submissions" value={queueFilter} onChange={(event) => setQueueFilter(event.target.value as typeof queueFilter)}>
             <option value="attention">Needs review</option>
             <option value="ready">Ready to publish</option>
             <option value="published">Published</option>
@@ -5906,10 +5926,18 @@ function QuestionImage({
       cancelled = true;
     };
   }, [assignmentId, pdf, question]);
+  // The question is a cropped bitmap of the original paper, so without a name
+  // a screen reader reports nothing at all. extracted_question_text is already
+  // stored per question and already sent to the client, so use it when it is
+  // there and say plainly when it is not, rather than leaving silence.
+  const marks = question.marks ? `, ${question.marks} mark${question.marks === 1 ? "" : "s"}` : "";
+  const description = question.extracted_question_text?.trim()
+    ? `Question ${question.label}${marks}. ${question.extracted_question_text.trim()}`
+    : `Question ${question.label}${marks}. Shown as an image from the question paper; no text version is available.`;
   return (
     <div className="question-image">
       {message && <p>{message}</p>}
-      <canvas ref={canvasRef} />
+      <canvas ref={canvasRef} role="img" aria-label={description} />
     </div>
   );
 }
