@@ -1,10 +1,10 @@
 @import "tailwindcss";
 :root {
-  --ink: #29263c;
-  --muted: #8a8798;
-  --purple: #6c63db;
-  --line: #e9e6ef;
-  --paper: #f7f6fa;
+  --ink: #17212e;
+  --muted: #5b6472;
+  --purple: #a6323d;
+  --line: #dce1e6;
+  --paper: #f2f4f6;
 }
 
 * {
@@ -14,7 +14,7 @@ body {
   margin: 0;
   background: var(--paper);
   color: var(--ink);
-  font-family: Arial, sans-serif;
+  font-family: var(--font-public-sans), Arial, sans-serif;
 }
 button,
 input,
@@ -4732,5 +4732,13 @@ label {
 .pe-redesign .badge.amber {
   background: #f6e9ea;
   color: var(--purple);
+}
+
+
+
+/* Global heading typography -- expanding the design pilot's serif
+   headings (previously scoped to .pe-redesign only) app-wide. */
+h1, h2, h3 {
+  font-family: var(--font-source-serif), Georgia, serif;
 }
 
