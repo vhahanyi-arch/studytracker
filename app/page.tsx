@@ -9,148 +9,29 @@ import {
   useUser,
 } from "@clerk/nextjs";
 import { igcsePhysicsSyllabus } from "@/lib/physics-syllabus";
-type Role = "choose" | "teacher" | "student";
-type TeacherView = "dashboard" | "stage7" | "stage89" | "physics" | "physicsExam" | "papers" | "students" | "submissions";
-type AssignmentSummary = {
-  id: string;
-  title: string;
-  subject: string;
-  syllabus: string;
-  paper_mode: "structured" | "multiple_choice";
-  due_date: string | null;
-  status: string;
-  lower_secondary_stage?: number | null;
-  is_practice_library?: boolean;
-  source_year?: string | null;
-  resource_kind?: "exam" | "homework";
-  content_start_page?: number | null;
-  content_end_page?: number | null;
-};
-type StudentPaperStatus =
-  | "not_started"
-  | "in_progress"
-  | "submitted"
-  | "awaiting_review"
-  | "result_available";
-const questions = [
-  {
-    n: "1(a)",
-    topic: "Number",
-    marks: 2,
-    text: "Evaluate 3.6 × 2.5 and give your answer.",
-    answer: "9",
-  },
-  {
-    n: "1(b)",
-    topic: "Number",
-    marks: 3,
-    text: "A value increases from 80 to 92. Calculate the percentage increase.",
-    answer: "15",
-  },
-  {
-    n: "2",
-    topic: "Algebra",
-    marks: 4,
-    text: "Solve 3x² − 12 = 0. Give both values of x.",
-    answer: "-2, 2",
-  },
-  {
-    n: "3",
-    topic: "Geometry",
-    marks: 5,
-    text: "A right-angled triangle has shorter sides 7 cm and 9 cm. Calculate its area.",
-    answer: "31.5",
-  },
-];
-const stage7Chapters = [
-  { id: "integers", strand: "Number", title: "Integers and place value", summary: "Ordering, rounding, operations and negative numbers", icon: "±" },
-  { id: "fractions", strand: "Number", title: "Fractions, decimals and percentages", summary: "Equivalence, comparison and calculations", icon: "%" },
-  { id: "ratio", strand: "Number", title: "Ratio and proportion", summary: "Sharing, rates and real-life proportion", icon: ":" },
-  { id: "powers", strand: "Number", title: "Powers and roots", summary: "Squares, cubes, roots and index notation", icon: "²" },
-  { id: "expressions", strand: "Algebra", title: "Expressions and formulae", summary: "Terms, substitution and simplifying expressions", icon: "x" },
-  { id: "equations", strand: "Algebra", title: "Equations and inequalities", summary: "Solving and representing simple relationships", icon: "=" },
-  { id: "sequences", strand: "Algebra", title: "Sequences and functions", summary: "Term-to-term rules and pattern reasoning", icon: "↗" },
-  { id: "geometry", strand: "Geometry and Measure", title: "Angles and geometrical reasoning", summary: "Angle facts, constructions and properties", icon: "△" },
-  { id: "measure", strand: "Geometry and Measure", title: "Perimeter, area and volume", summary: "Measures, formulae and compound shapes", icon: "□" },
-  { id: "transformations", strand: "Geometry and Measure", title: "Position and transformations", summary: "Coordinates, symmetry and transformations", icon: "◇" },
-  { id: "statistics", strand: "Statistics and Probability", title: "Statistics and data", summary: "Representing, interpreting and comparing data", icon: "▥" },
-  { id: "probability", strand: "Statistics and Probability", title: "Probability", summary: "Probability scales, outcomes and experiments", icon: "◉" },
-];
-
-type LowerSecondaryUnit = { id: string; strand: string; title: string; summary: string; icon: string };
-const stage8Units: LowerSecondaryUnit[] = [
-  { id:"s8-u1", strand:"Number", title:"1. Integers", summary:"Integer operations, factors, multiples, primes, roots and indices", icon:"±" },
-  { id:"s8-u2", strand:"Algebra", title:"2. Expressions, formulae and equations", summary:"Simplifying, substituting, expanding and solving", icon:"x" },
-  { id:"s8-u3", strand:"Number", title:"3. Place value and rounding", summary:"Place value, estimation and accurate rounding", icon:"≈" },
-  { id:"s8-u4", strand:"Number", title:"4. Decimals", summary:"Decimal operations and problem solving", icon:"." },
-  { id:"s8-u5", strand:"Geometry and Measure", title:"5. Angles and constructions", summary:"Angle properties and accurate constructions", icon:"∠" },
-  { id:"s8-u6", strand:"Statistics", title:"6. Collecting data", summary:"Sampling, questionnaires and data collection", icon:"▥" },
-  { id:"s8-u7", strand:"Number", title:"7. Fractions", summary:"Equivalent fractions and fraction calculations", icon:"½" },
-  { id:"s8-u8", strand:"Geometry and Measure", title:"8. Shapes and symmetry", summary:"Properties, congruence and symmetry", icon:"◇" },
-  { id:"s8-u9", strand:"Algebra", title:"9. Sequences and functions", summary:"Rules, terms, functions and patterns", icon:"↗" },
-  { id:"s8-u10", strand:"Number", title:"10. Percentages", summary:"Percentage calculations and applications", icon:"%" },
-  { id:"s8-u11", strand:"Algebra", title:"11. Graphs", summary:"Coordinates, relationships and interpreting graphs", icon:"⌁" },
-  { id:"s8-u12", strand:"Number", title:"12. Ratio and proportion", summary:"Ratios, rates and proportional reasoning", icon:":" },
-  { id:"s8-u13", strand:"Probability", title:"13. Probability", summary:"Outcomes, experiments and probability models", icon:"◉" },
-  { id:"s8-u14", strand:"Geometry and Measure", title:"14. Position and transformation", summary:"Coordinates and geometric transformations", icon:"↻" },
-  { id:"s8-u15", strand:"Geometry and Measure", title:"15. Distance, area and volume", summary:"Measurement, formulae and compound problems", icon:"□" },
-  { id:"s8-u16", strand:"Statistics", title:"16. Interpreting and discussing results", summary:"Analyse, compare and communicate conclusions", icon:"▤" },
-];
-const stage9Units: LowerSecondaryUnit[] = [
-  { id:"s9-u1", strand:"Number", title:"1. Number and calculation", summary:"Number properties, operations and problem solving", icon:"±" },
-  { id:"s9-u2", strand:"Algebra", title:"2. Expressions and formulae", summary:"Manipulating expressions and using formulae", icon:"x" },
-  { id:"s9-u3", strand:"Number", title:"3. Decimals, percentages and rounding", summary:"Accuracy, percentages and decimal calculations", icon:"%" },
-  { id:"s9-u4", strand:"Algebra", title:"4. Equations and inequalities", summary:"Solve and represent equations and inequalities", icon:"=" },
-  { id:"s9-u5", strand:"Geometry and Measure", title:"5. Angles", summary:"Angle relationships and geometrical reasoning", icon:"∠" },
-  { id:"s9-u6", strand:"Statistics", title:"6. Statistical investigations", summary:"Plan investigations and work with data", icon:"▥" },
-  { id:"s9-u7", strand:"Geometry and Measure", title:"7. Shapes and measurements", summary:"Properties, constructions and measurement", icon:"△" },
-  { id:"s9-u8", strand:"Number", title:"8. Fractions", summary:"Fraction calculations and applications", icon:"½" },
-  { id:"s9-u9", strand:"Algebra", title:"9. Sequences and functions", summary:"Generate, describe and analyse relationships", icon:"↗" },
-  { id:"s9-u10", strand:"Algebra", title:"10. Graphs", summary:"Plot, interpret and use graphs", icon:"⌁" },
-  { id:"s9-u11", strand:"Number", title:"11. Ratio and proportion", summary:"Proportional change, scale and rates", icon:":" },
-  { id:"s9-u12", strand:"Probability", title:"12. Probability", summary:"Combined outcomes and experimental probability", icon:"◉" },
-  { id:"s9-u13", strand:"Geometry and Measure", title:"13. Position and transformation", summary:"Coordinates, vectors and transformations", icon:"↻" },
-  { id:"s9-u14", strand:"Geometry and Measure", title:"14. Volume, surface area and symmetry", summary:"Three-dimensional measures and symmetry", icon:"▣" },
-  { id:"s9-u15", strand:"Statistics", title:"15. Interpreting and discussing results", summary:"Evaluate evidence and communicate conclusions", icon:"▤" },
-];
-
-type PhysicsUnit = { id: string; title: string; summary: string; icon: string; available: boolean };
-const igcsePhysicsUnits: PhysicsUnit[] = [
-  { id:"igcse-u1", title:"1.1 Physical quantities & measurement", summary:"SI units, conversions, precision and error types", icon:"⚖", available:true },
-  { id:"igcse-u2", title:"1.2 Motion", summary:"Speed, velocity, acceleration and motion graphs", icon:"→", available:true },
-  { id:"igcse-u3", title:"1.3–1.4 Mass, weight & density", summary:"Mass, weight, gravity and density calculations", icon:"◆", available:true },
-  { id:"igcse-u4", title:"1.5 Forces & their effects", summary:"Hooke's law, turning effects and equilibrium", icon:"↕", available:true },
-  { id:"igcse-u5", title:"1.6 Momentum", summary:"Momentum and conservation of momentum", icon:"⇒", available:true },
-  { id:"igcse-u6", title:"1.7 Energy, work & power", summary:"Energy transfers, work done and power", icon:"⚡", available:true },
-  { id:"igcse-u7", title:"1.8 Pressure", summary:"Pressure in solids, liquids and gases", icon:"▼", available:true },
-  { id:"igcse-u8", title:"2.1 Kinetic model of matter", summary:"States of matter and particle behaviour", icon:"◌", available:true },
-  { id:"igcse-u9", title:"2.2 Thermal properties & temperature", summary:"Thermal expansion, specific heat and temperature", icon:"🌡", available:true },
-  { id:"igcse-u10", title:"2.3 Thermal energy transfer", summary:"Conduction, convection and radiation", icon:"↺", available:true },
-  { id:"igcse-u11", title:"3.1 General wave properties", summary:"Wave terminology, speed, frequency and wavelength", icon:"∿", available:true },
-  { id:"igcse-u12", title:"3.2 Light", summary:"Reflection, refraction and lenses", icon:"☀", available:true },
-  { id:"igcse-u13", title:"3.3–3.4 Electromagnetic spectrum & sound", summary:"EM spectrum properties and sound waves", icon:"📡", available:true },
-  { id:"igcse-u14", title:"4.1 Magnetism", summary:"Magnetic fields, materials and electromagnets", icon:"🧲", available:true },
-  { id:"igcse-u15", title:"4.2 Electrical quantities", summary:"Charge, current, e.m.f., p.d., resistance and power", icon:"⏚", available:true },
-  { id:"igcse-u16", title:"4.3 Electric circuits", summary:"Circuit diagrams, series and parallel circuits", icon:"🔌", available:true },
-  { id:"igcse-u17", title:"4.4 Electrical safety", summary:"Hazards, fuses, earthing and double insulation", icon:"⚠", available:true },
-  { id:"igcse-u18", title:"4.5 Electromagnetic effects", summary:"Induction, generators, motors and transformers", icon:"🔄", available:true },
-  { id:"igcse-u19", title:"5.1 The nuclear model of the atom", summary:"Atomic structure, protons, neutrons and isotopes", icon:"⚛", available:true },
-  { id:"igcse-u20", title:"5.2 Radioactivity", summary:"Nuclear radiation, decay and half-life", icon:"☢", available:true },
-  { id:"igcse-u21", title:"6.1–6.2 Space physics", summary:"The Solar System, stars and the Universe", icon:"🌌", available:true },
-];
-const asPhysicsUnits: PhysicsUnit[] = [
-  { id:"as-u1", title:"1. Physical quantities & units", summary:"SI units, errors and dimensional analysis", icon:"⚖", available:true },
-  { id:"as-u2", title:"2. Kinematics", summary:"Motion graphs, equations of motion and projectiles", icon:"→", available:true },
-  { id:"as-u3", title:"3. Dynamics", summary:"Newton's laws, momentum and collisions", icon:"⇒", available:true },
-  { id:"as-u4", title:"4. Forces, density & pressure", summary:"Equilibrium, moments, density and pressure", icon:"↕", available:true },
-  { id:"as-u5", title:"5. Work, energy and power", summary:"Work, energy conservation, efficiency, power and energy changes", icon:"⚡", available:true },
-  { id:"as-u6", title:"6. Deformation of solids", summary:"Hooke's law, stress, strain and the Young modulus", icon:"◆", available:true },
-  { id:"as-u7", title:"7. Waves", summary:"Wave motion, Doppler effect, electromagnetic spectrum and polarisation", icon:"∿", available:true },
-  { id:"as-u8", title:"8. Superposition", summary:"Stationary waves, interference, diffraction and gratings", icon:"≈", available:true },
-  { id:"as-u9", title:"9. Electricity", summary:"Charge, current, resistance, resistivity and power", icon:"⏚", available:true },
-  { id:"as-u10", title:"10. D.C. circuits", summary:"Kirchhoff’s laws, internal resistance and potential dividers", icon:"⎋", available:true },
-  { id:"as-u11", title:"11. Particle physics", summary:"Nuclei, decay equations, quarks and leptons", icon:"☢", available:true },
-];
+import {
+  type TeacherView,
+  type AssignmentSummary,
+  type StudentPaperStatus,
+  type LowerSecondaryUnit,
+  type PhysicsUnit,
+  questions,
+  stage7Chapters,
+  stage8Units,
+  stage9Units,
+  igcsePhysicsUnits,
+  asPhysicsUnits,
+} from '@/lib/portal-content';
+import {
+  type AnswerRow,
+  type AnswerDraft,
+  readAnswerDraft,
+  writeAnswerDraft,
+  removeAnswerDraft,
+  readCloudAnswerDraft,
+  writeCloudAnswerDraft,
+  removeCloudAnswerDraft,
+} from '@/lib/answer-drafts';
 
 export default function Home() {
   return (
@@ -373,59 +254,6 @@ function PreviewBadge() {
   return <span className="preview-badge">SECURE TEST LOGIN ACTIVE</span>;
 }
 
-function PortalChoice({ onChoose }: { onChoose: (r: Role) => void }) {
-  return (
-    <div className="portal-choice">
-      <header>
-        <Logo />
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <PreviewBadge />
-          <UserButton />
-        </div>
-      </header>
-      <section>
-        <div className="choice-copy">
-          <p>CAMBRIDGE LEARNING WORKSPACE</p>
-          <h1>
-            One place for teaching,
-            <br />
-            practice and progress.
-          </h1>
-          <h2>
-            Your sign-in is protected by Clerk. Choose a workspace to continue
-            testing.
-          </h2>
-        </div>
-        <div className="role-grid">
-          <button onClick={() => onChoose("teacher")}>
-            <span className="role-icon teacher">▤</span>
-            <small>FOR EDUCATORS</small>
-            <h3>Teacher portal</h3>
-            <p>
-              Create classes, upload papers, assign revision and review student
-              answers.
-            </p>
-            <b>Open teacher portal →</b>
-          </button>
-          <button onClick={() => onChoose("student")}>
-            <span className="role-icon student">π</span>
-            <small>FOR LEARNERS</small>
-            <h3>Student portal</h3>
-            <p>
-              Open assigned papers, submit typed or handwritten work and view
-              feedback.
-            </p>
-            <b>Open student portal →</b>
-          </button>
-        </div>
-        <aside>
-          🔒 Authentication is active. Teacher and student roles will be
-          assigned when the first test accounts are created.
-        </aside>
-      </section>
-    </div>
-  );
-}
 
 function Shell({
   role,
@@ -1825,32 +1653,6 @@ function Stage89Student({ back }:{ back:()=>void }) {
   </>;
 }
 
-function Stage89StudentLegacy({ back }:{ back:()=>void }) {
-  const [stage, setStage] = useState<8 | 9>(8);
-  const [records, setRecords] = useState<Record<number,{chapters:string[];enrolled:boolean}>>({8:{chapters:[],enrolled:false},9:{chapters:[],enrolled:false}});
-  const [loaded, setLoaded] = useState(false);
-  const [progress,setProgress]=useState<Record<string,{attempts:number;average:number;strong_sets:number;mastered:boolean}>>({});
-  const [practice,setPractice]=useState<LowerSecondaryUnit|null>(null);
-  const [session,setSession]=useState<{id:string;difficulty:string;questions:Array<{templateId?:string;objective?:string;difficulty?:string;answerFormat?:string;prompt:string;hint:string;source?:PastPaperPracticeSource}>}|null>(null);
-  const [answers,setAnswers]=useState<string[]>([]),[hints,setHints]=useState<boolean[]>([]),[cursor,setCursor]=useState(0),[result,setResult]=useState<any>(null),[message,setMessage]=useState("");
-  useEffect(()=>{Promise.all([8,9].map(value=>fetch(`/api/lower-secondary/focus?stage=${value}`).then(response=>response.json()))).then(results=>{const next:any={};results.forEach(result=>next[result.stage]={chapters:Array.isArray(result.chapters)?result.chapters:[],enrolled:Boolean(result.enrolled)});setRecords(next);const first=([8,9] as const).find(value=>next[value]?.enrolled);if(first)setStage(first);setLoaded(true);}).catch(()=>setLoaded(true));},[]);
-  useEffect(()=>{fetch(`/api/lower-secondary/practice?stage=${stage}`).then(response=>response.json()).then(data=>{const next:Record<string,any>={};(Array.isArray(data.units)?data.units:[]).forEach((item:any)=>next[item.chapter_id]=item);setProgress(next);});},[stage]);
-  const enrolledStages = ([8,9] as const).filter(value=>records[value]?.enrolled);
-  const units = stage===8?stage8Units:stage9Units;
-  const focus = records[stage]?.chapters || [];
-  const startPractice=async(unit:LowerSecondaryUnit)=>{setMessage("Preparing a fresh practice set…");const response=await fetch("/api/lower-secondary/practice",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"start",stage,chapter:unit.id})});const data=await response.json();if(!response.ok){setMessage(data.error||"Practice could not start.");return;}setPractice(unit);setSession(data);setAnswers(Array(data.questions.length).fill(""));setHints(Array(data.questions.length).fill(false));setCursor(0);setResult(null);setMessage("");};
-  const submitPractice=async()=>{if(!session||!practice)return;setMessage("Marking and saving your set…");const response=await fetch("/api/lower-secondary/practice",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"submit",id:session.id,answers,hints})});const data=await response.json();if(!response.ok){setMessage(data.error||"The set could not be saved.");return;}setResult(data);setProgress(current=>({...current,[practice.id]:{attempts:(current[practice.id]?.attempts||0)+1,average:data.score,strong_sets:data.strong_sets,mastered:data.mastered}}));setMessage("");};
-  const closePractice=()=>{setPractice(null);setSession(null);setResult(null);setMessage("");};
-  if(loaded&&!enrolledStages.length)return <><div className="portal-heading"><div><p>CAMBRIDGE LOWER SECONDARY MATHEMATICS</p><h1>Stages 8 and 9 mastery</h1><h2>Your teacher has not added you to a Stage 8 or Stage 9 class yet.</h2></div><button onClick={back}>← Assigned papers</button></div><section className="panel dashboard-empty">Ask your teacher to add your account under Stages 8 &amp; 9.</section></>;
-  if(practice&&session){const question=session.questions[cursor];if(result)return <section className="stage7-practice panel practice-summary"><header><button onClick={closePractice}>← Curriculum</button><div><small>STAGE {stage} · PRACTICE COMPLETE</small><h2>{practice.title}</h2></div><span>{result.mastered?"Mastered":"Keep practising"}</span></header><main><div className="mastery-score"><b>{result.score}%</b><span>{result.score>=80?"Strong set achieved":"Target: 80%"}</span></div><h2>{result.mastered?"Unit mastery achieved":"Your worked review"}</h2><p>{result.strong_sets} of 2 strong sets completed · {result.hints_used} hints used</p><div className="worked-review">{result.results.map((item:any,index:number)=><article className={item.correct?"correct":"retry"} key={index}><span>{item.correct?"✓":"!"}</span><div><b>Question {index+1}: {item.prompt}</b><p>Your answer: {item.answer||"No answer"}</p><strong>{item.solution}</strong></div></article>)}</div></main><footer><button onClick={closePractice}>Return to curriculum</button><button className="primary" onClick={()=>startPractice(practice)}>Start a fresh set →</button></footer></section>;
-    return <section className="stage7-practice panel"><header><button onClick={closePractice}>← Curriculum</button><div><small>STAGE {stage} PRACTICE · {session.difficulty.toUpperCase()}</small><h2>{practice.title}</h2></div><span>Question {cursor+1} of {session.questions.length}</span></header><div className="practice-progress"><i style={{width:`${((cursor+1)/session.questions.length)*100}%`}}/></div><main><small>QUESTION {cursor+1}</small>{question.objective&&<p className="practice-objective">{question.objective}</p>}<h1>{question.prompt}</h1>{question.source&&<PastPaperPracticeCrop source={question.source}/>} {hints[cursor]&&<p className="practice-hint">Hint: {question.hint}</p>}<label>Your answer{question.answerFormat&&<small className="answer-format">Answer format: {question.answerFormat}</small>}<input value={answers[cursor]} placeholder={question.answerFormat||"Enter your answer"} onChange={event=>setAnswers(answers.map((value,index)=>index===cursor?event.target.value:value))} autoFocus/></label></main><footer><button onClick={()=>setHints(hints.map((value,index)=>index===cursor?true:value))}>{hints[cursor]?"Hint shown":"Show hint"}</button><div><button disabled={cursor===0} onClick={()=>setCursor(cursor-1)}>← Previous</button>{cursor<session.questions.length-1?<button className="primary" onClick={()=>setCursor(cursor+1)}>Next →</button>:<button className="primary" onClick={submitPractice}>Finish &amp; mark set →</button>}</div></footer>{message&&<p className="queue-message">{message}</p>}</section>;
-  }
-  return <><div className="portal-heading"><div><p>CAMBRIDGE LOWER SECONDARY · STAGE {stage}</p><h1>My mathematics mastery</h1><h2>This week’s focus is highlighted. Every unit stays open for revision.</h2></div><div className="stage89-switch">{enrolledStages.map(value=><button key={value} className={stage===value?"primary":""} onClick={()=>setStage(value)}>Stage {value}</button>)}<button onClick={back}>← Assigned papers</button></div></div>
-    <section className="weekly-focus"><header><div><small>YOUR FOCUS THIS WEEK</small><h2>Stage {stage} priorities</h2><p>Work towards two strong practice sets at 80% or higher.</p></div><b>{focus.length} units</b></header><div>{focus.length?units.filter(unit=>focus.includes(unit.id)).map(unit=>{const item=progress[unit.id];return <article key={unit.id}><span>{unit.icon}</span><div><b>{unit.title}</b><p>{item?.mastered?"Mastered":`${item?.strong_sets||0} of 2 strong sets`}</p><i><em style={{width:`${Math.min(100,((item?.strong_sets||0)/2)*100)}%`}}/></i></div><button onClick={()=>startPractice(unit)}>{item?.attempts?"Continue practice →":"Start practice →"}</button></article>}):<p className="dashboard-empty">Your teacher has not selected a weekly focus yet.</p>}</div></section>
-    {message&&<p className="queue-message panel">{message}</p>}
-    <div className="stage7-library-head"><div><small>ALL STAGE {stage} UNITS</small><h2>Curriculum library</h2><p>All {units.length} units remain available for revision.</p></div><span>{Object.values(progress).filter(item=>item.mastered).length} of {units.length} mastered</span></div><div className="stage7-chapter-grid student">{units.map(unit=>{const item=progress[unit.id];return <article key={unit.id} className={focus.includes(unit.id)?"focus":""}><span>{unit.icon}</span><small>{unit.strand}</small><h3>{unit.title}</h3><p>{unit.summary}</p><div><em>{item?.mastered?"Mastered":item?.attempts?"In progress":focus.includes(unit.id)?"This week":"Not started"}</em><b>{item?.attempts?`${item.average}%`:"—"}</b></div><button onClick={()=>startPractice(unit)}>{focus.includes(unit.id)?"Start weekly focus":"Practise unit"} →</button></article>})}</div>
-  </>;
-}
 
 function Stage7Teacher() {
   const [focus, setFocus] = useState<string[]>([]);
@@ -5641,93 +5443,6 @@ function Submissions() {
   );
 }
 
-type AnswerRow = {
-  question: string;
-  formula?: string;
-  working?: string;
-  answer: string;
-  answers?: string[];
-  workMode?: "answer" | "working" | "formula";
-  drawing?: string;
-  showDrawing?: boolean;
-};
-
-type AnswerDraft = {
-  rows: AnswerRow[];
-  activeIndex: number;
-  mode: "typed" | "handwritten" | "both" | "paper";
-  paperPages?: Record<number, string>;
-  paperPageNumber?: number;
-  savedAt: string;
-};
-
-const openDraftStore = () =>
-  new Promise<IDBDatabase>((resolve, reject) => {
-    const request = indexedDB.open("studytrack-student-drafts", 1);
-    request.onupgradeneeded = () => {
-      if (!request.result.objectStoreNames.contains("drafts"))
-        request.result.createObjectStore("drafts");
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-
-async function readAnswerDraft(key: string) {
-  const database = await openDraftStore();
-  return new Promise<AnswerDraft | null>((resolve, reject) => {
-    const request = database.transaction("drafts").objectStore("drafts").get(key);
-    request.onsuccess = () => resolve((request.result as AnswerDraft) || null);
-    request.onerror = () => reject(request.error);
-  }).finally(() => database.close());
-}
-
-async function writeAnswerDraft(key: string, draft: AnswerDraft) {
-  const database = await openDraftStore();
-  return new Promise<void>((resolve, reject) => {
-    const transaction = database.transaction("drafts", "readwrite");
-    transaction.objectStore("drafts").put(draft, key);
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
-  }).finally(() => database.close());
-}
-
-async function removeAnswerDraft(key: string) {
-  const database = await openDraftStore();
-  return new Promise<void>((resolve, reject) => {
-    const transaction = database.transaction("drafts", "readwrite");
-    transaction.objectStore("drafts").delete(key);
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
-  }).finally(() => database.close());
-}
-
-async function readCloudAnswerDraft(assignmentId: string) {
-  const response = await fetch(`/api/assignments/${assignmentId}/draft`, {
-    cache: "no-store",
-  });
-  if (!response.ok) throw new Error("Cloud draft unavailable");
-  const result = await response.json();
-  return (result.draft as AnswerDraft | null) || null;
-}
-
-async function writeCloudAnswerDraft(
-  assignmentId: string,
-  draft: AnswerDraft,
-) {
-  const response = await fetch(`/api/assignments/${assignmentId}/draft`, {
-    method: "PUT",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ draft }),
-  });
-  if (!response.ok) throw new Error("Cloud draft unavailable");
-}
-
-async function removeCloudAnswerDraft(assignmentId: string) {
-  const response = await fetch(`/api/assignments/${assignmentId}/draft`, {
-    method: "DELETE",
-  });
-  if (!response.ok) throw new Error("Cloud draft could not be removed");
-}
 
 function PdfAnnotator({
   assignment,
