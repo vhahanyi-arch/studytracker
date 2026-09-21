@@ -1,5 +1,7 @@
 # AS Physics 9702 — Waves checkpoint
 
+Historical Topic 7 checkpoint. The latest status is in the [Topic 8 verification report](as-physics-superposition-verification.md). Topics 1–8 are now enabled.
+
 Topic 7 is implemented as `structuredAsWaves`, registered as `as-u7`, and enabled in `app/page.tsx`. The existing architecture is preserved: six questions in each of three tiers, 18 templates, `sq`, `validateUnitSet`, `answerMatches`, and the public generation API. The [revision notes and formula sheet](as-physics-notes/topic-7-waves.md) accompany the generator. No push or deployment was performed.
 
 ## Source, scope and coverage

@@ -146,7 +146,7 @@ const asPhysicsUnits: PhysicsUnit[] = [
   { id:"as-u5", title:"5. Work, energy and power", summary:"Work, energy conservation, efficiency, power and energy changes", icon:"⚡", available:true },
   { id:"as-u6", title:"6. Deformation of solids", summary:"Hooke's law, stress, strain and the Young modulus", icon:"◆", available:true },
   { id:"as-u7", title:"7. Waves", summary:"Wave motion, Doppler effect, electromagnetic spectrum and polarisation", icon:"∿", available:true },
-  { id:"as-u8", title:"8. Superposition", summary:"Interference, diffraction and stationary waves", icon:"≈", available:false },
+  { id:"as-u8", title:"8. Superposition", summary:"Stationary waves, interference, diffraction and gratings", icon:"≈", available:true },
   { id:"as-u9", title:"9. Electricity", summary:"Current, resistance, resistivity and power", icon:"⏚", available:false },
   { id:"as-u10", title:"10. D.C. circuits", summary:"Circuit analysis, EMF and internal resistance", icon:"⎋", available:false },
   { id:"as-u11", title:"11. Particle physics", summary:"Atomic structure, particles and radiation", icon:"☢", available:false },
