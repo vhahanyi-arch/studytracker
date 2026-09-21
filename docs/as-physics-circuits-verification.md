@@ -63,4 +63,4 @@ node scripts/test-physics-shared-regression.mjs
 node $topicCompiler --noEmit --strict --incremental false
 ```
 
-Previous checkpoint: [Topic 9 — Electricity](as-physics-electricity-verification.md). Next syllabus topic: **11 — Particle physics**.
+Previous checkpoint: [Topic 9 — Electricity](as-physics-electricity-verification.md). Topic 11 is now recorded in the [Particle physics checkpoint](as-physics-particles-verification.md).

@@ -149,7 +149,7 @@ const asPhysicsUnits: PhysicsUnit[] = [
   { id:"as-u8", title:"8. Superposition", summary:"Stationary waves, interference, diffraction and gratings", icon:"≈", available:true },
   { id:"as-u9", title:"9. Electricity", summary:"Charge, current, resistance, resistivity and power", icon:"⏚", available:true },
   { id:"as-u10", title:"10. D.C. circuits", summary:"Kirchhoff’s laws, internal resistance and potential dividers", icon:"⎋", available:true },
-  { id:"as-u11", title:"11. Particle physics", summary:"Atomic structure, particles and radiation", icon:"☢", available:false },
+  { id:"as-u11", title:"11. Particle physics", summary:"Nuclei, decay equations, quarks and leptons", icon:"☢", available:true },
 ];
 
 export default function Home() {

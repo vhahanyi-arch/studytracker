@@ -1,6 +1,6 @@
 # AS Physics 9702 revision references
 
-Based on the supplied Cambridge International AS & A Level Physics 9702 syllabus, version 1, examinations 2025–2027. These references cover AS theory objectives; they do not replace practical assessment preparation.
+Based on the supplied Cambridge International AS & A Level Physics 9702 syllabus, version 1, examinations 2025–2027. All 11 AS theory topics now have references, covering the 145 objectives in the checked syllabus record. These references do not replace practical assessment preparation.
 
 | Topic | Reference | Syllabus pages | Objectives |
 |---|---|---|---|
@@ -14,6 +14,7 @@ Based on the supplied Cambridge International AS & A Level Physics 9702 syllabus
 | 8 | [Superposition](topic-8-superposition.md) | 22 | 12 |
 | 9 | [Electricity](topic-9-electricity.md) | 23 | 15 |
 | 10 | [D.C. circuits](topic-10-dc-circuits.md) | 24; symbols 61–62 | 16 |
+| 11 | [Particle physics](topic-11-particle-physics.md) | 25 | 18 |
 
 Each reference separates concepts from formulas, identifies the syllabus objectives, and gives symbols, SI units and conditions of use. Formula tables include equations explicitly required and direct mathematical expressions of required definitions or methods. Derived applications and cross-topic formulas are labelled; they are not additional syllabus objectives.
 
