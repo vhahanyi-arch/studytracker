@@ -35,8 +35,12 @@ jobs:
         # Placeholder values only. The build imports modules that construct a
         # Neon client and read Clerk keys at module scope, so these must parse,
         # but nothing here connects to a real service.
+        # The publishable key is decoded by ClerkProvider while /_not-found is
+        # prerendered, so it has to be a well-formed key and not just a string:
+        # base64 of a host ending in "$". This one decodes to
+        # ci-build-placeholder.clerk.accounts.dev$ and reaches no real instance.
         env:
           DATABASE_URL: postgres://build:build@localhost:5432/build
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2ktYnVpbGQtcGxhY2Vob2xkZXIk
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2ktYnVpbGQtcGxhY2Vob2xkZXIuY2xlcmsuYWNjb3VudHMuZGV2JA==
           CLERK_SECRET_KEY: sk_test_ci_build_placeholder
         run: pnpm build
