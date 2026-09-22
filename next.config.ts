@@ -17,6 +17,27 @@ const nextConfig: NextConfig = {
   // lib/physics-exam-extraction.ts -- this class of PDF-processing library
   // has been observed needing both mitigations together on Vercel.
   serverExternalPackages: ["@napi-rs/canvas", "pdfjs-dist"],
+  // One canonical address. Clerk binds a production instance to a single
+  // domain and its cookies only work there, so anyone arriving on the
+  // *.vercel.app address would be unable to sign in once that move happens.
+  //
+  // Deliberately NOT permanent: a 308 is cached hard by browsers, and undoing
+  // one means asking people to clear site data. Switch to permanent: true once
+  // studytrack.win has proven itself.
+  //
+  // Only the two production aliases are matched. Preview deployments keep
+  // their own generated hostnames so they stay reachable.
+  async redirects() {
+    const canonical = "https://studytrack.win";
+    return ["studytrack-cambridge-planner.vercel.app", "studytrack-cambridge-planner-mo-0b56.vercel.app"].map(
+      (host) => ({
+        source: "/:path*",
+        has: [{ type: "host" as const, value: host }],
+        destination: `${canonical}/:path*`,
+        permanent: false,
+      }),
+    );
+  },
 };
 
 export default nextConfig;
