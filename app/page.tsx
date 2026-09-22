@@ -617,46 +617,33 @@ function TeacherDashboard({
 
   return (
     <>
-      <div className="portal-heading">
-        <div>
-          <p>{today}</p>
-          <h1>Welcome back, {firstName}</h1>
-          <h2>Your classes, papers and marking work are summarised here.</h2>
+      {/* A teacher opens this between lessons to answer one question: is
+          anything waiting for me. That answer is the page, and the supporting
+          numbers sit beneath it rather than competing with it. */}
+      <header className="dash-hero">
+        <p className="dash-date">{today}, {firstName}</p>
+        <div className={dashboard && !dashboard.needs_review ? "dash-headline clear" : "dash-headline"}>
+          <b>{dashboard?.needs_review ?? "—"}</b>
+          <div>
+            <h1>papers waiting to be marked</h1>
+            <p>
+              {!dashboard
+                ? "Checking your marking queue…"
+                : dashboard.needs_review
+                  ? "Open the marking queue to review them."
+                  : "Everything handed in has been marked and published."}
+            </p>
+          </div>
         </div>
-        <button className="primary" onClick={upload}>
-          ＋ Upload & assign paper
-        </button>
-      </div>
-      <div className="teacher-stats">
-        <article>
-          <div>
-            <small>Active students</small>
-            <b>{dashboard?.active_students ?? "—"}</b>
-            <em>Assigned across your papers</em>
-          </div>
-        </article>
-        <article>
-          <div>
-            <small>Waiting to be marked</small>
-            <b>{dashboard?.needs_review ?? "—"}</b>
-            <em>{dashboard?.needs_review ? "Ready for your approval" : "Queue is clear"}</em>
-          </div>
-        </article>
-        <article>
-          <div>
-            <small>Papers running</small>
-            <b>{dashboard?.active_papers ?? "—"}</b>
-            <em>Open to the students you assigned them to</em>
-          </div>
-        </article>
-        <article>
-          <div>
-            <small>Published average</small>
-            <b>{dashboard ? `${dashboard.class_average}%` : "—"}</b>
-            <em>Across results you have published</em>
-          </div>
-        </article>
-      </div>
+        <div className="dash-actions">
+          <button className="primary" onClick={upload}>Upload &amp; assign paper</button>
+        </div>
+        <dl className="dash-figures">
+          <div><dt>Students</dt><dd>{dashboard?.active_students ?? "—"}</dd></div>
+          <div><dt>Papers running</dt><dd>{dashboard?.active_papers ?? "—"}</dd></div>
+          <div><dt>Published average</dt><dd>{dashboard ? `${dashboard.class_average}%` : "—"}</dd></div>
+        </dl>
+      </header>
       <div className="teacher-grid">
         <section className="panel">
           <header>
@@ -820,9 +807,18 @@ function PhysicsTeacher({ level }: { level: "igcse" | "as" }) {
     }).catch(()=>setState("Physics practice activity could not be loaded."));
   },[level,view]);
   return <>
-    <div className="portal-heading">
-      <div><p>{level === "as" ? "CAMBRIDGE AS LEVEL PHYSICS 9702" : "CAMBRIDGE IGCSE PHYSICS 0625"}</p><h1>{level === "as" ? "AS Level Physics" : "IGCSE Physics"}</h1><h2>See how students are progressing through generated {level === "as" ? "AS Level" : "IGCSE"} Physics practice sets.</h2></div>
-    </div>
+    <section className="subject-slab physics">
+      <div>
+        <p className="slab-code">{level === "as" ? "Cambridge International AS Level Physics 9702" : "Cambridge IGCSE Physics 0625"}</p>
+        <h1>{level === "as" ? "AS Level Physics" : "IGCSE Physics"}</h1>
+        <p className="slab-note">See how students are progressing through generated {level === "as" ? "AS Level" : "IGCSE"} Physics practice sets.</p>
+      </div>
+      <dl className="slab-figures">
+        <div><dt>Topics</dt><dd>{units.length}</dd></div>
+        <div><dt>Active students</dt><dd>{new Set(students.map(row=>row.student_id)).size}</dd></div>
+        <div><dt>Mastered</dt><dd>{students.filter(row=>row.mastered).length}</dd></div>
+      </dl>
+    </section>
     <div className="stage89-switch">
       <button className={view==="progress"?"primary":""} onClick={()=>setView("progress")}>Student progress</button>
       <button className={view==="checklist"?"primary":""} onClick={()=>setView("checklist")}>Syllabus checklist</button>
@@ -892,7 +888,19 @@ function Stage89Teacher({ stage }: { stage: 8 | 9 }) {
   };
   const strands = Array.from(new Set(units.map(unit => unit.strand)));
   return <>
-    <div className="portal-heading stage7-heading"><div><p>CAMBRIDGE LOWER SECONDARY MATHEMATICS</p><h1>Stage {stage} mastery</h1><h2>Set this class&rsquo;s weekly focus and keep the full Stage {stage} curriculum open for revision.</h2></div></div>
+    <section className="subject-slab maths">
+      <div>
+        <p className="slab-code">Cambridge Lower Secondary Mathematics</p>
+        <h1>Stage {stage} mastery</h1>
+        <p className="slab-note">Set this class&rsquo;s weekly focus and keep the full Stage {stage} curriculum open for revision.</p>
+      </div>
+      <dl className="slab-figures">
+        <div><dt>Enrolled</dt><dd>{students.filter(student=>student.enrolled).length}</dd></div>
+        <div><dt>Units</dt><dd>{units.length}</dd></div>
+        <div><dt>This week</dt><dd>{focus.length}</dd></div>
+        <div><dt>Mastered</dt><dd>{progress.filter(item=>item.mastered).length}</dd></div>
+      </dl>
+    </section>
     <section className="stage7-rule panel"><span>{stage}</span><div><b>Stage {stage} class</b><p>{units.length} units based on the uploaded Stage {stage} scheme of work.</p></div><div><b>Mastery rule</b><p>Two practice sets at 80% or higher. Every unit remains available for revision.</p></div></section>
     <PastPaperLibrary stage={stage}/>
     <section className="panel stage7-class-manager"><header><div><h3>Stage {stage} students</h3><p>Select the existing student accounts that belong to this class.</p></div><b>{students.filter(student=>student.enrolled).length} enrolled</b></header><div className="stage7-class-tools"><input value={search} onChange={event=>setSearch(event.target.value)} placeholder="Search students…"/><button className="primary" onClick={saveClass}>Save Stage {stage} class</button></div>{classState&&<p className="queue-message">{classState}</p>}<div className="stage7-student-picker">{students.filter(student=>`${student.name} ${student.username}`.toLowerCase().includes(search.toLowerCase())).map(student=><label key={student.id} className={student.enrolled?"selected":""}><input type="checkbox" checked={student.enrolled} onChange={()=>{setClassState("");setStudents(current=>current.map(item=>item.id===student.id?{...item,enrolled:!item.enrolled}:item));}}/><span>{student.name.split(" ").map(part=>part[0]).slice(0,2).join("")}</span><div><b>{student.name}</b><small>@{student.username}</small></div><em>{student.enrolled?"Added":"Add"}</em></label>)}</div></section>
