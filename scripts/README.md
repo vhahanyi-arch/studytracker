@@ -16,20 +16,32 @@ irreversible. Stop any time with Ctrl-C and re-run later.
 ### Running them on Windows
 
 `bash` is not on PowerShell's PATH, so `bash scripts/...` fails with
-`The term 'bash' is not recognized`. Call Git's copy directly:
+`The term 'bash' is not recognized`. Call Git's copy directly, and give it the
+script's full path:
 
 ```powershell
-& "C:\Program Files\Git\bin\bash.exe" scripts\rotate-clerk-key.sh
+& "C:\Program Files\Git\bin\bash.exe" "C:\Users\USER\Documents\ChatGPT\task tracker for students\vercel-studytrack\scripts\rotate-clerk-key.sh"
 ```
 
-Launching it this way matters for more than finding `bash`: the shell inherits
-PowerShell's PATH, which is where the Vercel CLI lives. A Git Bash window opened
-from the Start menu does not necessarily see `vercel`, and the wizard will stop
-at its pre-flight check saying so.
+The full path is worth the length. A relative path needs PowerShell to already
+be in the project directory, and when it is not the error is just
+`No such file or directory` — which reads like the script is missing rather than
+like you are standing in the wrong place. Each wizard finds the project from its
+own location, so an absolute path works from anywhere.
 
-Run it from the project directory (the one holding `package.json`), or pass the
-full path to the script — each wizard locates the project from its own location,
-so both work.
+Launching it from PowerShell matters for more than finding `bash`: the shell
+inherits PowerShell's PATH, which is where the Vercel CLI lives. A Git Bash
+window opened from the Start menu does not necessarily see `vercel`, and the
+wizard will stop at its pre-flight check saying so.
+
+A good pre-flight looks like this, and stops harmlessly at the first prompt:
+
+```
+  Vercel CLI found: 59.24.0
+  Logged in as: <your-username>
+  Project linked: studytrack-cambridge-planner
+  ? Ready to start? [y/N]
+```
 
 ### Before a production move
 
