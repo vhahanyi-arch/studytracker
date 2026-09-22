@@ -27,36 +27,6 @@ export type StudentPaperStatus =
   | "submitted"
   | "awaiting_review"
   | "result_available";
-export const questions = [
-  {
-    n: "1(a)",
-    topic: "Number",
-    marks: 2,
-    text: "Evaluate 3.6 × 2.5 and give your answer.",
-    answer: "9",
-  },
-  {
-    n: "1(b)",
-    topic: "Number",
-    marks: 3,
-    text: "A value increases from 80 to 92. Calculate the percentage increase.",
-    answer: "15",
-  },
-  {
-    n: "2",
-    topic: "Algebra",
-    marks: 4,
-    text: "Solve 3x² − 12 = 0. Give both values of x.",
-    answer: "-2, 2",
-  },
-  {
-    n: "3",
-    topic: "Geometry",
-    marks: 5,
-    text: "A right-angled triangle has shorter sides 7 cm and 9 cm. Calculate its area.",
-    answer: "31.5",
-  },
-];
 export const stage7Chapters = [
   { id: "integers", strand: "Number", title: "Integers and place value", summary: "Ordering, rounding, operations and negative numbers", icon: "±" },
   { id: "fractions", strand: "Number", title: "Fractions, decimals and percentages", summary: "Equivalence, comparison and calculations", icon: "%" },

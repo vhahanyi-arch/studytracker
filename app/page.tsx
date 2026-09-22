@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { upload as uploadBlob } from "@vercel/blob/client";
 import {
   SignIn,
@@ -15,7 +15,6 @@ import {
   type StudentPaperStatus,
   type LowerSecondaryUnit,
   type PhysicsUnit,
-  questions,
   stage7Chapters,
   stage8Units,
   stage9Units,
