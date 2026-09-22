@@ -43,27 +43,35 @@ export default function Home() {
   return (
     <main className="portal-app">
       <SignedOut>
-        <div className="portal-choice">
-          <header>
-            <Logo />
-            <span className="preview-badge">SECURE ACCESS</span>
-          </header>
-          <section>
-            <div className="choice-copy">
-              <p>CAMBRIDGE LEARNING WORKSPACE</p>
-              <h1>Welcome to StudyTrack.</h1>
-              <h2>Sign in with the account created for you by your teacher.</h2>
+        <div className="signin">
+          <aside className="signin-brand">
+            <div>
+              <Logo />
+              <h1>Plan, practise and mark Cambridge Mathematics and Physics.</h1>
+              <ul className="signin-levels">
+                {(
+                  [
+                    ["stage7", "Stage 7", "maths"],
+                    ["stage8", "Stage 8", "maths"],
+                    ["stage9", "Stage 9", "maths"],
+                    ["igcse", "IGCSE 0625", "physics"],
+                    ["as", "AS Level 9702", "physics"],
+                  ] as const
+                ).map(([icon, label, subject]) => (
+                  <li key={icon} className={subject}>
+                    <NavIcon name={icon} />
+                    {label}
+                  </li>
+                ))}
+              </ul>
             </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                padding: "1rem 0 3rem",
-              }}
-            >
-              <SignIn routing="hash" />
-            </div>
-          </section>
+            <p className="signin-foot">
+              Your teacher creates your account. If you do not have one yet, ask them to add you to a class.
+            </p>
+          </aside>
+          <main className="signin-form">
+            <SignIn routing="hash" />
+          </main>
         </div>
       </SignedOut>
       <SignedIn>

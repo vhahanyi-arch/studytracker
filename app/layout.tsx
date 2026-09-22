@@ -42,7 +42,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider><html lang="en">
+    // Clerk renders the sign-in form itself, so without this it arrives in
+    // stock Clerk colours beside a page that is not. These variables are the
+    // app's own, so the form reads as part of the product rather than a
+    // widget dropped into it.
+    <ClerkProvider
+      appearance={{
+        variables: {
+          colorPrimary: '#8f2d3b',
+          colorText: '#17212e',
+          colorTextSecondary: '#5b6472',
+          colorBackground: '#ffffff',
+          borderRadius: '10px',
+          fontSize: '16px',
+          fontFamily: 'var(--font-public-sans), Arial, sans-serif',
+        },
+      }}
+    ><html lang="en">
       <body
         className={`${sourceSerif.variable} ${publicSans.variable} antialiased`}
       >
