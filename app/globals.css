@@ -950,7 +950,7 @@ label {
   padding: 28px;
   text-align: left;
   box-shadow: 0 12px 35px #17212e0b;
-  transition: transform 180ms var(--ease-out), border-color 180ms ease,
+  transition: transform 180ms var(--ease-press), border-color 180ms ease,
     box-shadow 180ms ease;
 }
 .role-grid > button:hover {
@@ -5974,8 +5974,14 @@ button.primary:hover { filter: brightness(1.08); }
 
 :root {
   /* The built-in easings are too weak to read as intentional; this is the
-     standard strong ease-out. Entering and responding both use it. */
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+     standard strong ease-out. Entering and responding both use it.
+
+     Not called --ease-out: Tailwind ships a token by that name, and both
+     used to land in the compiled sheet. Ours won only because Tailwind's
+     sits in @layer theme and this file is unlayered -- move this file into
+     a layer and every button would quietly fall back to Tailwind's softer
+     curve without an error anywhere. */
+  --ease-press: cubic-bezier(0.23, 1, 0.32, 1);
   --focus-ring: var(--accent);
 }
 
@@ -5983,7 +5989,7 @@ button.primary:hover { filter: brightness(1.08); }
    the surface giving way rather than as an animation. */
 button,
 a.report-download {
-  transition: transform 140ms var(--ease-out);
+  transition: transform 140ms var(--ease-press);
 }
 button:active:not(:disabled),
 a.report-download:active {
@@ -6004,7 +6010,7 @@ a.report-download:active {
   .mastery-table tr td,
   button.primary,
   .subject-slab .slab-action {
-    transition: transform 140ms var(--ease-out), background-color 150ms ease,
+    transition: transform 140ms var(--ease-press), background-color 150ms ease,
       color 150ms ease, filter 150ms ease;
   }
 }
