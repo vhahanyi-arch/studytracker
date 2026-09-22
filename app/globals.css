@@ -126,8 +126,7 @@ label {
   flex-direction: column;
   gap: 5px;
 }
-.back,
-.exam-nav {
+.back {
   border: 0;
   background: transparent;
   text-align: left;
@@ -145,20 +144,6 @@ label {
   color: #8c97a6;
   font-weight: 800;
   padding: 0 11px;
-}
-.exam-nav {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  font-weight: 700;
-}
-.exam-nav span {
-  font-size: 20px;
-}
-.exam-nav.active,
-.exam-nav:hover {
-  background: #eef1f5;
-  color: var(--accent);
 }
 .paper-card {
   margin-top: 22px;
@@ -953,10 +938,12 @@ label {
   transition: transform 180ms var(--ease-press), border-color 180ms ease,
     box-shadow 180ms ease;
 }
-.role-grid > button:hover {
-  transform: translateY(-3px);
-  border-color: #c8d0da;
-  box-shadow: 0 16px 40px #17212e15;
+@media (hover: hover) and (pointer: fine) {
+  .role-grid > button:hover {
+    transform: translateY(-3px);
+    border-color: #c8d0da;
+    box-shadow: 0 16px 40px #17212e15;
+  }
 }
 .role-icon {
   width: 54px;
@@ -1111,8 +1098,7 @@ label {
   font-size: 15px;
   font-weight: 700;
 }
-.portal-nav button.active,
-.portal-nav button:hover {
+.portal-nav button.active {
   background: #eef1f5;
   color: var(--accent);
 }
@@ -4791,8 +4777,10 @@ h1, h2, h3 {
 .mastery-table tr:last-child td {
   border-bottom: none;
 }
-.mastery-table tr:hover td {
-  background: var(--paper);
+@media (hover: hover) and (pointer: fine) {
+  .mastery-table tr:hover td {
+    background: var(--paper);
+  }
 }
 
 /* ---------- Physics: syllabus checklist ---------- */
@@ -4850,8 +4838,10 @@ h1, h2, h3 {
 .syllabus-topic[open] summary::before {
   transform: rotate(90deg);
 }
-.syllabus-topic summary:hover {
-  background: var(--paper);
+@media (hover: hover) and (pointer: fine) {
+  .syllabus-topic summary:hover {
+    background: var(--paper);
+  }
 }
 .syllabus-group {
   padding: 4px 18px 16px 18px;
@@ -4872,8 +4862,10 @@ h1, h2, h3 {
   font-size: 17px;
   line-height: 1.4;
 }
-.syllabus-group label:hover {
-  background: var(--paper);
+@media (hover: hover) and (pointer: fine) {
+  .syllabus-group label:hover {
+    background: var(--paper);
+  }
 }
 .syllabus-group label input[type="checkbox"] {
   margin-top: 3px;
@@ -5075,8 +5067,7 @@ h1, h2, h3 {
 /* The active tint is drawn from the entry's own accent. Previously every
    active item sat on a lavender (#eef1f5) under brick-red text, which no
    other surface in the app used. */
-.portal-nav button.active,
-.portal-nav button:hover {
+.portal-nav button.active {
   background: color-mix(in srgb, var(--nav-accent, var(--accent)) 10%, transparent);
   color: var(--nav-accent, var(--accent));
 }
@@ -5577,9 +5568,11 @@ body { background: var(--paper); }
 
 /* Active is a lit slab with the subject's own colour on the icon, so the
    sidebar tells you which subject you are in without being read. */
-.portal-nav button:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
+@media (hover: hover) and (pointer: fine) {
+  .portal-nav button:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+  }
 }
 .portal-nav button.active {
   background: rgba(255, 255, 255, 0.11);
@@ -5822,7 +5815,9 @@ body { background: var(--paper); }
   cursor: pointer;
   white-space: nowrap;
 }
-.subject-slab .slab-action:hover:not(:disabled) { background: rgba(255, 255, 255, 0.86); }
+@media (hover: hover) and (pointer: fine) {
+  .subject-slab .slab-action:hover:not(:disabled) { background: rgba(255, 255, 255, 0.86); }
+}
 .subject-slab .slab-action:disabled { opacity: 0.6; cursor: default; }
 
 
@@ -5862,8 +5857,10 @@ button.primary {
   white-space: nowrap;
   box-shadow: none;
 }
-.panel header button.primary:hover,
-button.primary:hover { filter: brightness(1.08); }
+@media (hover: hover) and (pointer: fine) {
+  .panel header button.primary:hover,
+  button.primary:hover { filter: brightness(1.08); }
+}
 .stage7-chapter-grid button > span { color: var(--subject, var(--maroon)); }
 .stage7-chapter-grid.teacher button.selected > span { color: var(--subject, var(--maroon)); }
 
@@ -6003,7 +6000,12 @@ a.report-download:active {
 }
 
 /* Hover changes were instant, which flickers. Gated, because a touch device
-   fires hover on tap and leaves the state stuck there afterwards. */
+   fires hover on tap and leaves the state stuck there afterwards.
+
+   The hover rules themselves carry the same gate, but are wrapped where they
+   are declared rather than gathered here: a hovered nav item and the active
+   one tie on specificity, so file order is what keeps the active style on
+   top, and moving the hovers to the end of the sheet would flip it. */
 @media (hover: hover) and (pointer: fine) {
   .portal-nav button,
   .syllabus-group label,
