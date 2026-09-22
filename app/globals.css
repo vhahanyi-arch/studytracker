@@ -4987,3 +4987,74 @@ h1, h2, h3 {
   font-weight: 800;
   color: var(--ink);
 }
+
+/* ---------------------------------------------------------------
+   Portal navigation: level groups and the shared icon set
+   --------------------------------------------------------------- */
+
+/* Each Cambridge level now has its own destination, so the sidebar holds ten
+   entries rather than eight. Four short labelled bands keep it scannable:
+   you pick the level first, then the screen within it. */
+.portal-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.portal-nav-group + .portal-nav-group {
+  margin-top: 13px;
+}
+.portal-nav-group p {
+  margin-bottom: 3px;
+}
+
+/* A fixed 18px icon box, so every label starts on the same vertical line
+   however wide its glyph happens to be. */
+.portal-nav button span {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: var(--nav-accent, #9a96a8);
+}
+.portal-nav button svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+/* Set here rather than on the element: a presentation attribute on <text>
+   loses to the font-size inherited from the button. */
+.portal-nav button svg text {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: inherit;
+}
+.portal-nav button svg text.pair {
+  font-size: 8px;
+  letter-spacing: -0.2px;
+}
+
+/* One accent per subject family, so Stage 7/8/9 read as a set and the two
+   Physics levels as another, before the label is read at all. */
+.portal-nav button[data-nav="stage7"],
+.portal-nav button[data-nav="stage8"],
+.portal-nav button[data-nav="stage9"] { --nav-accent: #1f7a6b; }
+.portal-nav button[data-nav="igcse"],
+.portal-nav button[data-nav="as"],
+.portal-nav button[data-nav="exam"] { --nav-accent: #2f5ea8; }
+.portal-nav button[data-nav="papers"],
+.portal-nav button[data-nav="marking"],
+.portal-nav button[data-nav="students"] { --nav-accent: var(--purple); }
+.portal-nav button[data-nav="home"] { --nav-accent: var(--ink); }
+
+/* The active tint is drawn from the entry's own accent. Previously every
+   active item sat on a lavender (#efedff) under brick-red text, which no
+   other surface in the app used. */
+.portal-nav button.active,
+.portal-nav button:hover {
+  background: color-mix(in srgb, var(--nav-accent, var(--purple)) 10%, transparent);
+  color: var(--nav-accent, var(--purple));
+}
+.portal-nav button.active {
+  font-weight: 800;
+}

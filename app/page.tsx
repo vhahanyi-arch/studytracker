@@ -318,6 +318,36 @@ function Shell({
   );
 }
 
+// One icon set for the whole portal: a single 24x24 grid, one stroke weight,
+// drawn in currentColor. This replaces a run of glyphs pulled from four
+// different typefaces -- a house, two bare digits, an atom, a full-colour
+// emoji, a geometric block, a tick and a chess pawn -- which sat on different
+// baselines and rendered differently on every OS.
+const navIcons: Record<string, React.ReactNode> = {
+  home: <path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4v-5H9v5H5a1 1 0 0 1-1-1z" />,
+  stage7: <><rect x="4" y="4" width="16" height="16" rx="3.5" /><text x="12" y="15.8" textAnchor="middle" fill="currentColor" stroke="none">7</text></>,
+  stage8: <><rect x="4" y="4" width="16" height="16" rx="3.5" /><text x="12" y="15.8" textAnchor="middle" fill="currentColor" stroke="none">8</text></>,
+  stage9: <><rect x="4" y="4" width="16" height="16" rx="3.5" /><text x="12" y="15.8" textAnchor="middle" fill="currentColor" stroke="none">9</text></>,
+  // The same boxed-token mark as the stages above: all five Cambridge levels
+  // read as one family, with the group heading and accent carrying the
+  // subject. An atom was tried first and collapsed into an unreadable blob at
+  // the 18px the sidebar actually renders at.
+  igcse: <><rect x="4" y="4" width="16" height="16" rx="3.5" /><text x="12" y="15.6" textAnchor="middle" fill="currentColor" stroke="none" className="pair">IG</text></>,
+  as: <><rect x="4" y="4" width="16" height="16" rx="3.5" /><text x="12" y="15.6" textAnchor="middle" fill="currentColor" stroke="none" className="pair">AS</text></>,
+  exam: <><rect x="5" y="3" width="14" height="18" rx="2.5" /><path d="M9 8h6M9 12h6M9 16h3" /></>,
+  papers: <><rect x="3.5" y="6.5" width="12" height="14" rx="2.5" /><path d="M8 6.5v-2a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-2.5" /></>,
+  marking: <><circle cx="12" cy="12" r="8.5" /><path d="m8.5 12 2.4 2.4 4.6-5" /></>,
+  students: <><circle cx="9.5" cy="8" r="3.2" /><path d="M3.8 19.2a5.7 5.7 0 0 1 11.4 0" /><path d="M16.4 5.6a3.2 3.2 0 0 1 0 4.8" /><path d="M17.6 13.6a5 5 0 0 1 2.9 4.2" /></>,
+};
+
+function NavIcon({ name }: { name: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {navIcons[name]}
+    </svg>
+  );
+}
+
 function TeacherPortal({ switchRole }: { switchRole: () => void }) {
   const [view, setView] = useState<TeacherView>("dashboard"),
     [modal, setModal] = useState(false),
@@ -326,29 +356,45 @@ function TeacherPortal({ switchRole }: { switchRole: () => void }) {
     [uploadProfile, setUploadProfile] = useState("igcse-mathematics-0580"),
     [creatingAssignment, setCreatingAssignment] = useState(false);
   const homeworkUpload = uploadProfile === "lower-secondary-homework";
+  // Each Cambridge level is its own destination rather than a toggle nested
+  // inside a combined view: a teacher picks the class they are teaching, and
+  // Stage 8 / Stage 9 / IGCSE / AS never share a screen or a piece of state.
   const nav = (
     <nav className="portal-nav">
-      <p>TEACHING</p>
       {(
         [
-          ["dashboard", "⌂", "Overview"],
-          ["stage7", "7", "Stage 7 mastery"],
-          ["stage89", "8", "Stages 8 & 9"],
-          ["physics", "⚛", "Physics practice"],
-          ["physicsExam", "📝", "Physics exam papers"],
-          ["papers", "▤", "Papers & assignments"],
-          ["submissions", "✓", "Marking queue"],
-          ["students", "♙", "Students"],
+          ["OVERVIEW", [["dashboard", "home", "Dashboard"]]],
+          ["LOWER SECONDARY", [
+            ["stage7", "stage7", "Stage 7"],
+            ["stage8", "stage8", "Stage 8"],
+            ["stage9", "stage9", "Stage 9"],
+          ]],
+          ["PHYSICS", [
+            ["physicsIgcse", "igcse", "IGCSE 0625"],
+            ["physicsAs", "as", "AS Level 9702"],
+            ["physicsExam", "exam", "Exam papers"],
+          ]],
+          ["CLASSROOM", [
+            ["papers", "papers", "Papers & assignments"],
+            ["submissions", "marking", "Marking queue"],
+            ["students", "students", "Students"],
+          ]],
         ] as const
-      ).map((x) => (
-        <button
-          key={x[0]}
-          className={view === x[0] ? "active" : ""}
-          onClick={() => setView(x[0])}
-        >
-          <span>{x[1]}</span>
-          {x[2]}
-        </button>
+      ).map(([heading, items]) => (
+        <div className="portal-nav-group" key={heading}>
+          <p>{heading}</p>
+          {items.map((x) => (
+            <button
+              key={x[0]}
+              className={view === x[0] ? "active" : ""}
+              data-nav={x[1]}
+              onClick={() => setView(x[0])}
+            >
+              <span><NavIcon name={x[1]} /></span>
+              {x[2]}
+            </button>
+          ))}
+        </div>
       ))}
     </nav>
   );
@@ -358,10 +404,14 @@ function TeacherPortal({ switchRole }: { switchRole: () => void }) {
         <TeacherDashboard setView={setView} upload={() => setModal(true)} />
       ) : view === "stage7" ? (
         <Stage7Teacher />
-      ) : view === "stage89" ? (
-        <Stage89Teacher />
-      ) : view === "physics" ? (
-        <PhysicsTeacher />
+      ) : view === "stage8" ? (
+        <Stage89Teacher key={8} stage={8} />
+      ) : view === "stage9" ? (
+        <Stage89Teacher key={9} stage={9} />
+      ) : view === "physicsIgcse" ? (
+        <PhysicsTeacher key="igcse" level="igcse" />
+      ) : view === "physicsAs" ? (
+        <PhysicsTeacher key="as" level="as" />
       ) : view === "physicsExam" ? (
         <div className="pe-redesign"><PhysicsExamTeacher /></div>
       ) : view === "papers" ? (
@@ -757,8 +807,7 @@ function PhysicsSyllabusChecklist({ level }:{ level:"igcse"|"as" }) {
   </div>;
 }
 
-function PhysicsTeacher() {
-  const [level,setLevel]=useState<"igcse"|"as">("igcse");
+function PhysicsTeacher({ level }: { level: "igcse" | "as" }) {
   const [view,setView]=useState<"progress"|"checklist">("progress");
   const [students,setStudents]=useState<Array<{student_id:string;student_name:string;chapter_id:string;attempts:number;average:number;strong_sets:number;mastered:boolean;last_active:string}>>([]);
   const [state,setState]=useState("Loading physics practice activity…");
@@ -774,11 +823,7 @@ function PhysicsTeacher() {
   },[level,view]);
   return <>
     <div className="portal-heading">
-      <div><p>PHYSICS</p><h1>Physics practice</h1><h2>See how students are progressing through generated IGCSE and AS Level Physics practice sets.</h2></div>
-      <div className="stage89-switch">
-        <button className={level==="igcse"?"primary":""} onClick={()=>setLevel("igcse")}>IGCSE Physics</button>
-        <button className={level==="as"?"primary":""} onClick={()=>setLevel("as")}>AS Level Physics</button>
-      </div>
+      <div><p>{level === "as" ? "CAMBRIDGE AS LEVEL PHYSICS 9702" : "CAMBRIDGE IGCSE PHYSICS 0625"}</p><h1>{level === "as" ? "AS Level Physics" : "IGCSE Physics"}</h1><h2>See how students are progressing through generated {level === "as" ? "AS Level" : "IGCSE"} Physics practice sets.</h2></div>
     </div>
     <div className="stage89-switch">
       <button className={view==="progress"?"primary":""} onClick={()=>setView("progress")}>Student progress</button>
@@ -804,8 +849,7 @@ function PhysicsTeacher() {
   </>;
 }
 
-function Stage89Teacher() {
-  const [stage, setStage] = useState<8 | 9>(8);
+function Stage89Teacher({ stage }: { stage: 8 | 9 }) {
   const [focus, setFocus] = useState<string[]>([]);
   const [students, setStudents] = useState<LowerSecondaryStudent[]>([]);
   const [progress, setProgress] = useState<Array<{student_id:string;student_name:string;source_stage:number;chapter_id:string;attempts:number;average:number;strong_sets:number;mastered:boolean}>>([]);
@@ -850,7 +894,7 @@ function Stage89Teacher() {
   };
   const strands = Array.from(new Set(units.map(unit => unit.strand)));
   return <>
-    <div className="portal-heading stage7-heading"><div><p>CAMBRIDGE LOWER SECONDARY MATHEMATICS</p><h1>Stages 8 and 9 mastery</h1><h2>Manage each class separately, set the weekly focus and keep the full curriculum open.</h2></div><div className="stage89-switch" role="group" aria-label="Choose stage"><button className={stage===8?"primary":""} onClick={()=>setStage(8)}>Stage 8</button><button className={stage===9?"primary":""} onClick={()=>setStage(9)}>Stage 9</button></div></div>
+    <div className="portal-heading stage7-heading"><div><p>CAMBRIDGE LOWER SECONDARY MATHEMATICS</p><h1>Stage {stage} mastery</h1><h2>Set this class&rsquo;s weekly focus and keep the full Stage {stage} curriculum open for revision.</h2></div></div>
     <section className="stage7-rule panel"><span>{stage}</span><div><b>Stage {stage} class</b><p>{units.length} units based on the uploaded Stage {stage} scheme of work.</p></div><div><b>Mastery rule</b><p>Two practice sets at 80% or higher. Every unit remains available for revision.</p></div></section>
     <PastPaperLibrary stage={stage}/>
     <section className="panel stage7-class-manager"><header><div><h3>Stage {stage} students</h3><p>Select the existing student accounts that belong to this class.</p></div><b>{students.filter(student=>student.enrolled).length} enrolled</b></header><div className="stage7-class-tools"><input value={search} onChange={event=>setSearch(event.target.value)} placeholder="Search students…"/><button className="primary" onClick={saveClass}>Save Stage {stage} class</button></div>{classState&&<p className="queue-message">{classState}</p>}<div className="stage7-student-picker">{students.filter(student=>`${student.name} ${student.username}`.toLowerCase().includes(search.toLowerCase())).map(student=><label key={student.id} className={student.enrolled?"selected":""}><input type="checkbox" checked={student.enrolled} onChange={()=>{setClassState("");setStudents(current=>current.map(item=>item.id===student.id?{...item,enrolled:!item.enrolled}:item));}}/><span>{student.name.split(" ").map(part=>part[0]).slice(0,2).join("")}</span><div><b>{student.name}</b><small>@{student.username}</small></div><em>{student.enrolled?"Added":"Add"}</em></label>)}</div></section>

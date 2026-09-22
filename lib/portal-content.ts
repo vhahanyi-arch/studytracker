@@ -1,7 +1,11 @@
 // Shared portal types and the Cambridge syllabus unit listings used across
 // the teacher and student portals. Extracted verbatim from app/page.tsx.
 
-export type TeacherView = "dashboard" | "stage7" | "stage89" | "physics" | "physicsExam" | "papers" | "students" | "submissions";
+export type TeacherView =
+  | "dashboard"
+  | "stage7" | "stage8" | "stage9"
+  | "physicsIgcse" | "physicsAs" | "physicsExam"
+  | "papers" | "submissions" | "students";
 export type AssignmentSummary = {
   id: string;
   title: string;
