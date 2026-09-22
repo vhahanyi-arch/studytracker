@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import {
   analysePaperWithMarkScheme,
@@ -10,7 +11,11 @@ globalThis.Path2D ||= class Path2D {};
 globalThis.pdfjsWorker ||= await import("pdfjs-dist/legacy/build/pdf.worker.mjs");
 const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
-const downloads = "C:/Users/USER/Downloads";
+// Real Cambridge past papers, which are copyrighted and so are not committed.
+// Point CAMBRIDGE_PAPERS_DIR at wherever you keep them; cases whose PDFs are
+// missing are skipped rather than failed, which is why CI runs the other
+// twelve harnesses and reports this one as skipped.
+const downloads = process.env.CAMBRIDGE_PAPERS_DIR || "C:/Users/USER/Downloads";
 const cases = [
   {
     name: "0580 March 2026 Paper 12",
@@ -147,7 +152,28 @@ let failed = false;
 const selectedCases = process.env.TEST_FILTER
   ? cases.filter((testCase) => testCase.name.includes(process.env.TEST_FILTER))
   : cases;
+
+// A missing PDF is an absent fixture, not a regression. Anything else the
+// analysis throws still fails the harness.
+const runnableCases = selectedCases.filter(
+  (testCase) => existsSync(testCase.paper) && existsSync(testCase.scheme),
+);
 for (const testCase of selectedCases) {
+  if (!runnableCases.includes(testCase))
+    console.log(`  skipped ${testCase.name}: papers not found under ${downloads}`);
+}
+if (!runnableCases.length) {
+  console.log(
+    `\nno Cambridge papers found under ${downloads}, so all ${selectedCases.length} cases were skipped.`,
+  );
+  console.log("set CAMBRIDGE_PAPERS_DIR to the folder holding the question papers to run them.");
+  // 2 means "nothing to run", which run-content-regression.mjs reports as a
+  // skip. Exiting 0 here would show up as a pass for a harness that ran no
+  // cases at all.
+  process.exit(2);
+}
+
+for (const testCase of runnableCases) {
   const [paperPages, schemePages] = await Promise.all([
     extractPages(testCase.paper),
     extractPages(testCase.scheme),

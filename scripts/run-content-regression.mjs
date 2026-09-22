@@ -29,11 +29,20 @@ const harnesses = readdirSync('scripts')
   .sort();
 
 let failed = 0;
+let skipped = 0;
 for (const name of harnesses) {
   try {
     execFileSync(process.execPath, [`scripts/${name}`], { stdio: 'pipe' });
     console.log(`  PASS ${name}`);
   } catch (error) {
+    // Exit code 2 means the harness had no fixtures to run against, which is
+    // not a regression. Reported separately so it can never read as a pass.
+    if (error.status === 2) {
+      skipped++;
+      console.log(`  SKIP ${name}`);
+      console.log(String(error.stdout ?? '').split('\n').filter(Boolean).slice(-2).map((l) => `       ${l}`).join('\n'));
+      continue;
+    }
     failed++;
     console.log(`  FAIL ${name}`);
     console.log(String(error.stdout ?? '').split('\n').slice(-15).join('\n'));
@@ -41,5 +50,6 @@ for (const name of harnesses) {
   }
 }
 
-console.log(`\n${harnesses.length - failed}/${harnesses.length} content harnesses passed`);
+const passed = harnesses.length - failed - skipped;
+console.log(`\n${passed}/${harnesses.length} content harnesses passed${skipped ? `, ${skipped} skipped` : ''}`);
 process.exit(failed ? 1 : 0);
