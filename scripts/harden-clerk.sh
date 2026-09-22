@@ -211,18 +211,21 @@ banner "Clerk: close public sign-up and move to production"
 
 # ── 1 ─────────────────────────────────────────────────────────────────────
 stage "What this changes"
-say "Two separate problems, in order of how quickly they can be fixed:"
+say "Two things to settle, in order of how quickly they can be fixed:"
 printf '\n'
-step "Public sign-up is open. Anyone who finds the URL can create an account."
-note "  Closed in stage 2. Takes about a minute and needs no deploy."
+step "Whether public sign-up is open. Stage 2 checks and closes it."
+note "  About a minute, and it needs no deploy."
 step "Clerk is on a DEVELOPMENT instance (sk_test_/pk_test_)."
-note "  Fixed in stages 5-8. Needs DNS records, so allow real time for it."
+note "  Stages 5-8. Needs a domain you own and DNS records, so allow real time."
+printf '\n'
+note "Stage 2 verifies rather than assumes: sign-up may already be closed, and"
+note "asserting otherwise sends you hunting for a setting that is already set."
 printf '\n'
 say "Closing sign-up costs this app nothing: it imports Clerk's SignIn component"
 say "but has no SignUp component and no sign-up route, so it never offers"
 say "registration itself. Teachers create students through the admin API, which"
 say "keeps working -- invite-only blocks self-service sign-up, not admin"
-say "creation."
+say "creation, and existing users can still sign in by any enabled method."
 printf '\n'
 warn "You can stop after stage 3. Stage 4 asks."
 printf '\n'
@@ -238,9 +241,29 @@ pause "Press Enter to begin."
 
 # ── 2 ─────────────────────────────────────────────────────────────────────
 stage "Close public sign-up"
+say "Check whether it is already closed before changing anything. The sign-up"
+say "page answers this directly:"
+printf '\n'
+step "Open your accounts portal's /sign-up page in a private window."
+note "  That address is the publishable key's host with 'clerk.' replaced by"
+note "  'accounts.', e.g. https://<your-slug>.accounts.dev/sign-up"
+printf '\n'
+say "Already closed if it shows:"
+note "  Access restricted"
+note "  Sign ups are currently disabled."
+say "In that case this stage is done -- skip to stage 3."
+printf '\n'
+warn "Check it in a browser, not with curl. That page is rendered by"
+warn "JavaScript, so fetching the HTML shows neither state."
+printf '\n'
+if confirm "Is sign-up already closed?"; then
+  write_env CLERK_SIGNUP_CLOSED "already-closed $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  say "Good. Nothing to change here."
+else
 open_url "https://dashboard.clerk.com/last-active?path=user-authentication/restrictions"
-say "In the Clerk dashboard, on the instance selector at the top left, make sure"
-say "you are on the DEVELOPMENT instance -- that is the one serving your app now."
+say "Then close it. In the Clerk dashboard, on the instance selector at the top"
+say "left, make sure you are on the DEVELOPMENT instance -- that is the one"
+say "serving your app now."
 printf '\n'
 step "Find the 'Access mode' setting (under Configure, with the restrictions)."
 step "Change it from 'Public' to 'Invite-only'."
@@ -256,6 +279,7 @@ printf '\n'
 confirm "Have you set the access mode to invite-only?" \
   && write_env CLERK_SIGNUP_CLOSED "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
   || SKIPPED+=("close public sign-up on the development instance")
+fi
 
 # ── 3 ─────────────────────────────────────────────────────────────────────
 stage "Confirm sign-up is actually closed"
