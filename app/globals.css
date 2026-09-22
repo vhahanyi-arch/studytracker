@@ -950,7 +950,8 @@ label {
   padding: 28px;
   text-align: left;
   box-shadow: 0 12px 35px #17212e0b;
-  transition: 0.2s;
+  transition: transform 180ms var(--ease-out), border-color 180ms ease,
+    box-shadow 180ms ease;
 }
 .role-grid > button:hover {
   transform: translateY(-3px);
@@ -5823,10 +5824,7 @@ body { background: var(--paper); }
 }
 .subject-slab .slab-action:hover:not(:disabled) { background: rgba(255, 255, 255, 0.86); }
 .subject-slab .slab-action:disabled { opacity: 0.6; cursor: default; }
-.subject-slab .slab-action:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 3px;
-}
+
 
 @media (max-width: 720px) {
   .subject-slab { padding: 24px 22px 26px; }
@@ -5956,4 +5954,93 @@ button.primary:hover { filter: brightness(1.08); }
   .signin-brand h1 { margin-top: 24px; font-size: 30px; max-width: none; }
   .signin-levels { margin-top: 24px; gap: 10px 18px; }
   .signin-form { padding: 34px 20px 56px; }
+}
+
+/* =======================================================================
+   Interaction
+
+   Before this block the stylesheet had two transitions and no :active state
+   anywhere, so nothing in the app acknowledged being pressed. A teacher hit
+   "Publish all ready" and the button sat there until the screen changed; on
+   a phone, where there is no hover either, there was no feedback at all
+   between the tap and the result.
+
+   The motion here is deliberately plain. Teachers mark for an hour at a
+   stretch and students grind practice sets, so every one of these is seen
+   hundreds of times a day. That rules out anything with personality --
+   no bounce, no stagger, no entrance animations. It acknowledges the press
+   and gets out of the way.
+   ======================================================================= */
+
+:root {
+  /* The built-in easings are too weak to read as intentional; this is the
+     standard strong ease-out. Entering and responding both use it. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --focus-ring: var(--accent);
+}
+
+/* Pressable things answer the press. 0.97 is small enough that it reads as
+   the surface giving way rather than as an animation. */
+button,
+a.report-download {
+  transition: transform 140ms var(--ease-out);
+}
+button:active:not(:disabled),
+a.report-download:active {
+  transform: scale(0.97);
+}
+
+/* The role cards already lift on hover, so pressing one settles it back
+   toward the page instead of scaling from nothing. */
+.role-grid > button:active {
+  transform: translateY(-1px) scale(0.985);
+}
+
+/* Hover changes were instant, which flickers. Gated, because a touch device
+   fires hover on tap and leaves the state stuck there afterwards. */
+@media (hover: hover) and (pointer: fine) {
+  .portal-nav button,
+  .syllabus-group label,
+  .mastery-table tr td,
+  button.primary,
+  .subject-slab .slab-action {
+    transition: transform 140ms var(--ease-out), background-color 150ms ease,
+      color 150ms ease, filter 150ms ease;
+  }
+}
+
+/* One ring everywhere, lightened on the surfaces that are dark. Keyboard is
+   how a school Chromebook gets driven. */
+button:focus-visible,
+a:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.portal-shell > aside,
+.subject-slab,
+.signin-brand {
+  --focus-ring: #fff;
+}
+
+/* Reduced motion means gentler, not none: the press feedback is the thing
+   telling the user the tap registered, so it stays -- only the movement
+   goes. */
+@media (prefers-reduced-motion: reduce) {
+  button:active:not(:disabled),
+  a.report-download:active,
+  .role-grid > button:active {
+    transform: none;
+  }
+  .role-grid > button:hover {
+    transform: none;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
