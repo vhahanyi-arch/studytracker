@@ -316,6 +316,19 @@ printf '\n'
 warn "DNS propagation is not instant. This stage can legitimately take hours."
 note "You can Ctrl-C here and re-run the wizard later; nothing is half-applied."
 printf '\n'
+warn "Expect at least one plan-gated feature to block the checklist."
+say "Every feature is free on a development instance, so cloning those settings"
+say "carries options across that production will not accept. The usual one is:"
+note "  \"The SMS code (MFA) feature is not available on your current plan\""
+printf '\n'
+step "Open Configure -> Multi-factor on the PRODUCTION instance."
+step "Turn off SMS verification code."
+printf '\n'
+note "Nothing in StudyTrack uses it. Accounts are username and password only --"
+note "no phone number, no email, no second factor -- so turning it off costs"
+note "nothing. The same applies to any other paid feature the clone dragged in:"
+note "turn it off rather than paying for something the app never calls."
+printf '\n'
 open_url "https://dashboard.clerk.com"
 pause "Press Enter once Clerk reports the instance is ready."
 
