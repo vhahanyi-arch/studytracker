@@ -263,6 +263,33 @@ note "Do NOT delete the old key yet. Deleting it before the new one is deployed"
 note "would break every signed-in session immediately. Stage 6 deletes it."
 printf '\n'
 
+# The secret key and the publishable key must belong to the SAME Clerk
+# instance. An sk_live_ key paired with a pk_test_ frontend authenticates
+# nobody: the browser holds a session issued by one instance and the server
+# validates it against another, so every request arrives looking signed out.
+# Nothing in the resulting 401s says "wrong instance", which makes this
+# expensive to diagnose -- hence checking it here, before it is deployed.
+EXPECTED_KIND=""
+PUBLISHABLE_KIND=""
+if [[ -f .env.local ]]; then
+  PK_LINE=$(grep -E '^NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=' .env.local | head -n1 || true)
+  PK_VALUE=$(printf '%s' "$PK_LINE" | sed -E 's/^[^=]+=//; s/^"//; s/"$//')
+  case "$PK_VALUE" in
+    pk_test_*) EXPECTED_KIND="sk_test_"; PUBLISHABLE_KIND="pk_test_" ;;
+    pk_live_*) EXPECTED_KIND="sk_live_"; PUBLISHABLE_KIND="pk_live_" ;;
+  esac
+fi
+
+if [[ -n "$EXPECTED_KIND" ]]; then
+  say "This app ships a ${PUBLISHABLE_KIND} publishable key, so the secret key"
+  say "must start ${EXPECTED_KIND} -- the same instance."
+else
+  warn "Could not read the publishable key from .env.local, so the instance"
+  warn "cannot be checked here. Make sure the dashboard's instance selector"
+  warn "matches the instance this app actually uses."
+fi
+printf '\n'
+
 while true; do
   ask_secret NEW_CLERK_SECRET_KEY "Paste the new secret key:"
   if [[ -z "$NEW_CLERK_SECRET_KEY" ]]; then
@@ -270,11 +297,21 @@ while true; do
   elif [[ "$NEW_CLERK_SECRET_KEY" != sk_* ]]; then
     warn "A Clerk secret key starts with sk_test_ or sk_live_."
     note "If what you copied starts with pk_, that is the publishable key."
+  elif [[ -n "$EXPECTED_KIND" && "$NEW_CLERK_SECRET_KEY" != ${EXPECTED_KIND}* ]]; then
+    warn "That key belongs to a different instance than this app's frontend."
+    say "Expected a key starting ${EXPECTED_KIND}, to match the ${PUBLISHABLE_KIND}"
+    say "publishable key the app ships."
+    printf '\n'
+    step "Switch the instance selector at the TOP LEFT of the Clerk dashboard."
+    step "Open API keys again there, and copy the secret key from that instance."
+    printf '\n'
+    note "Deploying this key would sign every user out and make each request"
+    note "look unauthenticated, with no error that points at the cause."
   else
     break
   fi
 done
-say "New secret key captured (starts ${NEW_CLERK_SECRET_KEY:0:8}...)."
+say "New secret key captured, matching the app's instance."
 
 # ── 3 ─────────────────────────────────────────────────────────────────────
 stage "Vercel: publish the new key"
