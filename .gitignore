@@ -1,11 +1,12 @@
 node_modules
 .next
 .vercel
-.env*.local
-*.log
-/tmp/9702/
 
-.vercel
+# Every dotenv variant, including .env.local and .env.production.local.
 .env*
 
+*.log
 tsconfig.tsbuildinfo
+
+# Scratch renders and compiled artifacts for the 9702 content harnesses.
+/tmp/9702/

@@ -31,7 +31,7 @@ export function ConfirmDialog({
         aria-label={title}
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <button type="button" className="x" onClick={onCancel}>
+        <button type="button" className="x" onClick={onCancel} aria-label="Close">
           ×
         </button>
         <small>{eyebrow}</small>

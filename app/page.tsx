@@ -4178,7 +4178,7 @@ function QuestionSetup({
                 : "Drag a box around one complete question, then add it."}
             </p>
           </div>
-          <button onClick={close}>×</button>
+          <button onClick={close} aria-label="Close">×</button>
         </header>
         {reviewingScheme ? (
           <section className="scheme-review-screen">

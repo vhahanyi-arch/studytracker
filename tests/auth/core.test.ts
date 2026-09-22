@@ -106,6 +106,16 @@ test('listing pages past the first hundred accounts',async()=>{
  const f=fake(many(150,()=>studentOf('t_1')));
  assert.equal((await listStudents(f.store,'t_1')).length,150);
 });
+test('listing pages well past the old thousand-account ceiling',async()=>{
+ const f=fake(many(2500,()=>studentOf('t_1')));
+ assert.equal((await listStudents(f.store,'t_1')).length,2500);
+});
+// Losing a student off the end of the roster silently is worse than an error,
+// because nothing on the page would say the list was incomplete.
+test('an impossibly large workspace fails loudly rather than truncating',async()=>{
+ const f=fake(many(10100,()=>studentOf('t_1')));
+ await assert.rejects(()=>listStudents(f.store,'t_1'),/beyond what this page can list/);
+});
 test('a student name falls back to the username',async()=>{
  const f=fake([{id:'s_1',username:'ana-k',meta:studentOf('t_1')},{id:'s_2',username:'bo',firstName:'Bo',lastName:'Ng',meta:{...studentOf('t_1'),mustChangePassword:true}}]);
  const [ana,bo]=await listStudents(f.store,'t_1');

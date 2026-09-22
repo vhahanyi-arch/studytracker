@@ -25,7 +25,31 @@ const ok = <T>(data: T): Outcome<T> => ({ ok: true, data });
 const fail = (status: number, error: string): Outcome<never> => ({ ok: false, status, error });
 
 const PAGE = 100;
-const MAX_SCANNED = 1000;
+// A ceiling purely to stop an unbounded loop if Clerk ever kept returning full
+// pages. It is deliberately far above any realistic school roll, because
+// reaching it is treated as a fault rather than quietly returning a short list:
+// a teacher whose roster silently lost a student has no way to tell.
+const MAX_SCANNED = 10_000;
+
+class RosterTooLarge extends Error {
+  constructor() {
+    super(
+      `More than ${MAX_SCANNED} accounts exist on this workspace, which is beyond what this page can list.`,
+    );
+    this.name = "RosterTooLarge";
+  }
+}
+
+// Walks every page of the user list, newest page last. Throws rather than
+// truncating if the ceiling is reached.
+async function eachUser(store: UserStore, visit: (user: UserRecord) => boolean | void) {
+  for (let offset = 0; offset < MAX_SCANNED; offset += PAGE) {
+    const page = await store.getUserList({ limit: PAGE, offset });
+    for (const user of page.data) if (visit(user) === true) return;
+    if (page.data.length < PAGE) return;
+  }
+  throw new RosterTooLarge();
+}
 
 // Clerk reports validation problems (a weak or breached password, a taken
 // username) in an errors array; anything else is a genuine failure.
@@ -39,14 +63,14 @@ export function clerkMessage(error: unknown, fallback: string) {
 }
 
 export async function findTeacher(store: UserStore) {
-  for (let offset = 0; offset < MAX_SCANNED; offset += PAGE) {
-    const page = await store.getUserList({ limit: PAGE, offset });
-    if (!page.data.length) return null;
-    const teacher = page.data.find((user) => user.publicMetadata.role === "teacher");
-    if (teacher) return teacher;
-    if (page.data.length < PAGE) return null;
-  }
-  return null;
+  let teacher: UserRecord | null = null;
+  await eachUser(store, (user) => {
+    if (user.publicMetadata.role === "teacher") {
+      teacher = user;
+      return true;
+    }
+  });
+  return teacher as UserRecord | null;
 }
 
 async function oldestAccountId(store: UserStore) {
@@ -115,16 +139,10 @@ export async function requireTeacher(store: UserStore, userId: string): Promise<
 // sees or touches another teacher's students.
 export async function studentsOf(store: UserStore, teacherId: string) {
   const students: UserRecord[] = [];
-  for (let offset = 0; offset < MAX_SCANNED; offset += PAGE) {
-    const page = await store.getUserList({ limit: PAGE, offset });
-    students.push(
-      ...page.data.filter(
-        (user) =>
-          user.publicMetadata.role === "student" && user.publicMetadata.teacherId === teacherId,
-      ),
-    );
-    if (page.data.length < PAGE) break;
-  }
+  await eachUser(store, (user) => {
+    if (user.publicMetadata.role === "student" && user.publicMetadata.teacherId === teacherId)
+      students.push(user);
+  });
   return students;
 }
 

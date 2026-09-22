@@ -3,7 +3,10 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, staging, reconcile]
+    # Every branch, not just the long-lived ones. Work on a feature branch was
+    # previously unchecked until a pull request existed, which is exactly when
+    # it is most useful to know.
+    branches: ['**']
 
 jobs:
   verify:
