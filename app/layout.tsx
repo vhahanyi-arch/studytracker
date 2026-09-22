@@ -29,7 +29,7 @@ const publicSans = Public_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://studytrack-cambridge-planner.vhahanyi.chatgpt.site'),
+  metadataBase: new URL('https://studytrack.win'),
   title: 'StudyTrack — Cambridge Learner Planner',
   description: 'A focused task and progress tracker for Cambridge Lower Secondary, IGCSE and AS Level Mathematics and Physics.',
   openGraph: {
