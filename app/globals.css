@@ -5041,12 +5041,15 @@ h1, h2, h3 {
 /* Set here rather than on the element: a presentation attribute on <text>
    loses to the font-size inherited from the button. */
 .portal-nav button svg text {
-  font-size: 15px;
+  /* A glyph drawn inside a 16x16 rect, not text anyone reads as text. The
+     type scale's 13px floor does not apply here, and the remap that raised
+     it to 15px left a "7" nearly filling its box. */
+  font-size: 10px;
   font-weight: 700;
   font-family: inherit;
 }
 .portal-nav button svg text.pair {
-  font-size: 13px;
+  font-size: 8px;
   letter-spacing: -0.2px;
 }
 
