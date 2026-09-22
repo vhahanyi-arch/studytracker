@@ -36,7 +36,10 @@ export async function renderPdf(buffer: Uint8Array, selected?: number[]): Promis
     (globalThis as { pdfjsWorker?: unknown }).pdfjsWorker = pdfjsWorker;
   }
   const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  const doc = await getDocument({ data: buffer, useSystemFonts: true }).promise;
+  // pdfjs 6 moved destroy() off the document proxy and onto the loading task,
+  // so the task has to be held rather than discarded after awaiting .promise.
+  const loadingTask = getDocument({ data: buffer, useSystemFonts: true });
+  const doc = await loadingTask.promise;
   try {
     if (doc.numPages > 50) throw Error("Use a section of at most 50 pages per document.");
     const pages = selected ?? Array.from({ length: doc.numPages }, (_, i) => i + 1);
@@ -53,7 +56,7 @@ export async function renderPdf(buffer: Uint8Array, selected?: number[]): Promis
     }
     return images;
   } finally {
-    await doc.destroy();
+    await loadingTask.destroy();
   }
 }
 
