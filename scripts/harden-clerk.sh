@@ -272,6 +272,27 @@ pause "Press Enter once you have checked."
 
 # ── 4 ─────────────────────────────────────────────────────────────────────
 stage "Continue to the production instance?"
+printf '\n'
+warn "PREREQUISITE: you must own a domain. There is no way around this."
+say "Clerk production puts its own records (clerk., accounts., mail) on your"
+say "domain and issues a certificate for them, so it needs one whose DNS you"
+say "control. A *.vercel.app address cannot be used: that domain is Vercel's,"
+say "and you cannot add records to it."
+printf '\n'
+step "No domain yet? Buy one, then come back. Roughly 10-15 USD a year."
+note "  vercel domains buy <name>   -- or any registrar you prefer."
+note "Attach it to the project first, so the app and Clerk agree on one address."
+printf '\n'
+
+if ! confirm "Do you already own a domain for this app?"; then
+  say "Stopping here. Public sign-up is closed, which was the urgent part and"
+  say "the one that actually mattered today."
+  SKIPPED+=("Clerk production instance -- blocked until a domain is registered")
+  finish
+  exit 0
+fi
+
+printf '\n'
 say "The immediate risk is now closed. What follows is a bigger job:"
 step "Creating a production instance (new sk_live_/pk_live_ keys)."
 step "Adding DNS records for Clerk's domains, then waiting for SSL."
