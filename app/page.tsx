@@ -1155,14 +1155,21 @@ function PhysicsExamTeacher() {
 
   return (
     <>
-      <div className="portal-heading">
+      <section className="subject-slab physics">
         <div>
-          <p>Physics exam papers</p>
+          <p className="slab-code">Cambridge Physics &middot; past papers</p>
           <h1>Exam papers</h1>
-          <h2>Upload a real Cambridge past paper and mark scheme for auto-assisted marking, reviewed by you before anything is published.</h2>
+          <p className="slab-note">Upload a real Cambridge past paper and mark scheme for auto-assisted marking, reviewed by you before anything is published.</p>
         </div>
-        <button className="primary" onClick={() => setUploadOpen(true)}>＋ Upload paper</button>
-      </div>
+        <div className="slab-side">
+          <dl className="slab-figures">
+            <div><dt>Papers</dt><dd>{papers.length}</dd></div>
+            <div><dt>Questions</dt><dd>{papers.reduce((total, paper) => total + paper.questions.length, 0)}</dd></div>
+            <div><dt>Submissions</dt><dd>{submissions.length}</dd></div>
+          </dl>
+          <button className="slab-action" onClick={() => setUploadOpen(true)}>＋ Upload paper</button>
+        </div>
+      </section>
       {error && <p className="error-text">{error}</p>}
       <section className="panel paper-table">
         <header>
@@ -1753,16 +1760,24 @@ function Stage7Teacher() {
   };
   return (
     <>
-      <div className="portal-heading stage7-heading">
+      <section className="subject-slab maths">
         <div>
-          <p>CAMBRIDGE LOWER SECONDARY · STAGE 7</p>
-          <h1>Weekly mastery focus</h1>
-          <h2>Highlight this week’s priorities while keeping every chapter open for revision.</h2>
+          <p className="slab-code">Cambridge Lower Secondary Mathematics</p>
+          <h1>Stage 7 mastery</h1>
+          <p className="slab-note">Set this class&rsquo;s weekly focus and keep the full Stage 7 curriculum open for revision.</p>
         </div>
-        <button className="primary" disabled={saved === "loading" || saved === "saving"} onClick={saveFocus}>
-          {saved === "saved" ? "✓ Weekly focus saved" : saved === "saving" ? "Saving…" : saved === "loading" ? "Loading focus…" : `Save weekly focus (${focus.length})`}
-        </button>
-      </div>
+        <div className="slab-side">
+          <dl className="slab-figures">
+            <div><dt>Enrolled</dt><dd>{stage7Students.filter(student=>student.enrolled).length}</dd></div>
+            <div><dt>Units</dt><dd>{stage7Chapters.length}</dd></div>
+            <div><dt>This week</dt><dd>{focus.length}</dd></div>
+            <div><dt>Mastered</dt><dd>{integerProgress.filter(student=>student.mastered).length}</dd></div>
+          </dl>
+          <button className="slab-action" disabled={saved === "loading" || saved === "saving"} onClick={saveFocus}>
+            {saved === "saved" ? "✓ Weekly focus saved" : saved === "saving" ? "Saving…" : saved === "loading" ? "Loading focus…" : `Save weekly focus (${focus.length})`}
+          </button>
+        </div>
+      </section>
       <section className="stage7-rule panel">
         <span>80%</span>
         <div><b>Mastery rule</b><p>Two practice sets at 80% or higher. Teachers can reset or override mastery at any time.</p></div>
@@ -1928,16 +1943,23 @@ function Papers({ upload }: { upload: () => void }) {
   }
   return (
     <>
-      <div className="portal-heading">
+      <section className="subject-slab classroom">
         <div>
-          <p>CONTENT LIBRARY</p>
-          <h1>Papers & assignments</h1>
-          <h2>Upload materials once, then assign them to any class.</h2>
+          <p className="slab-code">Content library</p>
+          <h1>Papers &amp; assignments</h1>
+          <p className="slab-note">Upload materials once, then assign them to any class.</p>
         </div>
-        <button className="primary" onClick={upload}>
-          ＋ New assignment
-        </button>
-      </div>
+        <div className="slab-side">
+          <dl className="slab-figures">
+            <div><dt>Papers</dt><dd>{assignments.length}</dd></div>
+            <div><dt>Subjects</dt><dd>{new Set(assignments.map((item) => item.subject)).size}</dd></div>
+            <div><dt>Students</dt><dd>{studentAccounts.length}</dd></div>
+          </dl>
+          <button className="slab-action" onClick={upload}>
+            ＋ New assignment
+          </button>
+        </div>
+      </section>
       <section className="panel paper-table">
         <header>
           <div>
@@ -4745,16 +4767,22 @@ function Students() {
   }
   return (
     <>
-      <div className="portal-heading">
+      <section className="subject-slab classroom">
         <div>
-          <p>CLASS ROSTER</p>
-          <h1>IGCSE Mathematics 2026</h1>
-          <h2>Create and manage secure student accounts.</h2>
+          <p className="slab-code">Student accounts</p>
+          <h1>Class roster</h1>
+          <p className="slab-note">Create and manage secure student accounts. Each is issued a username and a temporary password the student replaces on first sign-in.</p>
         </div>
-        <button className="primary" onClick={() => setOpen(true)}>
-          ＋ Add student
-        </button>
-      </div>
+        <div className="slab-side">
+          <dl className="slab-figures">
+            <div><dt>Students</dt><dd>{accounts.length}</dd></div>
+            <div><dt>New passwords due</dt><dd>{accounts.filter((student) => student.mustChangePassword).length}</dd></div>
+          </dl>
+          <button className="slab-action" onClick={() => setOpen(true)}>
+            ＋ Add student
+          </button>
+        </div>
+      </section>
       <section className="panel student-table">
         <header>
           <div>
@@ -5375,24 +5403,24 @@ function Submissions() {
   });
   return (
     <>
-      <div className="portal-heading">
+      <section className="subject-slab classroom">
         <div>
-          <p>MARKING QUEUE</p>
+          <p className="slab-code">Marking queue</p>
           <h1>Student submissions</h1>
-          <h2>
-            Review proposed marks, handwriting flags and student corrections.
-          </h2>
+          <p className="slab-note">Review proposed marks, handwriting flags and student corrections. Nothing reaches a student until you publish it.</p>
         </div>
         {queueCounts.ready > 0 && (
-          <button
-            className="primary"
-            disabled={queueAction === "all-ready"}
-            onClick={() => setConfirmPublishAll(true)}
-          >
-            {queueAction === "all-ready" ? "Publishing…" : `Publish all ready (${queueCounts.ready})`}
-          </button>
+          <div className="slab-side">
+            <button
+              className="slab-action"
+              disabled={queueAction === "all-ready"}
+              onClick={() => setConfirmPublishAll(true)}
+            >
+              {queueAction === "all-ready" ? "Publishing…" : `Publish all ready (${queueCounts.ready})`}
+            </button>
+          </div>
         )}
-      </div>
+      </section>
       {confirmPublishAll && (
         <ConfirmDialog
           eyebrow="PUBLISH RESULTS"

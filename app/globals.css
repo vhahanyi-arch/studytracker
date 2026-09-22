@@ -2288,7 +2288,6 @@ label {
 }
 
 /* Stage 7 mastery pilot */
-.stage7-heading { align-items: center; }
 .stage7-rule { display:grid; grid-template-columns:auto 1fr 1fr; gap:18px; align-items:center; padding:18px; margin-bottom:24px; }
 .stage7-rule > span { width:58px; height:58px; display:grid; place-items:center; border-radius:16px; background:#eef1f5; color:var(--accent); font-size: 24px; font-weight:900; }
 .stage7-rule b { display:block; font-size: 17px; }
@@ -5320,6 +5319,16 @@ h3 { font-size: var(--t-h3); line-height: 1.28; }
 .portal-shell {
   grid-template-columns: 264px minmax(0, 1fr);
 }
+
+/* Restated, because the widening above is unconditional and sits 51KB later
+   in the compiled sheet than the phone rule it silently beat. The sidebar is
+   already display:none at this width, so the track it left behind was 264px
+   of content squeezed beside an empty column. */
+@media (max-width: 900px) {
+  .portal-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 .portal-shell > aside {
   padding: 26px 16px;
 }
@@ -5789,9 +5798,40 @@ body { background: var(--paper); }
   line-height: 1;
 }
 
+/* Some screens own an action -- upload a paper, add a student, publish a
+   batch. It sits in the slab beside the figures rather than in a separate
+   header strip above it, so the screen still opens with one object. Reversed
+   out of the slab colour, which is the only place in the app where a primary
+   button is white on colour rather than colour on white. */
+.subject-slab .slab-side {
+  display: flex;
+  align-items: flex-end;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+.subject-slab .slab-action {
+  font-family: var(--font-public-sans), Arial, sans-serif;
+  font-size: var(--t-small);
+  font-weight: 600;
+  color: var(--slab);
+  background: #fff;
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 19px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.subject-slab .slab-action:hover:not(:disabled) { background: rgba(255, 255, 255, 0.86); }
+.subject-slab .slab-action:disabled { opacity: 0.6; cursor: default; }
+.subject-slab .slab-action:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
 @media (max-width: 720px) {
   .subject-slab { padding: 24px 22px 26px; }
   .slab-figures { gap: 22px; }
+  .subject-slab .slab-side { gap: 20px; }
 }
 
 /* ---------- the subject colour flows down the screen ---------- */
