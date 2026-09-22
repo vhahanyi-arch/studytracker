@@ -1543,8 +1543,7 @@ function PhysicsExamStudent({ back }: { back: () => void }) {
   );
 }
 
-function PhysicsStudent({ back }:{ back:()=>void }) {
-  const [level, setLevel] = useState<"igcse"|"as">("igcse");
+function PhysicsStudent({ back, level }:{ back:()=>void; level:"igcse"|"as" }) {
   const [libraryView,setLibraryView]=useState<"topics"|"checklist">("topics");
   const [progress,setProgress]=useState<Record<string,{attempts:number;average:number;strong_sets:number;mastered:boolean}>>({});
   const [practice,setPractice]=useState<PhysicsUnit|null>(null);
@@ -1623,10 +1622,8 @@ function PhysicsStudent({ back }:{ back:()=>void }) {
 
   return <>
     <div className="portal-heading">
-      <div><p>CAMBRIDGE PHYSICS</p><h1>Physics practice</h1><h2>Generated practice questions with instant, reliable marking — separate from your assigned past papers.</h2></div>
+      <div><p>{level==="as"?"CAMBRIDGE AS LEVEL PHYSICS 9702":"CAMBRIDGE IGCSE PHYSICS 0625"}</p><h1>{level==="as"?"AS Level Physics practice":"IGCSE Physics practice"}</h1><h2>Generated practice questions with instant, reliable marking — separate from your assigned past papers.</h2></div>
       <div className="stage89-switch">
-        <button className={level==="igcse"?"primary":""} onClick={()=>setLevel("igcse")}>IGCSE Physics</button>
-        <button className={level==="as"?"primary":""} onClick={()=>setLevel("as")}>AS Level Physics</button>
         <button onClick={back}>← Assigned papers</button>
       </div>
     </div>
@@ -1692,7 +1689,7 @@ function Stage89Student({ back }:{ back:()=>void }) {
     return <section className="stage7-practice panel"><header><button onClick={closePractice}>← Curriculum</button><div><small>STAGE {practice.sourceStage} {practice.sourceStage<homeStage?"REVISION":"PRACTICE"} · {session.difficulty.toUpperCase()}</small><h2>{practice.title}</h2></div><span>Question {cursor+1} of {session.questions.length}</span></header><div className="practice-progress"><i style={{width:`${((cursor+1)/session.questions.length)*100}%`}}/></div><main><small>QUESTION {cursor+1}</small>{question.objective&&<p className="practice-objective">{question.objective}</p>}<h1>{question.prompt}</h1>{question.source&&<PastPaperPracticeCrop source={question.source}/>} {hints[cursor]&&<p className="practice-hint">Hint: {question.hint}</p>}<label>Your answer{question.answerFormat&&<small className="answer-format">Answer format: {question.answerFormat}</small>}<input value={answers[cursor]} placeholder={question.answerFormat||"Enter your answer"} onChange={event=>setAnswers(answers.map((value,index)=>index===cursor?event.target.value:value))} onKeyDown={event=>{if(event.key==="Enter"){event.preventDefault();cursor<session.questions.length-1?setCursor(cursor+1):submitPractice();}}} autoFocus/></label></main><footer><button onClick={()=>setHints(hints.map((value,index)=>index===cursor?true:value))}>{hints[cursor]?"Hint shown":"Show hint"}</button><div><button disabled={cursor===0} onClick={()=>setCursor(cursor-1)}>← Previous</button>{cursor<session.questions.length-1?<button className="primary" onClick={()=>setCursor(cursor+1)}>Next →</button>:<button className="primary" onClick={submitPractice}>Finish &amp; mark set →</button>}</div></footer>{message&&<p className="queue-message">{message}</p>}</section>;
   }
 
-  return <><div className="portal-heading"><div><p>CAMBRIDGE LOWER SECONDARY · STAGE {homeStage} CLASS</p><h1>My mathematics mastery</h1><h2>Build current-stage mastery or revisit an earlier foundation whenever you need it.</h2></div><div className="stage89-switch">{enrolledStages.map(value=><button key={value} className={homeStage===value?"primary":""} onClick={()=>chooseHomeStage(value)}>Stage {value} class</button>)}<button onClick={back}>← Assigned papers</button></div></div>
+  return <><div className="portal-heading"><div><p>CAMBRIDGE LOWER SECONDARY · STAGE {homeStage} CLASS</p><h1>My mathematics mastery</h1><h2>Build current-stage mastery or revisit an earlier foundation whenever you need it.</h2></div><div className="stage89-switch">{enrolledStages.length>1&&enrolledStages.map(value=><button key={value} className={homeStage===value?"primary":""} onClick={()=>chooseHomeStage(value)}>Stage {value} class</button>)}<button onClick={back}>← Assigned papers</button></div></div>
     <section className="panel cross-stage-picker"><header><div><small>CHOOSE YOUR PRACTICE LEVEL</small><h3>Current learning and earlier-stage revision</h3><p>Mastery is always recorded against the original stage of each unit.</p></div></header><div className="stage89-switch">{accessibleStages.slice().reverse().map(value=><button key={value} className={sourceStage===value?"primary":""} onClick={()=>setSourceStage(value)}>{value===homeStage?`Stage ${value} current`:`Stage ${value} revision`}</button>)}</div></section>
     <section className="weekly-focus"><header><div><small>YOUR FOCUS THIS WEEK</small><h2>Stage {homeStage} class priorities</h2><p>Your teacher can include current units and prerequisite revision.</p></div><b>{focusUnits.length} units</b></header><div>{focusUnits.length?focusUnits.map(unit=>{const item=progress[unit.id];return <article key={`${unit.sourceStage}-${unit.id}`}><span>{unit.icon}</span><div><b>Stage {unit.sourceStage} · {unit.title}</b><p>{item?.mastered?"Mastered":`${item?.strong_sets||0} of 2 strong sets`}</p><i><em style={{width:`${Math.min(100,((item?.strong_sets||0)/2)*100)}%`}}/></i></div><button onClick={()=>startPractice(unit,unit.sourceStage)}>{item?.attempts?"Continue practice →":"Start practice →"}</button></article>}):<p className="dashboard-empty">Your teacher has not selected a weekly focus yet.</p>}</div></section>
     {recommendations.length>0&&<section className="panel foundation-recommendations"><header><div><small>RECOMMENDED FOR YOU</small><h3>Strengthen the foundation first</h3><p>Your recent results suggest that these earlier-stage units will help with your current work.</p></div><span>Adaptive revision</span></header><div>{recommendations.map(unit=><article key={`${unit.sourceStage}-${unit.id}`}><span>{unit.icon}</span><div><small>STAGE {unit.sourceStage} FOUNDATION</small><b>{unit.title}</b><p>{unit.summary}</p></div><button onClick={()=>startPractice(unit,unit.sourceStage)}>Practise foundation →</button></article>)}</div></section>}
@@ -6338,17 +6335,28 @@ function AnswerWorkspace({
 
 function StudentPortal({ switchRole }: { switchRole: () => void }) {
   const [started, setStarted] = useState(false);
-  const [studentArea, setStudentArea] = useState<"papers" | "stage7" | "stage89" | "physics" | "physicsExam">("papers");
-  const [stage89Enrolled, setStage89Enrolled] = useState<boolean | null>(null);
+  const [studentArea, setStudentArea] = useState<"papers" | "stage7" | "stage89" | "physicsIgcse" | "physicsAs" | "physicsExam">("papers");
+  // Which Lower Secondary stages this student is actually enrolled in, rather
+  // than merely whether they are in either. A student is normally in exactly
+  // one, so the sidebar can name their class instead of offering both and
+  // leaving them to work out which one is theirs.
+  const [lowerStages, setLowerStages] = useState<Array<8 | 9> | null>(null);
   useEffect(() => {
     Promise.all(
-      [8, 9].map((value) =>
-        fetch(`/api/lower-secondary/focus?stage=${value}`).then((r) => (r.ok ? r.json() : { enrolled: false })),
+      ([8, 9] as const).map((value) =>
+        fetch(`/api/lower-secondary/focus?stage=${value}`)
+          .then((r) => (r.ok ? r.json() : { enrolled: false }))
+          .then((result) => ({ stage: value, enrolled: Boolean(result.enrolled) })),
       ),
     )
-      .then((results) => setStage89Enrolled(results.some((result) => Boolean(result.enrolled))))
-      .catch(() => setStage89Enrolled(false));
+      .then((results) => setLowerStages(results.filter((r) => r.enrolled).map((r) => r.stage)))
+      .catch(() => setLowerStages([]));
   }, []);
+  const stage89Enrolled = lowerStages === null ? null : lowerStages.length > 0;
+  // Before enrollment resolves, and for a student genuinely in both, the
+  // generic label stands: either way it keeps the "ask your teacher to add
+  // you" screen reachable.
+  const lowerStage = lowerStages?.length === 1 ? lowerStages[0] : null;
   const [activeAssignment, setActiveAssignment] = useState<{
     id: string;
     title: string;
@@ -6397,22 +6405,28 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
   const cleanNav = (
     <nav className="portal-nav">
       <p>MY LEARNING</p>
-      <button className={studentArea === "papers" ? "active" : ""} onClick={() => setStudentArea("papers")}>
-        <span>▤</span>Assigned papers
+      <button className={studentArea === "papers" ? "active" : ""} data-nav="papers" onClick={() => setStudentArea("papers")}>
+        <span><NavIcon name="papers" /></span>Assigned papers
       </button>
-      <button className={studentArea === "stage7" ? "active" : ""} onClick={() => setStudentArea("stage7")}>
-        <span>7</span>Stage 7 mastery
+      <button className={studentArea === "stage7" ? "active" : ""} data-nav="stage7" onClick={() => setStudentArea("stage7")}>
+        <span><NavIcon name="stage7" /></span>Stage 7 mastery
       </button>
-      <button className={studentArea === "stage89" ? "active" : ""} onClick={() => setStudentArea("stage89")}>
-        <span>8</span>Stages 8 &amp; 9
+      <button className={studentArea === "stage89" ? "active" : ""} data-nav={`stage${lowerStage ?? 8}`} onClick={() => setStudentArea("stage89")}>
+        <span><NavIcon name={`stage${lowerStage ?? 8}`} /></span>
+        {lowerStage ? `Stage ${lowerStage} mastery` : "Stages 8 & 9"}
       </button>
       {stage89Enrolled === false && (
-        <button className={studentArea === "physics" ? "active" : ""} onClick={() => setStudentArea("physics")}>
-          <span>⚛</span>Physics practice
-        </button>
+        <>
+          <button className={studentArea === "physicsIgcse" ? "active" : ""} data-nav="igcse" onClick={() => setStudentArea("physicsIgcse")}>
+            <span><NavIcon name="igcse" /></span>IGCSE 0625
+          </button>
+          <button className={studentArea === "physicsAs" ? "active" : ""} data-nav="as" onClick={() => setStudentArea("physicsAs")}>
+            <span><NavIcon name="as" /></span>AS Level 9702
+          </button>
+        </>
       )}
-      <button className={studentArea === "physicsExam" ? "active" : ""} onClick={() => setStudentArea("physicsExam")}>
-        <span>📝</span>Physics exam papers
+      <button className={studentArea === "physicsExam" ? "active" : ""} data-nav="exam" onClick={() => setStudentArea("physicsExam")}>
+        <span><NavIcon name="exam" /></span>Physics exam papers
       </button>
     </nav>
   );
@@ -6464,10 +6478,10 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
         <Stage89Student back={() => setStudentArea("papers")} />
       </Shell>
     );
-  if (studentArea === "physics" && stage89Enrolled === false)
+  if ((studentArea === "physicsIgcse" || studentArea === "physicsAs") && stage89Enrolled === false)
     return (
       <Shell role="Student" onSwitch={switchRole} nav={cleanNav}>
-        <PhysicsStudent back={() => setStudentArea("papers")} />
+        <PhysicsStudent key={studentArea} level={studentArea === "physicsAs" ? "as" : "igcse"} back={() => setStudentArea("papers")} />
       </Shell>
     );
   if (studentArea === "physicsExam")
