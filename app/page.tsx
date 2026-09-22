@@ -69,9 +69,9 @@ export default function Home() {
               Your teacher creates your account. If you do not have one yet, ask them to add you to a class.
             </p>
           </aside>
-          <main className="signin-form">
+          <div className="signin-form">
             <SignIn routing="hash" />
-          </main>
+          </div>
         </div>
       </SignedOut>
       <SignedIn>
