@@ -7,8 +7,20 @@ export async function readPrivatePdf(url: string) {
   return new Uint8Array(await new Response(blob.stream).arrayBuffer());
 }
 
+// pdfjs expects these browser globals to exist. On the server they are stubbed
+// onto globalThis, which is why the cast goes through unknown: lib.dom already
+// declares DOMMatrix, ImageData and Path2D with their full browser shapes, and
+// the stubs deliberately do not implement those. Narrow enough to still catch a
+// typo, unlike the `any` this replaces.
+type PdfRuntimeGlobals = {
+  DOMMatrix?: unknown;
+  ImageData?: unknown;
+  Path2D?: unknown;
+  pdfjsWorker?: unknown;
+};
+
 export async function extractPdfPages(data: Uint8Array): Promise<PdfPageData[]> {
-  const runtime = globalThis as any;
+  const runtime = globalThis as unknown as PdfRuntimeGlobals;
   runtime.DOMMatrix ||= class DOMMatrix {};
   runtime.ImageData ||= class ImageData {};
   runtime.Path2D ||= class Path2D {};
@@ -63,7 +75,7 @@ export async function extractPdfPages(data: Uint8Array): Promise<PdfPageData[]> 
 }
 
 export async function pdfPageCount(data: Uint8Array) {
-  const runtime = globalThis as any;
+  const runtime = globalThis as unknown as PdfRuntimeGlobals;
   runtime.DOMMatrix ||= class DOMMatrix {};
   runtime.ImageData ||= class ImageData {};
   runtime.Path2D ||= class Path2D {};

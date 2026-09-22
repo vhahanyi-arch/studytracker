@@ -1,0 +1,16 @@
+# Normalise line endings in the repository, and let Git pick the working-tree
+# ending per platform for ordinary source files.
+* text=auto
+
+# Shell scripts must stay LF even when checked out on Windows. With
+# core.autocrlf=true they would otherwise arrive with CRLF, and bash fails on
+# the shebang with "bad interpreter: /usr/bin/env bash^M".
+*.sh text eol=lf
+
+# Line-ending rewrites would corrupt these.
+*.pdf binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff binary
+*.woff2 binary

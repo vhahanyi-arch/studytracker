@@ -22,9 +22,12 @@ export async function GET(
       ? await sql`SELECT s.answer_text FROM submissions s JOIN assignments a ON a.id = s.assignment_id WHERE s.id = ${id} AND a.teacher_id = ${userId}`
       : await sql`SELECT answer_text FROM submissions WHERE id = ${id} AND student_id = ${userId} AND status = 'published'`;
   if (!rows.length) return new NextResponse("Not found.", { status: 404 });
-  let answers: any[] = [];
+  // Only drawingUrl is read; the stored answer objects carry more than this.
+  let answers: Array<{ drawingUrl?: string }> = [];
   try {
     answers = JSON.parse(String(rows[0].answer_text || "[]"));
+    // Malformed stored answers leave the list empty, which the lookup below
+    // then reports as a missing drawing.
   } catch {}
   const url = answers[index]?.drawingUrl;
   if (!url) return new NextResponse("Drawing not found.", { status: 404 });

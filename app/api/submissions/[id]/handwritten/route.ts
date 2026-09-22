@@ -12,6 +12,8 @@ const filesFromStoredValue = (value: unknown): HandwrittenFile[] => {
     const parsed = JSON.parse(stored);
     if (Array.isArray(parsed))
       return parsed.filter((item) => item && typeof item.url === "string");
+    // Older submissions stored a bare URL string rather than JSON, so a parse
+    // failure falls through to treating the value as that single URL.
   } catch {}
   return [{ url: stored, name: "Handwritten work" }];
 };

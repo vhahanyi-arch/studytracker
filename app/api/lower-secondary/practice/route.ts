@@ -71,6 +71,8 @@ export async function GET(request: Request) {
       try {
         const student = await clerk.users.getUser(String(row.student_id));
         name = [student.firstName, student.lastName].filter(Boolean).join(" ") || student.username || name;
+        // A deleted or unreachable account falls back to the default name
+        // rather than failing the whole listing.
       } catch {}
       return { ...row, student_name: name, mastered: Number(row.strong_sets) >= 2 };
     }));

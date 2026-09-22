@@ -64,7 +64,12 @@ export async function POST(
       { error: "Add at least one question." },
       { status: 400 },
     );
-  const cleaned = questions.map((question: any, index: number) => ({
+  // The request body is unvalidated JSON, so each field is narrowed on the way
+  // in. oneOf keeps a value only when it is one of the accepted literals.
+  const oneOf = <T extends string, F>(value: unknown, allowed: readonly T[], fallback: F): T | F =>
+    allowed.includes(value as T) ? (value as T) : fallback;
+
+  const cleaned = questions.map((question: Record<string, unknown>, index: number) => ({
     id: crypto.randomUUID(),
     position: index + 1,
     label: String(question.label || index + 1)
@@ -76,15 +81,9 @@ export async function POST(
     y: Math.max(0, Math.min(1, Number(question.crop_y) || 0)),
     width: Math.max(0.05, Math.min(1, Number(question.crop_width) || 1)),
     height: Math.max(0.05, Math.min(1, Number(question.crop_height) || 1)),
-    responseType: ["drawing", "multiple_choice"].includes(question.response_type)
-      ? question.response_type
-      : "typed",
+    responseType: oneOf(question.response_type, ["drawing", "multiple_choice"] as const, "typed"),
     answerSlots: Math.max(1, Math.min(6, Number(question.answer_slots) || 1)),
-    responseLayout: ["answer", "working", "formula"].includes(
-      question.response_layout,
-    )
-      ? question.response_layout
-      : "answer",
+    responseLayout: oneOf(question.response_layout, ["answer", "working", "formula"] as const, "answer"),
     expectedAnswer:
       String(question.expected_answer || "")
         .trim()
@@ -96,9 +95,7 @@ export async function POST(
     topic: String(question.topic || "General skills").trim().slice(0, 80),
     draftAnswer: String(question.draft_answer || "").trim().slice(0, 4000) || null,
     draftAcceptedAnswer: String(question.draft_accepted_answer || "").trim().slice(0, 500) || null,
-    draftConfidence: ["high", "medium", "review"].includes(question.draft_confidence)
-      ? question.draft_confidence
-      : null,
+    draftConfidence: oneOf(question.draft_confidence, ["high", "medium", "review"] as const, null),
     extractedQuestionText: String(question.extracted_question_text || "").trim().slice(0, 6000) || null,
   }));
   await sql`DELETE FROM assignment_questions WHERE assignment_id = ${id}`;

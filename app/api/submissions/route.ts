@@ -58,7 +58,10 @@ export async function GET() {
           WHERE q.assignment_id = ${submission.assignment_id} ORDER BY q.position
         `,
       ]);
-      const parsedAnswers: any[] = (() => {
+      // Whatever the student's client stored, read back as opaque records:
+      // only `question` and `handwrittenPageAssigned` are inspected here, and
+      // normalizedLabel already accepts unknown.
+      const parsedAnswers: Record<string, unknown>[] = (() => {
         try {
           return JSON.parse(String(submission.answer_text || "[]"));
         } catch {
@@ -78,7 +81,7 @@ export async function GET() {
       const detectedPages = [...new Set(marks.map((mark) => Number(mark.page_number || 1)))].sort((a, b) => a - b);
       const singlePdf = handwrittenFiles.length === 1 && (handwrittenFiles[0].type === "application/pdf" || String(submission.handwritten_url || "").toLowerCase().includes(".pdf"));
       const normalizedLabel = (value: unknown) => String(value || "").toLowerCase().replace(/\s+/g, "");
-      const answerRows = parsedAnswers.length
+      const answerRows: Record<string, unknown>[] = parsedAnswers.length
         ? parsedAnswers
         : marks.map((mark) => ({ question: String(mark.label), answer: "" }));
       const answers = handwrittenFiles.length

@@ -61,6 +61,7 @@ export async function PUT(
     try {
       const parsed = new URL(suppliedUrl);
       if (parsed.protocol === "https:" && parsed.hostname.endsWith("blob.vercel-storage.com")) directUrl = parsed.toString();
+      // An unparseable URL is simply not accepted; directUrl keeps its default.
     } catch {}
   }
   if (!directUrl && (!(paper instanceof File) || paper.type !== "application/pdf"))

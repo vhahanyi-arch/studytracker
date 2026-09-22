@@ -92,6 +92,7 @@ export async function POST(request: Request) {
     try {
       const parsed = new URL(paperUrlValue);
       if (parsed.protocol === "https:" && parsed.hostname.endsWith("blob.vercel-storage.com")) paperUrl = parsed.toString();
+      // An unparseable URL is simply not accepted; paperUrl keeps its default.
     } catch {}
   }
   if (

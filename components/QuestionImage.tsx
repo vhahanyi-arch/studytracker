@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import type { PDFDocumentProxy } from "pdfjs-dist";
 import { type PaperQuestion, displayCrop } from "@/lib/paper-questions";
 
 // Rendered crops are expensive to produce, so they are cached across mounts
@@ -13,7 +14,7 @@ export function QuestionImage({
   onRendered,
 }: {
   assignmentId: string;
-  pdf: any;
+  pdf: PDFDocumentProxy | null;
   question: PaperQuestion;
   onRendered?: (image: string) => void;
 }) {
