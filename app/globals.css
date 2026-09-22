@@ -5548,7 +5548,7 @@ body { background: var(--paper); }
 }
 
 .portal-nav p {
-  color: #6d7b8d;
+  color: #8a97a8;
   font-weight: 700;
 }
 .portal-nav button {
@@ -5766,7 +5766,7 @@ body { background: var(--paper); }
 .slab-figures div { min-width: 0; }
 .slab-figures dt {
   font-size: var(--t-fine);
-  color: rgba(255, 255, 255, 0.66);
+  color: rgba(255, 255, 255, 0.76);
   margin: 0;
   white-space: nowrap;
 }
