@@ -1,9 +1,38 @@
 import { neon } from "@neondatabase/serverless";
+import { SCHEMA_VERSION, needsSchemaApply } from "./schema-version";
 
 export const sql = neon(process.env.DATABASE_URL!);
 let schemaPromise: Promise<void> | null = null;
 
 async function initializeSchema() {
+  // Read the stamp before creating anything, so the common case -- a database
+  // that is already current -- costs one round trip. On a database that has
+  // never been migrated the query throws because the table is absent; that is
+  // the signal to apply the DDL, not an error worth propagating.
+  try {
+    const [stamp] = await sql`SELECT version FROM schema_version ORDER BY version DESC LIMIT 1`;
+    if (!needsSchemaApply(stamp)) return;
+  } catch {
+    // schema_version is absent: first boot against this database.
+  }
+
+  await applySchema();
+
+  // Stamped only after the DDL succeeds, so a half-applied schema is retried by
+  // the next cold start rather than being recorded as done.
+  await sql`
+    CREATE TABLE IF NOT EXISTS schema_version (
+      version INTEGER PRIMARY KEY,
+      applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`
+    INSERT INTO schema_version (version) VALUES (${SCHEMA_VERSION})
+    ON CONFLICT (version) DO NOTHING
+  `;
+}
+
+async function applySchema() {
   await sql`
     CREATE TABLE IF NOT EXISTS assignments (
       id UUID PRIMARY KEY,
