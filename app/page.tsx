@@ -22,6 +22,7 @@ import {
   igcsePhysicsUnits,
   asPhysicsUnits,
 } from '@/lib/portal-content';
+import { overall, trend, series, perUnit, type PracticeSession } from '@/lib/progress';
 import {
   type AnswerRow,
   type AnswerDraft,
@@ -335,6 +336,7 @@ const navIcons: Record<string, React.ReactNode> = {
   igcse: <><rect x="4" y="4" width="16" height="16" rx="3.5" /><text x="12" y="15.6" textAnchor="middle" fill="currentColor" stroke="none" className="pair">IG</text></>,
   as: <><rect x="4" y="4" width="16" height="16" rx="3.5" /><text x="12" y="15.6" textAnchor="middle" fill="currentColor" stroke="none" className="pair">AS</text></>,
   exam: <><rect x="5" y="3" width="14" height="18" rx="2.5" /><path d="M9 8h6M9 12h6M9 16h3" /></>,
+  progress: <><path d="M4 4v16h16" /><path d="m7.5 14.5 3.5-4 3 2.4 4.5-6" /></>,
   papers: <><rect x="3.5" y="6.5" width="12" height="14" rx="2.5" /><path d="M8 6.5v-2a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-2.5" /></>,
   marking: <><circle cx="12" cy="12" r="8.5" /><path d="m8.5 12 2.4 2.4 4.6-5" /></>,
   students: <><circle cx="9.5" cy="8" r="3.2" /><path d="M3.8 19.2a5.7 5.7 0 0 1 11.4 0" /><path d="M16.4 5.6a3.2 3.2 0 0 1 0 4.8" /><path d="M17.6 13.6a5 5 0 0 1 2.9 4.2" /></>,
@@ -6333,9 +6335,108 @@ function AnswerWorkspace({
   );
 }
 
+// Answers the question a student actually asks about their own practice: not
+// "where am I in the curriculum" -- the unit grids already show that -- but
+// "am I getting better". Scores alone hide the most telling case, where marks
+// hold steady while the hints needed to reach them fall away, so both are
+// shown together. The arithmetic is in lib/progress.ts and tested there.
+function StudentProgress({ back }: { back: () => void }) {
+  const [sessions, setSessions] = useState<PracticeSession[] | null>(null);
+  const [state, setState] = useState("Loading your practice history…");
+  useEffect(() => {
+    fetch("/api/progress")
+      .then((response) => (response.ok ? response.json() : Promise.reject(new Error("progress"))))
+      .then((data) => { setSessions(Array.isArray(data.sessions) ? data.sessions : []); setState(""); })
+      .catch(() => setState("Your progress could not be loaded."));
+  }, []);
+
+  const heading = (
+    <div className="portal-heading">
+      <div><p>MY PROGRESS</p><h1>Am I improving?</h1><h2>Your practice scores over time, and how much help you needed to reach them.</h2></div>
+      <button onClick={back}>← Assigned papers</button>
+    </div>
+  );
+  if (!sessions) return <>{heading}<p className="queue-message panel">{state}</p></>;
+  if (!sessions.length)
+    return <>{heading}<section className="panel dashboard-empty">Finish a practice set and your scores will start appearing here.</section></>;
+
+  const summary = overall(sessions);
+  const movement = trend(sessions);
+  const points = series(sessions, 12);
+  const units = perUnit(sessions);
+  const allUnits = [...stage7Chapters, ...stage8Units, ...stage9Units, ...igcsePhysicsUnits, ...asPhysicsUnits];
+  const titleFor = (id: string) => allUnits.find((unit) => unit.id === id)?.title || id;
+  const asPercent = (rate: number | null) => (rate === null ? "—" : Math.round(rate * 100) + "%");
+
+  const scoreDelta = movement.enough ? movement.scoreTo - movement.scoreFrom : 0;
+  const hintDelta = movement.enough && movement.hintRateFrom !== null && movement.hintRateTo !== null
+    ? movement.hintRateTo - movement.hintRateFrom
+    : null;
+  // Deliberately not always encouraging: a dip is reported as a dip. The one
+  // case worth calling out is a steady score reached with less help, which
+  // looks like standing still and is not.
+  const remaining = movement.enough ? 0 : movement.needed - movement.sets;
+  const verdict = !movement.enough
+    ? remaining + (remaining === 1 ? " more set" : " more sets") + " and your trend appears here"
+    : scoreDelta >= 5 ? "Your scores are going up"
+    : scoreDelta <= -5 ? "Your scores have dipped lately"
+    : hintDelta !== null && hintDelta <= -0.05 ? "Same marks, noticeably less help"
+    : "Your scores are holding steady";
+
+  const W = 660, H = 190, PAD_X = 36, PAD_Y = 20;
+  const px = (index: number) => (points.length < 2 ? W / 2 : PAD_X + (index / (points.length - 1)) * (W - PAD_X * 2));
+  const py = (score: number) => PAD_Y + (1 - score / 100) * (H - PAD_Y * 2);
+  const line = points.map((point, index) => (index ? "L" : "M") + px(index).toFixed(1) + " " + py(point.score).toFixed(1)).join(" ");
+
+  return <>
+    {heading}
+
+    <section className="panel progress-verdict">
+      <div><small>OVER YOUR LAST {points.length} {points.length === 1 ? "SET" : "SETS"}</small><h2>{verdict}</h2></div>
+      {movement.enough && <div className="progress-figures">
+        <div><small>AVERAGE SCORE</small><b>{movement.scoreFrom}% <em>→</em> {movement.scoreTo}%</b></div>
+        <div><small>HINTS PER QUESTION</small><b>{asPercent(movement.hintRateFrom)} <em>→</em> {asPercent(movement.hintRateTo)}</b></div>
+      </div>}
+    </section>
+
+    <section className="panel progress-chart">
+      <header><div><small>SCORE PER SET</small><h3>Your last {points.length} practice {points.length === 1 ? "set" : "sets"}</h3></div><span>{summary.strongSets} of {summary.sets} at 80% or better</span></header>
+      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Practice scores, oldest to newest: ${points.map((p) => p.score + "%").join(", ")}`}>
+        {[0, 50, 100].map((value) => <g key={value}>
+          <line x1={PAD_X} x2={W - PAD_X} y1={py(value)} y2={py(value)} className="grid" />
+          <text x={PAD_X - 8} y={py(value) + 3.5} className="axis">{value}</text>
+        </g>)}
+        {/* The mastery threshold, so a score reads against the bar it has to clear. */}
+        <line x1={PAD_X} x2={W - PAD_X} y1={py(80)} y2={py(80)} className="target" />
+        <text x={W - PAD_X + 4} y={py(80) + 3.5} className="axis target-label">80</text>
+        <path d={line} className="score-line" />
+        {points.map((point, index) => <circle key={index} cx={px(index)} cy={py(point.score)} r={4} className={point.score >= 80 ? "dot strong" : "dot"}><title>{titleFor(point.chapterId)} · {point.score}% · {new Date(point.completedAt).toLocaleDateString()}</title></circle>)}
+      </svg>
+      <div className="progress-hints">
+        <small>HINTS USED PER QUESTION, SAME SETS</small>
+        <div>{points.map((point, index) => <i key={index} style={{ height: point.hintRate === null ? 2 : Math.max(2, Math.round(point.hintRate * 34)) }} title={asPercent(point.hintRate)} />)}</div>
+      </div>
+    </section>
+
+    <section className="panel progress-units">
+      <header><div><small>BY UNIT</small><h3>First set against your most recent</h3></div><span>{units.length} {units.length === 1 ? "unit" : "units"} practised</span></header>
+      {units.map((unit) => <article key={unit.source + unit.track + unit.chapterId}>
+        <div><b>{titleFor(unit.chapterId)}</b><small>{unit.source === "physics" ? (unit.track === "as" ? "AS Level" : "IGCSE") : "Stage " + unit.track} · {unit.sets} {unit.sets === 1 ? "set" : "sets"}</small></div>
+        <div className="progress-move">{unit.sets === 1
+          ? <span>{unit.latestScore}%</span>
+          : <><span>{unit.firstScore}%</span><em>→</em><span className={unit.latestScore >= unit.firstScore ? "up" : "down"}>{unit.latestScore}%</span></>}</div>
+        <div className="progress-move quiet">{unit.sets === 1
+          ? <span>{asPercent(unit.hintRateLatest)}</span>
+          : <><span>{asPercent(unit.hintRateFirst)}</span><em>→</em><span>{asPercent(unit.hintRateLatest)}</span></>}</div>
+        <strong className={unit.mastered ? "mastered" : ""}>{unit.mastered ? "Mastered" : unit.strongSets + "/2 strong"}</strong>
+      </article>)}
+    </section>
+  </>;
+}
+
 function StudentPortal({ switchRole }: { switchRole: () => void }) {
   const [started, setStarted] = useState(false);
-  const [studentArea, setStudentArea] = useState<"papers" | "stage7" | "stage89" | "physicsIgcse" | "physicsAs" | "physicsExam">("papers");
+  const [studentArea, setStudentArea] = useState<"papers" | "progress" | "stage7" | "stage89" | "physicsIgcse" | "physicsAs" | "physicsExam">("papers");
   // Which Lower Secondary stages this student is actually enrolled in, rather
   // than merely whether they are in either. A student is normally in exactly
   // one, so the sidebar can name their class instead of offering both and
@@ -6408,6 +6509,9 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
       <button className={studentArea === "papers" ? "active" : ""} data-nav="papers" onClick={() => setStudentArea("papers")}>
         <span><NavIcon name="papers" /></span>Assigned papers
       </button>
+      <button className={studentArea === "progress" ? "active" : ""} data-nav="progress" onClick={() => setStudentArea("progress")}>
+        <span><NavIcon name="progress" /></span>My progress
+      </button>
       <button className={studentArea === "stage7" ? "active" : ""} data-nav="stage7" onClick={() => setStudentArea("stage7")}>
         <span><NavIcon name="stage7" /></span>Stage 7 mastery
       </button>
@@ -6464,6 +6568,12 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
                 .then(setPublishedResults);
           }}
         />
+      </Shell>
+    );
+  if (studentArea === "progress")
+    return (
+      <Shell role="Student" onSwitch={switchRole} nav={cleanNav}>
+        <StudentProgress back={() => setStudentArea("papers")} />
       </Shell>
     );
   if (studentArea === "stage7")

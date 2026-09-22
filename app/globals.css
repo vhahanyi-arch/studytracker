@@ -5058,3 +5058,179 @@ h1, h2, h3 {
 .portal-nav button.active {
   font-weight: 800;
 }
+
+/* ---------------------------------------------------------------
+   My progress: scores over time, and the help needed to reach them
+   --------------------------------------------------------------- */
+
+.portal-nav button[data-nav="progress"] { --nav-accent: var(--ink); }
+
+.progress-verdict {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.progress-verdict h2 {
+  font-size: 22px;
+  margin: 4px 0 0;
+}
+.progress-verdict small,
+.progress-chart small,
+.progress-units small {
+  font-size: 8px;
+  letter-spacing: 1px;
+  font-weight: 800;
+  color: #aaa7b5;
+}
+.progress-figures {
+  display: flex;
+  gap: 28px;
+}
+.progress-figures b {
+  display: block;
+  font-size: 17px;
+  margin-top: 5px;
+  white-space: nowrap;
+}
+.progress-figures em,
+.progress-move em {
+  font-style: normal;
+  color: #aaa7b5;
+  padding: 0 3px;
+}
+
+.progress-chart header,
+.progress-units header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.progress-chart header h3,
+.progress-units header h3 {
+  font-size: 15px;
+  margin: 4px 0 0;
+}
+.progress-chart header span,
+.progress-units header span {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.progress-chart svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+.progress-chart .grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.progress-chart .axis {
+  fill: #aaa7b5;
+  font-size: 9px;
+  font-weight: 700;
+  text-anchor: end;
+}
+/* The 80% mastery threshold, so a score reads against the bar it must clear
+   rather than against an empty grid. */
+.progress-chart .target {
+  stroke: #1f7a6b;
+  stroke-width: 1.5;
+  stroke-dasharray: 5 5;
+  opacity: 0.55;
+}
+.progress-chart .target-label {
+  fill: #1f7a6b;
+  text-anchor: start;
+}
+.progress-chart .score-line {
+  fill: none;
+  stroke: #2f5ea8;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.progress-chart .dot {
+  fill: #fff;
+  stroke: #2f5ea8;
+  stroke-width: 2.5;
+}
+.progress-chart .dot.strong {
+  fill: #1f7a6b;
+  stroke: #1f7a6b;
+}
+
+/* Hints are drawn beneath the same sets rather than on a second axis: a shared
+   axis would imply a comparison between a percentage and a rate. */
+.progress-hints {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+.progress-hints > div {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 36px;
+  margin-top: 8px;
+}
+.progress-hints i {
+  flex: 1;
+  background: var(--purple);
+  opacity: 0.35;
+  border-radius: 2px 2px 0 0;
+  min-height: 2px;
+}
+
+.progress-units article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 18px;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.progress-units article b {
+  font-size: 13px;
+  display: block;
+}
+.progress-units article small {
+  color: var(--muted);
+  letter-spacing: 0;
+  font-weight: 600;
+  font-size: 10px;
+}
+.progress-move {
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.progress-move.quiet {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.progress-move .up { color: #1f7a6b; }
+.progress-move .down { color: var(--purple); }
+.progress-units strong {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.progress-units strong.mastered { color: #1f7a6b; }
+
+@media (max-width: 720px) {
+  .progress-units article {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 8px;
+  }
+  .progress-figures {
+    gap: 18px;
+  }
+}
