@@ -137,14 +137,26 @@ export function big(x: number) {
   return (x < 0 ? "−" : "") + grouped + (dec ? "." + dec : "");
 }
 
+/**
+ * Digits without exponent notation: JavaScript prints 0.00000032 as "3.2e-7",
+ * which no student would recognise.
+ */
+function plain(v: number) {
+  const s = String(v);
+  if (!s.includes("e")) return s;
+  const [m, e] = s.split("e"), exp = Number(e), [whole, part = ""] = m.replace("-", "").split(".");
+  const digits = exp < 0 ? "0." + "0".repeat(-exp - 1) + whole + part : whole + part + "0".repeat(Math.max(0, exp - part.length));
+  return (v < 0 ? "-" : "") + digits;
+}
+
 /** A number as text, with a true minus sign and no float noise: -0.3 -> "−0.3". */
 export function fmt(x: number, dp = 10) {
   const v = tidyNum(x, dp);
-  return (v < 0 ? "−" : "") + String(Math.abs(v));
+  return (v < 0 ? "−" : "") + plain(Math.abs(v));
 }
 
 /** A number as an answer: ASCII minus, since that is what students type. */
-export const ans = (x: number, dp = 10) => String(tidyNum(x, dp));
+export const ans = (x: number, dp = 10) => plain(tidyNum(x, dp));
 
 /** Fixed decimal places for money and measurements: 4.5 -> "4.50". */
 export const money = (x: number) => fmt(Math.round(x * 100) / 100).replace(/^(−?\d+)$/, "$1.00").replace(/^(−?\d+\.\d)$/, "$10");

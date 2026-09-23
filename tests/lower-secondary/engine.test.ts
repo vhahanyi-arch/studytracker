@@ -19,7 +19,8 @@ const LINT:Array<[string,RegExp]>=[
  ['"1" with a plural noun',/\b1 (hours|minutes|seconds|days|weeks|months|years|times|people|items|students|games|trials|books|pens|boxes|tickets|questions)\b/],
  // Lowercase only: a capital A is usually a variable ("A = 2 × 3 and B ...").
  // And only after a word or at the start: "4a − 3a = a and 7b ..." is algebra.
- ['"a" before a vowel sound',/(?:^|[A-Za-z,;:] )a (?!uni|use|one|eu|u\b)[aeiou]\w*/],
+ // Nor before a word no article can precede: "of a and b" is algebra too.
+ ['"a" before a vowel sound',/(?:^|[A-Za-z,;:] )a (?!uni|use|one|eu|u\b|(?:and|or|is|are|in|of|on|at|as)\b)[aeiou]\w*/],
  // A single letter can take "an": "an n-sided base", "an x-coordinate".
  ['"an" before a consonant sound',/\ban (?!hour|honest|[aeiou8]|11|18|[fhlmnrsx](?![a-z]))[b-df-hj-np-tv-z]\w*/],
  ['a double space',/ {2}/],
