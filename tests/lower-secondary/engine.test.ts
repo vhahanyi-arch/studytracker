@@ -22,7 +22,8 @@ const LINT:Array<[string,RegExp]>=[
  ['"an" before a consonant sound',/\ban (?!hour|honest|[aeiou8]|11|18)[b-df-hj-np-tv-z]\w*/],
  ['a double space',/ {2}/],
  // A spaced colon is ratio notation (flour : sugar); a colon with no space after it is not.
- ['a space before punctuation',/ [.,;?]| :(?! )/],
+ // ... after a list is an ellipsis (1, 3, 5, ...), not a stray full stop.
+ ['a space before punctuation',/ [,;?]| .(?!.)| :(?! )/],
  ['an ASCII minus on a negative number',/(^|[\s(=,:])-\d/],
  ['leftover code',/NaN|undefined|Infinity|\[object|null\b/],
 ];
