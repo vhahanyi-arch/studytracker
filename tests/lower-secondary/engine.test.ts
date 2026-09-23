@@ -19,11 +19,12 @@ const LINT:Array<[string,RegExp]>=[
  // Lowercase only: a capital A is usually a variable ("A = 2 × 3 and B ...").
  // And only after a word or at the start: "4a − 3a = a and 7b ..." is algebra.
  ['"a" before a vowel sound',/(?:^|[A-Za-z,;:] )a (?!uni|use|one|eu|u\b)[aeiou]\w*/],
- ['"an" before a consonant sound',/\ban (?!hour|honest|[aeiou8]|11|18)[b-df-hj-np-tv-z]\w*/],
+ // A single letter can take "an": "an n-sided base", "an x-coordinate".
+ ['"an" before a consonant sound',/\ban (?!hour|honest|[aeiou8]|11|18|[fhlmnrsx](?![a-z]))[b-df-hj-np-tv-z]\w*/],
  ['a double space',/ {2}/],
  // A spaced colon is ratio notation (flour : sugar); a colon with no space after it is not.
  // ... after a list is an ellipsis (1, 3, 5, ...), not a stray full stop.
- ['a space before punctuation',/ [,;?]| .(?!.)| :(?! )/],
+ ['a space before punctuation',/ [,;?]| \.(?!\.)| :(?! )/],
  ['an ASCII minus on a negative number',/(^|[\s(=,:])-\d/],
  ['leftover code',/NaN|undefined|Infinity|\[object|null\b/],
 ];

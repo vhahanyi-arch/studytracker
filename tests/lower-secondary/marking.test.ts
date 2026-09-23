@@ -26,4 +26,12 @@ test('ordered lists compare their numbers in order',()=>{
  assert.ok(!answerMatches('3, 0, -2, -7',['-7,-2,0,3']));
 });
 
+// The answer box says a unit may be included; before this, "37.7 cm" was marked wrong.
+test('a numeric answer may carry its unit or currency sign',()=>{
+ for(const typed of ['37.7 cm','37.7cm','R37.7','37.7 m²','37.7 cm^3','37.7%','37.7 km/h','37.7 degrees']) assert.ok(answerMatches(typed,['37.7']),typed);
+ assert.ok(!answerMatches('37.8 cm',['37.7']));
+ assert.ok(!answerMatches('2x',['2']),'a variable is not a unit');
+ assert.ok(!answerMatches('2 cm',['2x']));
+});
+
 test('coordinates compare in order',()=>{assert.ok(answerMatches('(5, 3)',['(5,3)']));assert.ok(!answerMatches('(3,5)',['(5,3)']));});
