@@ -1392,7 +1392,7 @@ function PhysicsExamStudent({ back }: { back: () => void }) {
           </div>
           <button onClick={() => { setResult(null); load(); }}>← Back to papers</button>
         </div>
-        <div className="error-text" style={{ background: "#eef1ff", color: "var(--purple)" }}>
+        <div className="error-text" style={{ background: "var(--bg-violet-96-f)", color: "inherit" }}>
           Proposed marks are not final grades. Anything needing your teacher's judgment is excluded from the total until they confirm it.
         </div>
         {result.submission.grades.map((grade) => {
