@@ -45,7 +45,7 @@ export function answerMatches(input:unknown,accepted:string[]) {
           actualSequence.every((value,index)=>Math.abs(value-expectedSequence[index])<0.0001)) return true;
     }
     const a=Number(withoutUnit(actual)),b=Number(clean);
-    return Number.isFinite(a)&&Number.isFinite(b)&&Math.abs(a-b)<=Math.max(0.0001,Math.abs(b)*0.001);
+    return Number.isFinite(a)&&Number.isFinite(b)&&Math.abs(a-b)<=Math.max(1e-9,Math.abs(b)*0.001);
   });
 }
 

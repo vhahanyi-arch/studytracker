@@ -125,3 +125,9 @@ test('a factorised form accepts its bracket in either order',()=>{
 test('superscript powers convert to caret form',()=>{
  assert.equal(supToCaret('2³ × 3² × 5'),'2^3 × 3^2 × 5');assert.equal(supToCaret('7¹²'),'7^12');assert.equal(supToCaret('9'),'9');
 });
+
+// String(0.00000032) is "3.2e-7"; students must see the digits.
+test('very small numbers print as decimals, not exponent notation',()=>{
+ assert.equal(fmt(0.00000032),'0.00000032');assert.equal(ans(-0.0000045),'-0.0000045');assert.equal(fmt(3.2e-7*-1),'−0.00000032');
+ assert.equal(fmt(0.00012),'0.00012');
+});

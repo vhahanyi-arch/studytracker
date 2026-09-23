@@ -35,3 +35,9 @@ test('a numeric answer may carry its unit or currency sign',()=>{
 });
 
 test('coordinates compare in order',()=>{assert.ok(answerMatches('(5, 3)',['(5,3)']));assert.ok(!answerMatches('(3,5)',['(5,3)']));});
+
+// A fixed 0.0001 slack accepted 0.0000032 for 0.000032: ten times too small.
+test('small answers are compared relative to their size',()=>{
+ assert.ok(!answerMatches('0.0000032',['0.000032']));assert.ok(answerMatches('0.000032',['0.000032']));
+ assert.ok(answerMatches('0.3333',['0.3333333333']));assert.ok(answerMatches('0',['0']));assert.ok(!answerMatches('0.001',['0']));
+});
