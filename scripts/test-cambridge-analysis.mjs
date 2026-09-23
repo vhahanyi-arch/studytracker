@@ -14,7 +14,8 @@ const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
 // Real Cambridge past papers, which are copyrighted and so are not committed.
 // Point CAMBRIDGE_PAPERS_DIR at wherever you keep them; cases whose PDFs are
 // missing are skipped rather than failed, which is why CI runs the other
-// twelve harnesses and reports this one as skipped.
+// twelve harnesses and reports this one as skipped. CI still covers the layout
+// through made-up papers in tests/extraction/synthetic-papers.test.ts.
 const downloads = process.env.CAMBRIDGE_PAPERS_DIR || "C:/Users/USER/Downloads";
 const cases = [
   {
