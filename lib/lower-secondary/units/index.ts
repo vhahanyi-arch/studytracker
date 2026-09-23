@@ -27,6 +27,8 @@ import { s9u7 } from "./s9-u7";
 import { s9u8 } from "./s9-u8";
 import { s9u9 } from "./s9-u9";
 import { s9u10 } from "./s9-u10";
+import { s9u11 } from "./s9-u11";
+import { s9u12 } from "./s9-u12";
 
 export const stageUnits: Record<string, Template[]> = {
   "s8-u1": s8u1,
@@ -55,4 +57,6 @@ export const stageUnits: Record<string, Template[]> = {
   "s9-u8": s9u8,
   "s9-u9": s9u9,
   "s9-u10": s9u10,
+  "s9-u11": s9u11,
+  "s9-u12": s9u12,
 };
