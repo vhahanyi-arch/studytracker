@@ -33,6 +33,7 @@ import {
   removeCloudAnswerDraft,
 } from '@/lib/answer-drafts';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { RevisionNotes } from '@/components/RevisionNotes';
 import { DrawingPad } from '@/components/DrawingPad';
 import { QuestionImage } from '@/components/QuestionImage';
 import { PdfAnnotator } from '@/components/PdfAnnotator';
@@ -800,7 +801,8 @@ function PhysicsSyllabusChecklist({ level }:{ level:"igcse"|"as" }) {
 }
 
 function PhysicsTeacher({ level }: { level: "igcse" | "as" }) {
-  const [view,setView]=useState<"progress"|"checklist">("progress");
+  const [view,setView]=useState<"progress"|"checklist"|"notes">("progress");
+  const [noteTopic,setNoteTopic]=useState("as-u1");
   const [students,setStudents]=useState<Array<{student_id:string;student_name:string;chapter_id:string;attempts:number;average:number;strong_sets:number;mastered:boolean;last_active:string}>>([]);
   const [state,setState]=useState("Loading physics practice activity…");
   const units = level==="as" ? asPhysicsUnits : igcsePhysicsUnits;
@@ -829,8 +831,13 @@ function PhysicsTeacher({ level }: { level: "igcse" | "as" }) {
     <div className="stage89-switch">
       <button className={view==="progress"?"primary":""} onClick={()=>setView("progress")}>Student progress</button>
       <button className={view==="checklist"?"primary":""} onClick={()=>setView("checklist")}>Syllabus checklist</button>
+      {level==="as"&&<button className={view==="notes"?"primary":""} onClick={()=>setView("notes")}>Revision notes</button>}
     </div>
-    {view==="checklist" ? <PhysicsSyllabusChecklist level={level} /> : <>
+    {view==="notes" ? <section className="panel teacher-notes">
+      <header><div><h3>Revision notes</h3><p>Exactly what students see beside each topic&rsquo;s practice.</p></div></header>
+      <nav className="notes-topic-picker" aria-label="Topic">{units.map(unit=><button key={unit.id} aria-pressed={noteTopic===unit.id} className={noteTopic===unit.id?"active":""} onClick={()=>setNoteTopic(unit.id)}>{unit.title}</button>)}</nav>
+      <RevisionNotes unitId={noteTopic} showTitle />
+    </section> : view==="checklist" ? <PhysicsSyllabusChecklist level={level} /> : <>
     {state && <p className="queue-message panel">{state}</p>}
     {!!students.length && <table className="mastery-table">
       <thead><tr><th>Student</th><th>Topic</th><th>Attempts</th><th>Average</th><th>Strong sets</th><th>Status</th><th>Last active</th></tr></thead>
@@ -1567,6 +1574,8 @@ function PhysicsStudent({ back, level }:{ back:()=>void; level:"igcse"|"as" }) {
   const [libraryView,setLibraryView]=useState<"topics"|"checklist">("topics");
   const [progress,setProgress]=useState<Record<string,{attempts:number;average:number;strong_sets:number;mastered:boolean}>>({});
   const [practice,setPractice]=useState<PhysicsUnit|null>(null);
+  // AS only: every AS topic has revision notes (tests/notes/content.test.ts).
+  const [notesUnit,setNotesUnit]=useState<PhysicsUnit|null>(null);
   const [session,setSession]=useState<{id:string;level:string;chapter:string;difficulty:string;questions:Array<{templateId?:string;objective?:string;difficulty?:string;answerFormat?:string;prompt:string;hint:string}>}|null>(null);
   const [answers,setAnswers]=useState<string[]>([]),[hints,setHints]=useState<boolean[]>([]),[cursor,setCursor]=useState(0),[result,setResult]=useState<any>(null),[message,setMessage]=useState("");
   const units = level==="as" ? asPhysicsUnits : igcsePhysicsUnits;
@@ -1598,6 +1607,16 @@ function PhysicsStudent({ back, level }:{ back:()=>void; level:"igcse"|"as" }) {
     setMessage("");
   };
   const closePractice=()=>{setPractice(null);setSession(null);setResult(null);setMessage("");};
+  // The notes replace the page, so open them at the top rather than wherever
+  // the student had scrolled to on the topic grid.
+  const openNotes=(unit:PhysicsUnit)=>{closePractice();setNotesUnit(unit);window.scrollTo({top:0});};
+
+  if(notesUnit)
+    return <section className="stage7-practice panel revision-notes-panel">
+      <header><button onClick={()=>setNotesUnit(null)}>← Curriculum</button><div><small>AS PHYSICS · REVISION NOTES</small><h2>{notesUnit.title}</h2></div><span>9702</span></header>
+      <main><RevisionNotes unitId={notesUnit.id} /></main>
+      <footer><button onClick={()=>setNotesUnit(null)}>Return to curriculum</button><button className="primary" onClick={()=>{const unit=notesUnit;setNotesUnit(null);startPractice(unit);}}>Practise this topic →</button></footer>
+    </section>;
 
   if(practice&&session){
     const question=session.questions[cursor];
@@ -1615,7 +1634,7 @@ function PhysicsStudent({ back, level }:{ back:()=>void; level:"igcse"|"as" }) {
             </article>
           )}</div>
         </main>
-        <footer><button onClick={closePractice}>Return to curriculum</button><button className="primary" onClick={()=>startPractice(practice)}>Start a fresh set</button></footer>
+        <footer><button onClick={closePractice}>Return to curriculum</button>{level==="as"&&<button onClick={()=>openNotes(practice)}>Revision notes</button>}<button className="primary" onClick={()=>startPractice(practice)}>Start a fresh set</button></footer>
       </section>;
     return <section className="stage7-practice panel">
       <header><button onClick={closePractice}>← Curriculum</button><div><small>{level.toUpperCase()} PHYSICS · {session.difficulty.toUpperCase()}</small><h2>{practice.title}</h2></div><span>Question {cursor+1} of {session.questions.length}</span></header>
@@ -1666,6 +1685,7 @@ function PhysicsStudent({ back, level }:{ back:()=>void; level:"igcse"|"as" }) {
         <p>{unit.summary}</p>
         <div><em>{!unit.available?"Coming soon":item?.mastered?"Mastered":item?.attempts?"In progress":"Not started"}</em><b>{unit.available&&item?.attempts?`${item.average}%`:"—"}</b></div>
         <button disabled={!unit.available} onClick={()=>startPractice(unit)}>{unit.available?"Practise unit →":"Coming soon"}</button>
+        {level==="as"&&<button className="notes-link" onClick={()=>openNotes(unit)}>Revision notes</button>}
       </article>;
     })}</div>
     </>}

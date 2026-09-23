@@ -6052,3 +6052,113 @@ summary:focus-visible,
     animation-iteration-count: 1 !important;
   }
 }
+
+/* =======================================================================
+   AS Physics revision notes
+
+   Reading, not a form: a wider panel than practice, a reading measure on the
+   prose, and formula tables allowed the full width -- scrolling inside their
+   own frame on a phone rather than widening the page.
+   ======================================================================= */
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.stage7-practice.revision-notes-panel { max-width: 980px; }
+/* The practice screen caps its main at 620px, which suits one question and
+   crushes a formula table. */
+.revision-notes-panel > main { padding: 6px 28px 28px; max-width: none; }
+.notes-status { color: var(--muted); padding: 24px 0; margin: 0; }
+
+.revision-notes { color: var(--ink); font-size: var(--t-body); line-height: 1.6; }
+/* Prose only -- direct children -- so the symbol grid, which is also a list,
+   keeps its full width. The size is set here rather than inherited because
+   .portal-shell p pins every paragraph in the portal to 15px, and these are
+   the one screen that is read at length. */
+.revision-notes > p,
+.revision-notes > ul { max-width: 70ch; font-size: var(--t-body); }
+.revision-notes > ul { padding-left: 1.2em; }
+.revision-notes > ul > li + li { margin-top: 6px; }
+.revision-notes h2 { font-size: var(--t-h2); margin: 24px 0 6px; }
+.revision-notes h3 {
+  font-size: var(--t-h3); margin: 30px 0 6px; padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.revision-notes h4 { font-size: var(--t-lead); margin: 22px 0 4px; color: var(--physics); }
+.revision-notes > :first-child { margin-top: 14px; border-top: 0; padding-top: 0; }
+.revision-notes a { color: var(--physics); text-underline-offset: 2px; }
+.revision-notes sub { font-size: 0.72em; }
+
+/* An antiparticle: the bar is the notation, so it has to be visible. */
+.overbar { text-decoration: overline; text-decoration-thickness: 1px; }
+
+/* A nuclide: nucleon number over proton number, right-aligned, before the
+   symbol -- the form exam papers print, where the notes had `^238_92 U`. */
+.nuclide { display: inline-flex; align-items: center; gap: 1px; vertical-align: middle; white-space: nowrap; }
+.nuclide-numbers {
+  display: inline-flex; flex-direction: column; align-items: flex-end;
+  font-size: 0.66em; line-height: 1.05; font-variant-numeric: tabular-nums;
+}
+
+.notes-table { overflow-x: auto; margin: 12px 0 22px; border: 1px solid var(--line); border-radius: 10px; }
+.notes-table:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.notes-table table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: var(--t-small); line-height: 1.5; }
+.notes-table th {
+  text-align: left; background: var(--paper); font-weight: 700;
+  padding: 10px 14px; border-bottom: 1px solid var(--line);
+}
+.notes-table td { padding: 10px 14px; vertical-align: top; }
+.notes-table tr + tr td { border-top: 1px solid var(--line); }
+/* The first column is the formula itself; it is what a student scans for. */
+.notes-table td:first-child { font-weight: 600; color: var(--ink); }
+
+/* The topic card's second action, quieter than practising. */
+.stage7-chapter-grid.student button.notes-link {
+  margin-top: 6px; background: transparent; border-color: transparent; color: var(--accent);
+}
+@media (hover: hover) and (pointer: fine) {
+  .stage7-chapter-grid.student button.notes-link:hover { border-color: var(--line); }
+}
+
+/* Teacher view: every topic's notes, one at a time. */
+.teacher-notes { padding: 0 0 20px; }
+.teacher-notes > header { padding: 18px 24px; border-bottom: 1px solid var(--line); }
+.teacher-notes > header h3 { margin: 0; }
+.teacher-notes > header p { margin: 4px 0 0; color: var(--muted); }
+.notes-topic-picker {
+  display: flex; flex-wrap: wrap; gap: 8px; padding: 16px 24px;
+  border-bottom: 1px solid var(--line);
+}
+.notes-topic-picker button {
+  border: 1px solid var(--line); border-radius: 999px; padding: 7px 13px;
+  background: #fff; color: var(--ink); font-size: var(--t-fine); font-weight: 600;
+}
+.notes-topic-picker button.active {
+  background: var(--subject, var(--physics)); border-color: var(--subject, var(--physics)); color: #fff;
+}
+.teacher-notes .revision-notes { padding: 0 28px 8px; }
+
+/* Circuit symbols, drawn for StudyTrack from the syllabus forms. */
+.circuit-symbols { margin: 16px 0 26px; }
+.circuit-symbols ul {
+  list-style: none; margin: 0; padding: 0; display: grid; gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+.circuit-symbols li {
+  border: 1px solid var(--line); border-radius: 10px; padding: 12px 10px 10px; background: #fff;
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 8px;
+}
+.circuit-symbols li.tall { grid-row: span 2; }
+.circuit-symbols svg { width: 100%; max-width: 132px; height: auto; color: var(--ink); overflow: visible; }
+.circuit-symbols li > span { font-size: var(--t-fine); color: var(--muted); text-align: center; line-height: 1.3; }
+.circuit-symbols figcaption { margin-top: 10px; font-size: var(--t-fine); color: var(--muted); }
+
+@media (max-width: 720px) {
+  .revision-notes-panel > main { padding: 4px 16px 20px; }
+  .teacher-notes > header,
+  .notes-topic-picker { padding-left: 16px; padding-right: 16px; }
+  .teacher-notes .revision-notes { padding: 0 16px 8px; }
+  .circuit-symbols ul { grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); }
+}

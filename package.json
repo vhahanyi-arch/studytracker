@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test \"tests/**/*.test.ts\"",
     "test:content": "node scripts/run-content-regression.mjs",
-    "verify": "pnpm typecheck && pnpm test && pnpm test:content"
+    "verify": "pnpm typecheck && pnpm test && pnpm test:content",
+    "notes:as": "node scripts/generate-as-physics-notes.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.31.9",
