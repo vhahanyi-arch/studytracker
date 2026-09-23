@@ -16,7 +16,8 @@ const tierLetter={foundational:'f',application:'a',reasoning:'r'} as const;
 // A pie chart's "sector" is Lower Secondary; the area of a circle's sector is not.
 const OUT_OF_SCOPE=/\b(sin|cos|tan)\b|\bsine\b|cosine|trigonometr|quartile|interquartile|\bIQR\b|arc length|sector of (a|the) circle|area of (a|the) sector|sector area|negative scale factor/i;
 const LINT:Array<[string,RegExp]>=[
- ['"1" with a plural noun',/\b1 (hours|minutes|seconds|days|weeks|months|years|times|people|items|students|games|trials|books|pens|boxes|tickets|questions)\b/],
+ // Not the last digit of a decimal: "1.1 times" and "61.1 minutes" are correct.
+ ['"1" with a plural noun',/(?<![\d.])1 (hours|minutes|seconds|days|weeks|months|years|times|people|items|students|games|trials|books|pens|boxes|tickets|questions)\b/],
  // Lowercase only: a capital A is usually a variable ("A = 2 × 3 and B ...").
  // And only after a word or at the start: "4a − 3a = a and 7b ..." is algebra.
  // Nor before a word no article can precede: "of a and b" is algebra too.
