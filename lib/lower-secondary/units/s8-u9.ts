@@ -117,11 +117,11 @@ export const s8u9: Template[] = [
   }),
   T(`${U}-r5`, "reasoning", ["8As.02"], "Find where two sequences share a term number", () => {
     const n = r(2, 12), a = r(2, 5), c = a + r(1, 4), b = r(1, 15), d = a * n + b - c * n;
-    return { prompt: `Two sequences have nth terms ${nth(a, b)} and ${nth(c, d)}. For which value of n are the two terms equal?`, answers: [String(n)], hint: "Set the two expressions equal and solve for n.", solution: `${nth(a, b)} = ${nth(c, d)} gives ${c - a}n = ${b - d}, so n = ${n}.` };
+    return { prompt: `Two sequences have nth terms ${nth(a, b)} and ${nth(c, d)}. For which value of n are the two terms equal?`, answers: [String(n)], hint: "Set the two expressions equal and solve for n.", solution: `${nth(a, b)} = ${nth(c, d)} gives ${linear(c - a, 0, "n")} = ${b - d}, so n = ${n}.` };
   }),
   T(`${U}-r6`, "reasoning", ["8As.03"], "Find where input and output are equal", () => {
     const m = r(2, 6), x = r(2, 12) * pick([-1, 1]), c = x - m * x;
-    return { prompt: `A function multiplies the input by ${m}, then ${c < 0 ? "subtracts" : "adds"} ${Math.abs(c)}. Which input gives an output equal to itself?`, answers: [ans(x)], hint: `Solve x = ${linear(m, c)}.`, solution: `x = ${linear(m, c)} gives ${m - 1}x = ${fmt(-c)}, so x = ${fmt(x)}.` };
+    return { prompt: `A function multiplies the input by ${m}, then ${c < 0 ? "subtracts" : "adds"} ${Math.abs(c)}. Which input gives an output equal to itself?`, answers: [ans(x)], hint: `Solve x = ${linear(m, c)}.`, solution: `x = ${linear(m, c)} gives ${linear(m - 1, 0)} = ${fmt(-c)}, so x = ${fmt(x)}.` };
   }),
   T(`${U}-r7`, "reasoning", ["8As.02"], "Find the first term above a value", () => {
     const a = r(3, 8), b = -r(5, 30), limit = 10 * r(5, 20);

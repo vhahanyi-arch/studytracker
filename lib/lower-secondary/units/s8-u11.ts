@@ -59,7 +59,7 @@ export const s8u11: Template[] = [
   }),
   T(`${U}-a2`, "application", ["8As.07"], "Interpret where two lines intersect", () => {
     const x = r(3, 20), m1 = r(2, 6), m2 = m1 + r(1, 5), c2 = r(5, 30), c1 = c2 + (m2 - m1) * x;
-    return { prompt: `Plan A costs y = ${linear(m1, c1)} and Plan B costs y = ${linear(m2, c2)} (y in rand, x in gigabytes). Their graphs intersect. At what value of x do the plans cost the same?`, answers: [String(x)], hint: "At the intersection the two costs are equal.", solution: `${linear(m1, c1)} = ${linear(m2, c2)} gives ${m2 - m1}x = ${c1 - c2}, so x = ${x}.` };
+    return { prompt: `Plan A costs y = ${linear(m1, c1)} and Plan B costs y = ${linear(m2, c2)} (y in rand, x in gigabytes). Their graphs intersect. At what value of x do the plans cost the same?`, answers: [String(x)], hint: "At the intersection the two costs are equal.", solution: `${linear(m1, c1)} = ${linear(m2, c2)} gives ${linear(m2 - m1, 0)} = ${fmt(c1 - c2)}, so x = ${x}.` };
   }),
   T(`${U}-a3`, "application", ["8As.07"], "Find a speed from part of a travel graph", () => {
     const j = journey();
@@ -96,7 +96,7 @@ export const s8u11: Template[] = [
   }),
   T(`${U}-r2`, "reasoning", ["8As.07"], "Find where two lines meet", () => {
     const x = r(-3, 6), m1 = r(1, 5), m2 = -r(1, 4), c1 = r(-6, 8), c2 = m1 * x + c1 - m2 * x;
-    return { prompt: `The lines ${line(m1, c1)} and ${line(m2, c2)} intersect. Find the x-coordinate of the intersection.`, answers: [ans(x)], hint: "Set the right-hand sides equal and solve.", solution: `${linear(m1, c1)} = ${linear(m2, c2)} gives ${m1 - m2}x = ${fmt(c2 - c1)}, so x = ${fmt(x)}.` };
+    return { prompt: `The lines ${line(m1, c1)} and ${line(m2, c2)} intersect. Find the x-coordinate of the intersection.`, answers: [ans(x)], hint: "Set the right-hand sides equal and solve.", solution: `${linear(m1, c1)} = ${linear(m2, c2)} gives ${linear(m1 - m2, 0)} = ${fmt(c2 - c1)}, so x = ${fmt(x)}.` };
   }),
   T(`${U}-r3`, "reasoning", ["8As.04"], "Use a linear model backwards", () => {
     const m = 5 * r(5, 12), c = 10 * r(3, 12), x = r(2, 9);
