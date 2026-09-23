@@ -938,6 +938,27 @@ function PastPaperPracticeCrop({source}:{source:PastPaperPracticeSource}){
 
 type CrossStagePracticeUnit = LowerSecondaryUnit & { sourceStage: 7 | 8 | 9 };
 
+// A route that crashes or times out answers with the host's plain-text error
+// page rather than JSON. Report that as a sentence instead of a parse error
+// such as "Unexpected token 'A'".
+async function readReply(response: Response) {
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(
+      response.status === 504 || /timed? ?out/i.test(text)
+        ? "The server took too long to answer. Try again, or upload fewer pages."
+        : `The server sent an unexpected reply (HTTP ${response.status}). Try again in a moment.`,
+    );
+  }
+}
+
+function startedAgo(iso: string) {
+  const minutes = Math.round((Date.now() - Date.parse(iso)) / 60000);
+  return minutes < 1 ? "just now" : minutes === 1 ? "a minute ago" : `${minutes} minutes ago`;
+}
+
 function PhysicsExamTeacher() {
   type PaperSummary = { id: string; title: string; syllabus: string; status: string; revision: number;
     questions: Array<{ id: string; text: string; context: string; marks: number; topic: string; sourcePages: number[]; references: string[]; issues: string[] }>;
@@ -960,15 +981,18 @@ function PhysicsExamTeacher() {
   const [reviewing, setReviewing] = useState<PaperSummary | null>(null);
   const [editJson, setEditJson] = useState("");
   const [reviewingSubmission, setReviewingSubmission] = useState<Submission | null>(null);
+  const [jobs, setJobs] = useState<Array<{ id: string; title: string; createdAt: string }>>([]);
+  const [pollTick, setPollTick] = useState(0);
 
   async function load() {
     setLoading(true);
     try {
       const response = await fetch("/api/physics-exam");
-      const data = await response.json();
+      const data = await readReply(response);
       if (!response.ok) throw new Error(data.error || "Could not load papers.");
       setPapers(data.papers || []);
       setSubmissions(data.submissions || []);
+      setJobs(data.jobs || []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load papers.");
     } finally {
@@ -976,6 +1000,38 @@ function PhysicsExamTeacher() {
     }
   }
   useEffect(() => { load(); }, []);
+
+  // Reading a whole paper takes the model longer than one request may run, so
+  // the upload only starts it. Each running job is checked every five seconds
+  // until it becomes a draft paper or fails.
+  useEffect(() => {
+    if (!jobs.length) return;
+    const timer = window.setTimeout(async () => {
+      for (const job of jobs) {
+        let response: Response;
+        let data: { status?: string; error?: string; paper?: PaperSummary };
+        try {
+          response = await fetch("/api/physics-exam", {
+            method: "POST", headers: { "content-type": "application/json" },
+            body: JSON.stringify({ action: "extraction-status", jobId: job.id }),
+          });
+          data = await readReply(response);
+        } catch {
+          continue; // A dropped connection or a slow reply: check again next round.
+        }
+        if (response.ok && data.status === "running") continue;
+        setJobs((current) => current.filter((j) => j.id !== job.id));
+        if (!response.ok) {
+          setError(`${job.title}: ${data.error || "The extraction failed."}`);
+          continue;
+        }
+        await load();
+        if (data.status === "done" && data.paper) openReview(data.paper);
+      }
+      setPollTick((n) => n + 1);
+    }, 5000);
+    return () => window.clearTimeout(timer);
+  }, [jobs, pollTick]);
 
   async function saveReview(submissionId: string, questionId: string, score: number, note: string) {
     setBusy(true);
@@ -985,7 +1041,7 @@ function PhysicsExamTeacher() {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ action: "review", submissionId, questionId, score, note }),
       });
-      const data = await response.json();
+      const data = await readReply(response);
       if (!response.ok) throw new Error(data.error || "Could not save this mark.");
       setReviewingSubmission(data.submission);
       await load();
@@ -1010,11 +1066,10 @@ function PhysicsExamTeacher() {
       form.set("action", "extract");
       form.set("combined", String(combined));
       const response = await fetch("/api/physics-exam", { method: "POST", body: form });
-      const data = await response.json();
+      const data = await readReply(response);
       if (!response.ok) throw new Error(data.error || "Extraction failed.");
       setUploadOpen(false);
-      await load();
-      openReview(data.paper);
+      setJobs((current) => [...current, data.job]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Extraction failed.");
     } finally {
@@ -1034,7 +1089,7 @@ function PhysicsExamTeacher() {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ action: "approve", paperId: reviewing.id, revision: reviewing.revision, extraction }),
       });
-      const data = await response.json();
+      const data = await readReply(response);
       if (!response.ok) throw new Error(data.error || "Could not publish this paper.");
       setReviewing(null);
       await load();
@@ -1185,9 +1240,20 @@ function PhysicsExamTeacher() {
             <p>Draft papers need your review before students can see them</p>
           </div>
         </header>
-        {loading ? (
+        {jobs.map((job) => (
+          <article key={job.id}>
+            <span>…</span>
+            <div>
+              <b>{job.title}</b>
+              <small>Reading the paper · started {startedAgo(job.createdAt)}. Keep this page open; it appears here when it is ready.</small>
+            </div>
+            <div><span className="badge amber">Extracting</span></div>
+            <div />
+          </article>
+        ))}
+        {loading && !papers.length && !jobs.length ? (
           <p>Loading…</p>
-        ) : !papers.length ? (
+        ) : !papers.length && !jobs.length ? (
           <p>No papers uploaded yet. Upload a question paper and mark scheme to get started.</p>
         ) : (
           papers.map((paper, i) => (
@@ -1261,8 +1327,8 @@ function PhysicsExamTeacher() {
             )}
             <small>PDF · up to 25 MB each · scans supported</small>
             {error && <p className="error-text">{error}</p>}
-            <button disabled={busy} className="primary full">{busy ? "Reading page images…" : "Extract questions →"}</button>
-            <small>Page images are sent to the configured OpenAI model. Allow a few minutes.</small>
+            <button disabled={busy} className="primary full">{busy ? "Uploading and starting…" : "Extract questions →"}</button>
+            <small>Page images are sent to the configured OpenAI model. A whole paper takes a few minutes to read, and appears in your list when it is ready.</small>
           </form>
         </div>
       )}

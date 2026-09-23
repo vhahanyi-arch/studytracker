@@ -284,6 +284,22 @@ async function applySchema() {
     CREATE INDEX IF NOT EXISTS physics_exam_submissions_paper_idx
     ON physics_exam_submissions (paper_id)
   `;
+  // An extraction still running at OpenAI. The row becomes a draft paper when
+  // the result is collected, and is deleted then or when the job fails.
+  await sql`
+    CREATE TABLE IF NOT EXISTS physics_exam_jobs (
+      id UUID PRIMARY KEY,
+      teacher_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      response_id TEXT NOT NULL,
+      payload JSONB NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`
+    CREATE INDEX IF NOT EXISTS physics_exam_jobs_teacher_idx
+    ON physics_exam_jobs (teacher_id)
+  `;
 }
 
 export async function ensureSchema() {

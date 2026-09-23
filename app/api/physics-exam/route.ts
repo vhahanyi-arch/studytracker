@@ -5,16 +5,18 @@ import { sql, ensureSchema } from '@/lib/db';
 import {
   papersForTeacher, papersForStudent, getPaperWithOwner, insertPaper, updatePaper,
   submissionsForStudent, submissionsForTeacher, getSubmissionWithOwner, insertSubmission, updateSubmission,
-  teacherFor,
+  teacherFor, insertExtractionJob, extractionJobsForTeacher, getExtractionJob, claimExtractionJob,
 } from '@/lib/physics-exam-repository';
 import { demoPaper } from '@/lib/physics-exam-demo';
 import { approvePaper, makeSubmission, overrideGrade, SubmitSchema } from '@/lib/physics-exam-workflows';
-import { extractDocuments } from '@/lib/physics-exam-extraction';
+import { startExtraction, checkExtraction, cancelExtraction } from '@/lib/physics-exam-extraction';
 import { getFile, storeFile } from '@/lib/physics-exam-storage';
 import type { Paper, Answer } from '@/lib/physics-extraction-schema';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
+
+const MAX_EXTRACTION_MS = 30 * 60 * 1000;
 
 export async function GET() {
   const { userId } = await auth();
@@ -24,8 +26,11 @@ export async function GET() {
   await ensureSchema();
   try {
     if (user.publicMetadata.role === 'teacher') {
-      const [papers, submissions] = await Promise.all([papersForTeacher(userId), submissionsForTeacher(userId)]);
-      return NextResponse.json({ papers, submissions, config: { vision: !!process.env.OPENAI_API_KEY } });
+      const [papers, submissions, jobs] = await Promise.all([papersForTeacher(userId), submissionsForTeacher(userId), extractionJobsForTeacher(userId)]);
+      return NextResponse.json({
+        papers, submissions, config: { vision: !!process.env.OPENAI_API_KEY },
+        jobs: jobs.map(({ id, title, createdAt }) => ({ id, title, createdAt })),
+      });
     }
     if (user.publicMetadata.role !== 'student')
       return NextResponse.json({ error: 'Access denied.' }, { status: 403 });
@@ -73,13 +78,38 @@ export async function POST(request: Request) {
       const q = await storeFile(question, 'pdf');
       const m = !combined ? await storeFile(scheme as File, 'pdf') : null;
       const files: Paper['files'] = [{ role: combined ? 'combined' : 'questions', file: q }, ...(m ? [{ role: 'scheme' as const, file: m }] : [])];
-      const extracted = await extractDocuments(await Promise.all(files.map(async (f) => ({ role: f.role, bytes: new Uint8Array((await getFile(f.file.id)).bytes) }))));
-      const paper: Paper = { ...extracted, id: crypto.randomUUID(), title: String(form.get('title') || question.name).slice(0, 200), status: 'draft', files, revision: 0, createdAt: new Date().toISOString() };
-      await insertPaper(userId, paper);
-      return NextResponse.json({ paper });
+      // Only starts the extraction: the model's reading of a whole paper runs
+      // past this function's time limit, so the page polls extraction-status.
+      const started = await startExtraction(await Promise.all(files.map(async (f) => ({ role: f.role, bytes: new Uint8Array((await getFile(f.file.id)).bytes) }))));
+      const job = { id: crypto.randomUUID(), teacherId: userId, title: String(form.get('title') || question.name).slice(0, 200), responseId: started.responseId, files, pages: started.pages };
+      await insertExtractionJob(job);
+      return NextResponse.json({ job: { id: job.id, title: job.title, createdAt: new Date().toISOString() } }, { status: 202 });
     }
 
     const body = await request.json();
+
+    if (body.action === 'extraction-status') {
+      if (role !== 'teacher') return NextResponse.json({ error: 'Teacher access is required.' }, { status: 403 });
+      const job = await getExtractionJob(String(body.jobId || ''));
+      // Already collected, by an earlier check or another open tab.
+      if (!job || job.teacherId !== userId) return NextResponse.json({ status: 'gone' });
+      try {
+        if (Date.now() - Date.parse(job.createdAt) > MAX_EXTRACTION_MS) {
+          await cancelExtraction(job.responseId);
+          throw Error('The extraction took longer than 30 minutes and was stopped. Upload fewer pages at a time.');
+        }
+        const state = await checkExtraction(job.responseId, job.pages);
+        if (state.state === 'running') return NextResponse.json({ status: 'running' });
+        if (!(await claimExtractionJob(job.id))) return NextResponse.json({ status: 'gone' });
+        const paper: Paper = { ...state.extraction, id: crypto.randomUUID(), title: job.title, status: 'draft', files: job.files, revision: 0, createdAt: new Date().toISOString() };
+        await insertPaper(userId, paper);
+        return NextResponse.json({ status: 'done', paper });
+      } catch (e) {
+        // A failed job is reported once and then removed, so it is not retried forever.
+        await claimExtractionJob(job.id);
+        throw e;
+      }
+    }
 
     if (body.action === 'demo') {
       if (role !== 'teacher') return NextResponse.json({ error: 'Teacher access is required.' }, { status: 403 });

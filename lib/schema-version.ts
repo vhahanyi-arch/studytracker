@@ -7,7 +7,8 @@
 // cold start can skip the lot after a single query. Without the stamp every
 // cold lambda issued thirty sequential round trips to Neon before it could
 // serve its first request.
-export const SCHEMA_VERSION = 1;
+// 2: physics_exam_jobs, for extractions running in the background.
+export const SCHEMA_VERSION = 2;
 
 /**
  * Whether the DDL still needs applying, given the newest stamp in the table.

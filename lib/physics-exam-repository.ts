@@ -9,6 +9,7 @@
 
 import { sql } from "./db";
 import type { Paper, Submission } from "./physics-extraction-schema";
+import type { PageRefs } from "./physics-exam-extraction";
 
 // @neondatabase/serverless does not consistently pre-parse jsonb columns
 // into objects across all query shapes, so this defensively handles both
@@ -103,6 +104,54 @@ export async function updateSubmission(submission: Submission): Promise<void> {
   await sql`
     UPDATE physics_exam_submissions SET payload=${JSON.stringify(submission)} WHERE id=${submission.id}
   `;
+}
+
+// ── Extractions still running ──────────────────────────────────────────────
+
+export type ExtractionJob = {
+  id: string;
+  teacherId: string;
+  title: string;
+  responseId: string;
+  files: Paper["files"];
+  pages: PageRefs;
+  createdAt: string;
+};
+
+function toJob(row: Record<string, unknown>): ExtractionJob {
+  const payload = parsePayload<{ files: Paper["files"]; pages: PageRefs }>(row.payload);
+  return {
+    id: String(row.id), teacherId: String(row.teacher_id), title: String(row.title),
+    responseId: String(row.response_id), files: payload.files, pages: payload.pages,
+    createdAt: new Date(String(row.created_at)).toISOString(),
+  };
+}
+
+export async function insertExtractionJob(job: Omit<ExtractionJob, "createdAt">): Promise<void> {
+  await sql`
+    INSERT INTO physics_exam_jobs (id, teacher_id, title, response_id, payload)
+    VALUES (${job.id}, ${job.teacherId}, ${job.title}, ${job.responseId}, ${JSON.stringify({ files: job.files, pages: job.pages })})
+  `;
+}
+
+export async function extractionJobsForTeacher(teacherId: string): Promise<ExtractionJob[]> {
+  const rows = await sql`
+    SELECT * FROM physics_exam_jobs WHERE teacher_id=${teacherId} ORDER BY created_at
+  `;
+  return rows.map(toJob);
+}
+
+export async function getExtractionJob(id: string): Promise<ExtractionJob | null> {
+  const rows = await sql`SELECT * FROM physics_exam_jobs WHERE id=${id}`;
+  return rows.length ? toJob(rows[0]) : null;
+}
+
+// Removes the job and reports whether this caller was the one that removed it.
+// Two status checks can see the same finished result; only the one that
+// claims the job may turn it into a paper, so it is never saved twice.
+export async function claimExtractionJob(id: string): Promise<boolean> {
+  const rows = await sql`DELETE FROM physics_exam_jobs WHERE id=${id} RETURNING id`;
+  return rows.length > 0;
 }
 
 // Same enrollment-lookup pattern as teacherFor() in app/api/physics/practice/route.ts:
