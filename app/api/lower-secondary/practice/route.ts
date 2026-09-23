@@ -124,7 +124,7 @@ export async function POST(request: Request) {
     );
 
   if (body.action === "start") {
-    if ((sourceStage === 7 && chapter !== "integers") || (sourceStage !== 7 && !supportsMasteryUnit(chapter)))
+    if ((sourceStage === 7 && chapter !== "integers") || (sourceStage !== 7 && (!supportsMasteryUnit(chapter) || !chapter.startsWith(`s${sourceStage}-`))))
       return NextResponse.json(
         { error: "This unit does not have a question engine yet." },
         { status: 400 },
@@ -144,7 +144,7 @@ export async function POST(request: Request) {
     const strong = Number(history[0]?.strong || 0);
     const difficulty = strong === 0 ? "foundational" : strong === 1 ? "application" : "reasoning";
     const questions = sourceStage === 7
-      ? makeUnitQuestions("s8-u1", difficulty)
+      ? makeUnitQuestions("s7-integers", difficulty)
       : makeUnitQuestions(chapter, difficulty);
     const id = crypto.randomUUID();
     await sql`
