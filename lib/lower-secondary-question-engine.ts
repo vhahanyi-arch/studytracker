@@ -15,11 +15,16 @@ const q = (prompt:string,answer:string|string[],hint:string,solution:string,meta
 const sq = (templateId:string,objective:string,difficulty:"foundational"|"application"|"reasoning",prompt:string,answer:string|string[],hint:string,solution:string) => q(prompt,answer,hint,solution,{templateId,objective,difficulty});
 const tidy = (value:unknown) => String(value??"").trim().toLowerCase().replace(/\s+/g,"").replace(/[−–—]/g,"-").replace(/[×·]/g,"*").replace(/÷/g,"/").replace(/[°]/g,"").replace(/,/g,"");
 
+// A mixed number keeps its space: "2 1/3" and "21/3" are different numbers,
+// but tidy() strips all whitespace, which made them compare equal. Marking
+// the whole-number part off with "+" first keeps them apart.
+const mixed = (value:unknown) => String(value??"").replace(/(\d+)\s+(\d+\/\d+)/g,"$1+$2");
+
 export function answerMatches(input:unknown,accepted:string[]) {
-  const actual=tidy(input);
+  const actual=tidy(mixed(input));
   if(!actual)return false;
   return accepted.some(expected=>{
-    const clean=tidy(expected);
+    const clean=tidy(mixed(expected));
     if(actual===clean)return true;
     // Ordered lists and coordinates may be written with commas, semicolons,
     // spaces or inequality symbols. Compare their numeric entries in order.
