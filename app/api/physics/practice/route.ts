@@ -1,5 +1,6 @@
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { studentsOf, type UserStore } from "@/lib/auth-rules";
 import { ensureSchema, sql } from "@/lib/db";
 import {
   answerMatches,
@@ -40,12 +41,18 @@ export async function GET(request: Request) {
   const level = levelFrom(url.searchParams.get("level"));
 
   if (user.publicMetadata.role === "teacher") {
+    // A set started before the student had a class or an assigned paper is
+    // saved with no teacher_id, because teacherFor() finds no link yet. The
+    // student's account still names the teacher who created it, so those
+    // sets count for that teacher rather than for nobody.
+    const own = (await studentsOf(clerk.users as UserStore, userId)).map((student) => student.id);
     const rows = await sql`
       SELECT student_id,chapter_id,COUNT(*)::int attempts,
         COALESCE(ROUND(AVG(score)),0)::int average,
         COUNT(*) FILTER (WHERE score>=80)::int strong_sets,MAX(completed_at) last_active
       FROM physics_practice_sessions
-      WHERE teacher_id=${userId} AND level=${level} AND status='completed'
+      WHERE (teacher_id=${userId} OR (teacher_id IS NULL AND student_id=ANY(${own}::text[])))
+        AND level=${level} AND status='completed'
       GROUP BY student_id,chapter_id
       ORDER BY last_active DESC
     `;
