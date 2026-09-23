@@ -17,6 +17,17 @@ const nextConfig: NextConfig = {
   // lib/physics-exam-extraction.ts -- this class of PDF-processing library
   // has been observed needing both mitigations together on Vercel.
   serverExternalPackages: ["@napi-rs/canvas", "pdfjs-dist"],
+  // Turbopack keeps compiled output in .next/cache between builds, and Vercel
+  // carries .next/cache from one deployment to the next. On 2026-09-23 that
+  // shipped a production build of be89854 serving the previous deploy's
+  // stylesheet -- same content-hashed filename, same byte count -- even though
+  // globals.css had changed, and CI plus a READY deployment both reported
+  // success. Compiling from source every time costs build time; a deploy that
+  // silently ships old code costs far more. Vercel's dependency cache is
+  // untouched, so installs stay fast.
+  experimental: {
+    turbopackFileSystemCacheForBuild: false,
+  },
   // One canonical address. Clerk binds a production instance to a single
   // domain and its cookies only work there, so anyone arriving on the
   // *.vercel.app address would be unable to sign in once that move happens.
