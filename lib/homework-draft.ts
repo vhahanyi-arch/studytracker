@@ -205,7 +205,9 @@ export function generateHomeworkDraftFromText(rawText: string, splitExercises = 
     const place = match[2].toLowerCase() === "ten" ? 10 : match[2].toLowerCase() === "hundred" ? 100 : 1000;
     add(match[0], String(Math.round(Number(match[1]) / place) * place));
   }
-  for (const match of joinedExercises.matchAll(/(?:mean|average)\s+of\s+((?:-?\d+(?:\.\d+)?(?:\s*,\s*|\s+and\s+))+?-?\d+(?:\.\d+)?)/gi)) {
+  // Greedy, so the list runs to its last number: a lazy match stopped after
+  // two and drafted the mean of 4, 8 and 12 as 6.
+  for (const match of joinedExercises.matchAll(/(?:mean|average)\s+of\s+((?:-?\d+(?:\.\d+)?(?:\s*,\s*|\s+and\s+))+-?\d+(?:\.\d+)?)/gi)) {
     const values = match[1].match(/-?\d+(?:\.\d+)?/g)?.map(Number) || [];
     const value = values.length ? homeworkNumber(values.reduce((sum, item) => sum + item, 0) / values.length) : null;
     if (value !== null) add(match[0], value);

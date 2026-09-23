@@ -93,6 +93,11 @@ test('each kind of direct question is recognised',()=>{
  confident('1. The position-to-term rule is multiply by 3 then add 2. Write the first five terms.','5, 8, 11, 14, 17');
  confident('1. The term rule is multiply by 2 then subtract 1. Write the first five terms.','1, 3, 5, 7, 9');
 });
+test('a mean uses every number in the list',()=>{
+ confident('1. Find the mean of 4, 8 and 12','8');
+ confident('1. Work out the average of 2, 4, 6 and 8','5');
+ confident('1. Find the mean of -2, 0 and 5.5','1.16666667');
+});
 test('a ratio already in its simplest form is not offered as a simplification',()=>{
  assert.equal(draft('1. Write the ratio 5 : 7 in its simplest form').confidence,'review');
 });
