@@ -44,7 +44,7 @@ export const s8u2: Template[] = [
   T(`${U}-f2`, "foundational", ["8Ae.02"], "Collect like terms with squares", () => {
     const a = r(3, 8), b = r(1, a - 1), c = r(1, 9), d = r(1, 9) * pick([-1, 1]);
     const result = poly([a - b, c + d, 0]);
-    return { prompt: `Simplify ${a}x² + ${c}x − ${b === 1 ? "" : b}x² ${d < 0 ? "−" : "+"} ${Math.abs(d) === 1 ? "" : Math.abs(d)}x.`, answers: exprForms(result), hint: "x² terms and x terms are different kinds of term; collect each kind on its own.", solution: `x² terms: ${a} − ${b} = ${a - b}; x terms: ${c} ${d < 0 ? "−" : "+"} ${Math.abs(d)} = ${fmt(c + d)}. So the answer is ${result}.`, answerFormat: EXPR_FORMAT };
+    return { prompt: `Simplify ${a}x² + ${c === 1 ? "" : c}x − ${b === 1 ? "" : b}x² ${d < 0 ? "−" : "+"} ${Math.abs(d) === 1 ? "" : Math.abs(d)}x.`, answers: exprForms(result), hint: "x² terms and x terms are different kinds of term; collect each kind on its own.", solution: `x² terms: ${a} − ${b} = ${a - b}; x terms: ${c} ${d < 0 ? "−" : "+"} ${Math.abs(d)} = ${fmt(c + d)}. So the answer is ${result}.`, answerFormat: EXPR_FORMAT };
   }),
   T(`${U}-f3`, "foundational", ["8Ae.02"], "Multiply and divide algebraic terms", () => {
     const a = r(2, 7), b = r(2, 7);
@@ -140,7 +140,7 @@ export const s8u2: Template[] = [
     const k = r(2, 6), m = r(1, 5), b = r(1, 9);
     const kind = pick(["x/k+b", "mx/k", "(x+b)/k"] as const);
     if (kind === "x/k+b") { const x = k * r(1, 9), c = x / k + b; return { prompt: `Solve x/${k} + ${b} = ${c}.`, answers: [String(x), `x=${x}`], hint: `Subtract ${b}, then multiply both sides by ${k}.`, solution: `x/${k} = ${c - b}, so x = ${c - b} × ${k} = ${x}.` }; }
-    if (kind === "mx/k") { const x = k * r(1, 9), c = (m * x) / k; if (m === k) return { prompt: `Solve ${m + 1}x/${k} = ${((m + 1) * x) / k}.`, answers: [String(x), `x=${x}`], hint: `Multiply both sides by ${k}, then divide by ${m + 1}.`, solution: `${m + 1}x = ${((m + 1) * x)}, so x = ${x}.` }; return { prompt: `Solve ${m}x/${k} = ${fmt(c)}.`, answers: [String(x), `x=${x}`], hint: `Multiply both sides by ${k}, then divide by ${m}.`, solution: `${m}x = ${fmt(c * k)}, so x = ${x}.` }; }
+    if (kind === "mx/k") { const x = k * r(1, 9), c = (m * x) / k; if (m === k) return { prompt: `Solve ${m + 1}x/${k} = ${((m + 1) * x) / k}.`, answers: [String(x), `x=${x}`], hint: `Multiply both sides by ${k}, then divide by ${m + 1}.`, solution: `${m + 1}x = ${((m + 1) * x)}, so x = ${x}.` }; return { prompt: `Solve ${m === 1 ? "" : m}x/${k} = ${fmt(c)}.`, answers: [String(x), `x=${x}`], hint: `Multiply both sides by ${k}, then divide by ${m}.`, solution: `${m === 1 ? "x" : `${m}x`} = ${fmt(c * k)}, so x = ${x}.` }; }
     const c = r(2, 9), x = k * c - b;
     return { prompt: `Solve (x + ${b})/${k} = ${c}.`, answers: [ans(x), `x=${ans(x)}`], hint: `Multiply both sides by ${k} first.`, solution: `x + ${b} = ${k * c}, so x = ${fmt(x)}.` };
   }),
@@ -223,7 +223,7 @@ export const s8u2: Template[] = [
   T(`${U}-r9`, "reasoning", ["8Ae.06"], "Find when two costs are equal", () => {
     const n = r(3, 25), d = r(2, 6), b = d + r(1, 5), a = r(10, 60), c = a + (b - d) * n;
     const unit = pick(["call", "visit", "lesson", "journey"]);
-    return { prompt: `Plan A costs R${a} plus R${b} per ${unit}. Plan B costs R${c} plus R${d} per ${unit}. After how many ${unit}s do the two plans cost the same?`, answers: [String(n)], hint: `Write ${a} + ${b}n = ${c} + ${d}n and solve for n.`, solution: `${a} + ${b}n = ${c} + ${d}n, so ${b - d}n = ${c - a} and n = ${n}.` };
+    return { prompt: `Plan A costs R${a} plus R${b} per ${unit}. Plan B costs R${c} plus R${d} per ${unit}. After how many ${unit}s do the two plans cost the same?`, answers: [String(n)], hint: `Write ${a} + ${b}n = ${c} + ${d}n and solve for n.`, solution: `${a} + ${b}n = ${c} + ${d}n, so ${linear(b - d, 0, "n")} = ${c - a} and n = ${n}.` };
   }),
   T(`${U}-r10`, "reasoning", ["8Ae.05"], "Rearrange a formula, then use it", () => {
     const l = r(3, 15), w = r(2, 15), b = 2 * r(2, 10), h = r(3, 12);

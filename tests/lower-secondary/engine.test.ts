@@ -29,6 +29,8 @@ const LINT:Array<[string,RegExp]>=[
  ['a space before punctuation',/ [,;?]| \.(?!\.)| :(?! )/],
  ['an ASCII minus on a negative number',/(^|[\s(=,:])-\d/],
  ['leftover code',/NaN|undefined|Infinity|\[object|null\b/],
+ // Algebra never writes a coefficient of 1: "x", not "1x".
+ ['a coefficient of 1',/(^|[^\d.,/])1[a-z](?![a-z])/],
 ];
 
 const units=Object.entries(stageUnits);

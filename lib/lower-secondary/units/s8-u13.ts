@@ -112,7 +112,7 @@ export const s8u13: Template[] = [
       return { prompt: `Two fair coins are flipped. Use P(no heads) to find the probability of at least one head.`, answers: p.answers, hint: "\"At least one head\" is the complement of \"no heads\".", solution: `P(no heads) = P(TT) = 1/4, so P(at least one head) = 1 − 1/4 = ${p.text}.`, answerFormat: PROB };
     }
     const k = r(1, 6), p = prob(11, 36);
-    return { prompt: `Two fair dice are rolled. Use P(no ${k}s) to find the probability of at least one ${k}.`, answers: p.answers, hint: `"At least one ${k}" is the complement of "no ${k}s".`, solution: `Outcomes with no ${k}: 5 × 5 = 25 of 36. So P(at least one ${k}) = 1 − 25/36 = ${p.text}.`, answerFormat: PROB };
+    return { prompt: `Two fair dice are rolled. Use P(neither dice shows ${k}) to find the probability that at least one shows ${k}.`, answers: p.answers, hint: `"At least one shows ${k}" is the complement of "neither shows ${k}".`, solution: `Outcomes where neither shows ${k}: 5 × 5 = 25 of 36. So P(at least one shows ${k}) = 1 − 25/36 = ${p.text}.`, answerFormat: PROB };
   }),
   T(`${U}-a4`, "application", ["8Sp.04"], "Choose the more reliable estimate", () => {
     const small = pick([10, 20]), big = pick([100, 200, 250, 500]), ks = r(2, small - 2), kb = r(Math.round(big * 0.2), Math.round(big * 0.8));

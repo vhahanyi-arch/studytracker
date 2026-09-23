@@ -95,7 +95,7 @@ export const s9u2: Template[] = [
   }),
   T(`${U}-a2`, "application", ["9Ae.02"], "Square a bracket", () => {
     const a = rNonZero(-9, 9), result = poly([1, 2 * a, a * a]);
-    return { prompt: `Expand and simplify (${linear(1, a)})².`, answers: exprForms(result), hint: `Write it as (${linear(1, a)})(${linear(1, a)}). It is not just x² + ${a * a}.`, solution: `(${linear(1, a)})(${linear(1, a)}) = x² ${a < 0 ? "−" : "+"} ${Math.abs(a)}x ${a < 0 ? "−" : "+"} ${Math.abs(a)}x + ${a * a} = ${result}.`, answerFormat: EXPR };
+    return { prompt: `Expand and simplify (${linear(1, a)})².`, answers: exprForms(result), hint: `Write it as (${linear(1, a)})(${linear(1, a)}). It is not just x² + ${a * a}.`, solution: `(${linear(1, a)})(${linear(1, a)}) = x² ${a < 0 ? "−" : "+"} ${mono(Math.abs(a), "x", 1)} ${a < 0 ? "−" : "+"} ${mono(Math.abs(a), "x", 1)} + ${a * a} = ${result}.`, answerFormat: EXPR };
   }),
   T(`${U}-a3`, "application", ["9Ae.02"], "Add algebraic fractions", () => {
     let [p, q] = [r(2, 7), r(2, 9)];
@@ -165,7 +165,7 @@ export const s9u2: Template[] = [
     const k = r(2, 9), a = rNonZero(-9, 9), byX = pick([true, false]);
     if (byX) {
       const result = linear(1, a);
-      return { prompt: `Simplify (x² ${a < 0 ? "−" : "+"} ${Math.abs(a)}x)/x.`, answers: exprForms(result), hint: "Factorise the top, then cancel.", solution: `x² ${a < 0 ? "−" : "+"} ${Math.abs(a)}x = x(${result}), so dividing by x gives ${result}.`, answerFormat: EXPR };
+      return { prompt: `Simplify (x² ${a < 0 ? "−" : "+"} ${mono(Math.abs(a), "x", 1)})/x.`, answers: exprForms(result), hint: "Factorise the top, then cancel.", solution: `x² ${a < 0 ? "−" : "+"} ${mono(Math.abs(a), "x", 1)} = x(${result}), so dividing by x gives ${result}.`, answerFormat: EXPR };
     }
     const result = linear(1, a);
     return { prompt: `Simplify (${k}x ${k * a < 0 ? "−" : "+"} ${Math.abs(k * a)})/${k}.`, answers: exprForms(result), hint: "Factorise the top, then cancel.", solution: `${k}x ${k * a < 0 ? "−" : "+"} ${Math.abs(k * a)} = ${k}(${result}), so dividing by ${k} gives ${result}.`, answerFormat: EXPR };
