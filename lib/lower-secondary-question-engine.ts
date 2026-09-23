@@ -20,6 +20,13 @@ const tidy = (value:unknown) => String(value??"").trim().toLowerCase().replace(/
 // the whole-number part off with "+" first keeps them apart.
 const mixed = (value:unknown) => String(value??"").replace(/(\d+)\s+(\d+\/\d+)/g,"$1+$2");
 
+// The answer box tells students they may include the unit shown in the
+// question, but "37.7cm", "R45" and "25%" never compared equal to a numeric
+// answer. A number with a known unit or currency sign is read as the number.
+// Only these units are removed, so "2x" is still not taken for 2.
+const UNIT=/^(?:r|\$|£)?(-?\d+(?:\.\d+)?)(?:mm|cm|km|m|mg|kg|g|ml|l|litres?|s|seconds?|mins?|minutes?|h|hours?|km\/h|m\/s|mph|miles?|(?:mm|cm|km|m)(?:²|³|\^2|\^3)|degrees?|%|rand)?$/;
+const withoutUnit=(tidied:string)=>tidied.match(UNIT)?.[1]??tidied;
+
 export function answerMatches(input:unknown,accepted:string[]) {
   const actual=tidy(mixed(input));
   if(!actual)return false;
@@ -37,7 +44,7 @@ export function answerMatches(input:unknown,accepted:string[]) {
       if (actualSequence.length >= 2 && actualSequence.length === expectedSequence.length &&
           actualSequence.every((value,index)=>Math.abs(value-expectedSequence[index])<0.0001)) return true;
     }
-    const a=Number(actual),b=Number(clean);
+    const a=Number(withoutUnit(actual)),b=Number(clean);
     return Number.isFinite(a)&&Number.isFinite(b)&&Math.abs(a-b)<=Math.max(0.0001,Math.abs(b)*0.001);
   });
 }
