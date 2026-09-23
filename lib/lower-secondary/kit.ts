@@ -235,3 +235,6 @@ export function factorForms(outside: string, inside: string): string[] {
   const o = typed(outside);
   return [...new Set(inner.flatMap((i) => [`${o}(${i})`, `(${i})${o}`, `${o}×(${i})`]))];
 }
+
+/** 1 -> "1st", 12 -> "12th", 23 -> "23rd". */
+export const ordinal = (n: number) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] ?? "th"}`;

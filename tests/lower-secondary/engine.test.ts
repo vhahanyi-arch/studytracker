@@ -13,7 +13,8 @@ const codes=new Set(framework.map(o=>o.code));
 const tierLetter={foundational:'f',application:'a',reasoning:'r'} as const;
 
 // Content from IGCSE, not the Lower Secondary framework, found in Stage 9.
-const OUT_OF_SCOPE=/\b(sin|cos|tan)\b|\bsine\b|cosine|trigonometr|quartile|interquartile|\bIQR\b|arc length|\bsector\b|negative scale factor/i;
+// A pie chart's "sector" is Lower Secondary; the area of a circle's sector is not.
+const OUT_OF_SCOPE=/\b(sin|cos|tan)\b|\bsine\b|cosine|trigonometr|quartile|interquartile|\bIQR\b|arc length|sector of (a|the) circle|area of (a|the) sector|sector area|negative scale factor/i;
 const LINT:Array<[string,RegExp]>=[
  ['"1" with a plural noun',/\b1 (hours|minutes|seconds|days|weeks|months|years|times|people|items|students|games|trials|books|pens|boxes|tickets|questions)\b/],
  // Lowercase only: a capital A is usually a variable ("A = 2 × 3 and B ...").
