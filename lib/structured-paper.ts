@@ -110,17 +110,25 @@ export function finalAnswer(text: string): FinalAnswer | null {
     const unit = range[3] ?? "";
     const low = engineValue(range[1] + unit), high = engineValue(range[2] + unit);
     if (!low || !high || Number(range[1]) >= Number(range[2])) return null;
-    return { accepted: [low], range: [Number(range[1]), Number(range[2])], shown: `${range[1]} to ${high}`, partial: false };
+    return { accepted: [low], range: [Number(range[1]), Number(range[2])], shown: printedValue(`${range[1]} to ${high}`), partial: false };
   }
   const alternatives = tail.split(/\s+OR\s+/i).map(engineValue);
   const values = alternatives.filter((a): a is string => !!a);
   if (!values.length) return null;
   // "940 yrs or 2 half-lives": only the values are checked; partial says the
   // other forms were not, so a miss must go to the teacher.
-  return { accepted: values, range: null, shown: values.join(" or "), partial: values.length < alternatives.length };
+  return { accepted: values, range: null, shown: values.map(printedValue).join(" or "), partial: values.length < alternatives.length };
 }
 
 export { roundingTolerance };
+
+const SUPERSCRIPT: Record<string, string> = { "-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
+const raise = (power: string) => [...power].map((c) => SUPERSCRIPT[c] ?? c).join("");
+
+/** An answer as it is printed, for people: "1.8*10^-2 J" → "1.8 × 10⁻² J", "m s^-2" → "m s⁻²". */
+export function printedValue(value: string): string {
+  return value.replace(/\*10\^(-?\d+)/g, (_, p: string) => ` × 10${raise(p)}`).replace(/\^(-?\d+)/g, (_, p: string) => raise(p));
+}
 
 // Guidance or wording that means a correct final answer is not the whole
 // story, so a teacher marks the part. RESTRICTED blocks automatic marking

@@ -5,7 +5,7 @@ import {studentView} from '@/lib/exam-paper-access';
 import {markAnswer,compareNumeric} from '@/lib/physics-marking-engine';
 import type {SchemeRow} from '@/lib/cambridge-analysis';
 import type {Answer,Paper} from '@/lib/physics-extraction-schema';
-import {approvePaper,makeSubmission} from '@/lib/physics-exam-workflows';
+import {approvePaper,makeSubmission,checkAnswer,CheckSchema} from '@/lib/physics-exam-workflows';
 import {writePdf,A4,type Page} from '../fixtures/synthetic-pdf';
 import {asPhysicsStructured} from '../fixtures/synthetic-papers';
 
@@ -68,6 +68,14 @@ test('a paper read without AI publishes, and a student\'s answers are marked or 
  assert.deepEqual([grade('2(b)(ii)').status,grade('2(b)(ii)').proposed],['proposed',2]);
  assert.equal(grade('2(b)(i)').status,'needs_review','wrong on a two-mark part: the teacher decides the method mark');
  for(const id of ['1(a)','2(a)','3(a)','3(b)'])assert.equal(grade(id).status,'needs_review',id);
+});
+test('practising, a student can check an answer: right scores at once, anything else says the teacher marks it',async()=>{
+ const {extraction,crops}=await read();
+ const paper:Paper={...extraction,id:'p',title:'t',status:'ready',files:[],revision:1,createdAt:'',kind:'structured',reader:'text',crops};
+ const check=(questionId:string,text:string)=>checkAnswer(paper,CheckSchema.parse({paperId:'8a6e0804-2bd0-4a2f-8f1f-0c7c1f8b1c11',questionId,text}));
+ assert.deepEqual([check('1(b)','1.5 m/s²').status,check('1(b)','1.5 m/s²').proposed],['self_practice',2]);
+ assert.deepEqual([check('1(b)','3.0').status,check('1(b)','3.0').expected],['needs_review','1.5 m s⁻²'],'wrong on two marks: the teacher, and the answer shown');
+ assert.equal(check('2(a)','work done per second').status,'needs_review');
 });
 test('students receive none of the mark scheme: no answers, points or scheme screenshots',async()=>{
  const {extraction,crops,schemeCrops}=await read();
