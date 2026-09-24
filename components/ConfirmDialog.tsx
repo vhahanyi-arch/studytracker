@@ -1,4 +1,5 @@
 "use client";
+import { ModalScrim } from "./ModalScrim";
 
 // Replaces window.confirm for actions students see immediately and that the
 // teacher cannot take back. A browser prompt cannot show which students are
@@ -23,13 +24,12 @@ export function ConfirmDialog({
   onCancel: () => void;
 }) {
   return (
-    <div className="portal-modal" onMouseDown={onCancel}>
+    <ModalScrim onDismiss={() => !busy && onCancel()}>
       <div
         className="confirm-dialog"
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        onMouseDown={(event) => event.stopPropagation()}
       >
         <button type="button" className="x" onClick={onCancel} aria-label="Close">
           ×
@@ -53,6 +53,6 @@ export function ConfirmDialog({
           </button>
         </div>
       </div>
-    </div>
+    </ModalScrim>
   );
 }

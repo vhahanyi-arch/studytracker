@@ -41,6 +41,8 @@ import { type PaperQuestion, displayCrop } from '@/lib/paper-questions';
 import { ExamReview, type ReviewPaper, type Extraction } from '@/components/exam/ExamReview';
 import { ExamAttempt, type AttemptPaper } from '@/components/exam/ExamAttempt';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useNavDrawer } from '@/components/NavDrawer';
+import { ModalScrim } from '@/components/ModalScrim';
 import { generateHomeworkDraftFromText, type HomeworkDraft } from '@/lib/homework-draft';
 
 export default function Home() {
@@ -295,9 +297,15 @@ function Shell({
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join("") || (role === "Teacher" ? "T" : "S");
+  const drawer = useNavDrawer();
   return (
     <>
-      <header className="portal-top">
+      <header className="portal-top" inert={drawer.inertBehind}>
+        <button {...drawer.menuButtonProps}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+        </button>
         <Logo />
         <div>
           <PreviewBadge />
@@ -309,7 +317,7 @@ function Shell({
         </div>
       </header>
       <div className="portal-shell">
-        <aside>
+        <aside {...drawer.asideProps}>
           <div className="portal-person">
             <span className={role.toLowerCase()}>
               {initials}
@@ -329,7 +337,8 @@ function Shell({
             <small>Portal setup guide</small>
           </div>
         </aside>
-        <section className="portal-main">{children}</section>
+        <div {...drawer.scrimProps} />
+        <section className="portal-main" inert={drawer.inertBehind}>{children}</section>
       </div>
     </>
   );
@@ -440,9 +449,8 @@ function TeacherPortal({ switchRole }: { switchRole: () => void }) {
         <Students />
       )}
       {modal && (
-        <div className="portal-modal" onMouseDown={() => setModal(false)}>
+        <ModalScrim onDismiss={() => setModal(false)}>
           <form
-            onMouseDown={(e) => e.stopPropagation()}
             onSubmit={async (e) => {
               e.preventDefault();
               setCreatingAssignment(true);
@@ -554,7 +562,7 @@ function TeacherPortal({ switchRole }: { switchRole: () => void }) {
             </div>
             <button className="primary" disabled={creatingAssignment}>{creatingAssignment ? (homeworkUpload ? "Uploading large homework PDF…" : "Saving assignment…") : "Create assignment"}</button>
           </form>
-        </div>
+        </ModalScrim>
       )}
     </Shell>
   );
@@ -1312,8 +1320,8 @@ function PhysicsExamTeacher() {
         )}
       </section>
       {uploadOpen && (
-        <div className="portal-modal" onMouseDown={() => !busy && setUploadOpen(false)}>
-          <form onMouseDown={(e) => e.stopPropagation()} onSubmit={upload}>
+        <ModalScrim onDismiss={() => !busy && setUploadOpen(false)}>
+          <form onSubmit={upload}>
             <h3>Upload a paper</h3>
             <fieldset className="paper-kind">
               <legend>Paper type</legend>
@@ -1350,7 +1358,7 @@ function PhysicsExamTeacher() {
             <button disabled={busy} className="primary full">{busy ? (readingWithAi ? "Uploading and starting…" : "Reading the paper…") : "Extract questions →"}</button>
             {readingWithAi && <small>Page images are sent to the configured OpenAI model. A whole paper takes a few minutes to read, and appears in your list when it is ready.</small>}
           </form>
-        </div>
+        </ModalScrim>
       )}
     </>
   );
@@ -1974,10 +1982,9 @@ function Papers({ upload }: { upload: () => void }) {
         />
       )}
       {managing && (
-        <div className="portal-modal" onMouseDown={() => setManaging(null)}>
+        <ModalScrim onDismiss={() => setManaging(null)}>
           <form
             className="student-assignment-manager"
-            onMouseDown={(event) => event.stopPropagation()}
             onSubmit={(event) => {
               event.preventDefault();
               saveStudents(managing.id);
@@ -2044,7 +2051,7 @@ function Papers({ upload }: { upload: () => void }) {
             </div>
             <button className="primary">Save student list</button>
           </form>
-        </div>
+        </ModalScrim>
       )}
     </>
   );
@@ -2127,11 +2134,8 @@ function FileReview({
   }
 
   return (
-    <div className="portal-modal file-review-modal" onMouseDown={close}>
-      <section
-        className="file-review-shell"
-        onMouseDown={(event) => event.stopPropagation()}
-      >
+    <ModalScrim className="file-review-modal" onDismiss={close}>
+      <section className="file-review-shell">
         <header>
           <div>
             <small>REVIEW UPLOADED FILES</small>
@@ -2216,7 +2220,7 @@ function FileReview({
           </aside>
         </div>
       </section>
-    </div>
+    </ModalScrim>
   );
 }
 
@@ -4519,8 +4523,8 @@ function Students() {
         {resetMessage && !resetting && <p className="roster-note">{resetMessage}</p>}
       </section>
       {resetting && (
-        <div className="portal-modal" onMouseDown={() => setResetting(null)}>
-          <form onMouseDown={(e) => e.stopPropagation()} onSubmit={resetStudentPassword}>
+        <ModalScrim onDismiss={() => setResetting(null)}>
+          <form onSubmit={resetStudentPassword}>
             <button type="button" className="x" onClick={() => setResetting(null)}>
               ×
             </button>
@@ -4546,11 +4550,11 @@ function Students() {
               Set temporary password
             </button>
           </form>
-        </div>
+        </ModalScrim>
       )}
       {open && (
-        <div className="portal-modal" onMouseDown={() => setOpen(false)}>
-          <form onMouseDown={(e) => e.stopPropagation()} onSubmit={addStudent}>
+        <ModalScrim onDismiss={() => setOpen(false)}>
+          <form onSubmit={addStudent}>
             <button type="button" className="x" onClick={() => setOpen(false)}>
               ×
             </button>
@@ -4582,7 +4586,7 @@ function Students() {
             {message && <p>{message}</p>}
             <button className="primary">Create student account</button>
           </form>
-        </div>
+        </ModalScrim>
       )}
     </>
   );
@@ -5956,14 +5960,11 @@ function AnswerWorkspace({
         Review &amp; submit paper →
       </button>
       {reviewingSubmission && (
-        <div
-          className="portal-modal submission-review-modal"
-          onMouseDown={() => !submitting && setReviewingSubmission(false)}
+        <ModalScrim
+          className="submission-review-modal"
+          onDismiss={() => !submitting && setReviewingSubmission(false)}
         >
-          <section
-            className="submission-review-shell"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
+          <section className="submission-review-shell">
             <header>
               <div>
                 <small>FINAL CHECK</small>
@@ -6067,7 +6068,7 @@ function AnswerWorkspace({
               </div>
             </footer>
           </section>
-        </div>
+        </ModalScrim>
       )}
     </>
   );

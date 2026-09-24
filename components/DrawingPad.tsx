@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
+import { beginStroke } from "./inkStroke";
 
 export function DrawingPad({
   onChange,
@@ -9,7 +10,7 @@ export function DrawingPad({
   background?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const drawing = useRef(false);
+  const stroke = useRef<ReturnType<typeof beginStroke> | null>(null);
   const restoreBackground = () => {
     const canvas = canvasRef.current!;
     const context = canvas.getContext("2d")!;
@@ -34,37 +35,21 @@ export function DrawingPad({
     image.src = background;
   };
   useEffect(restoreBackground, [background]);
-  const point = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current!;
-    const rect = canvas.getBoundingClientRect();
-    return {
-      x: ((e.clientX - rect.left) * canvas.width) / rect.width,
-      y: ((e.clientY - rect.top) * canvas.height) / rect.height,
-    };
-  };
   const start = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current!;
     canvas.setPointerCapture(e.pointerId);
-    const ctx = canvas.getContext("2d")!;
-    const p = point(e);
-    ctx.beginPath();
-    ctx.moveTo(p.x, p.y);
-    ctx.strokeStyle = "#29263c";
-    ctx.lineWidth = 3;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    drawing.current = true;
+    stroke.current = beginStroke(canvas, e.nativeEvent, (ctx) => {
+      ctx.strokeStyle = "#29263c";
+      ctx.lineWidth = 3;
+    });
   };
   const move = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!drawing.current) return;
-    const ctx = canvasRef.current!.getContext("2d")!;
-    const p = point(e);
-    ctx.lineTo(p.x, p.y);
-    ctx.stroke();
+    stroke.current?.add(e.nativeEvent);
   };
   const stop = () => {
-    if (!drawing.current) return;
-    drawing.current = false;
+    if (!stroke.current) return;
+    stroke.current.end();
+    stroke.current = null;
     onChange(canvasRef.current!.toDataURL("image/png"));
   };
   const clear = () => {

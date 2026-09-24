@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { ModalScrim } from "@/components/ModalScrim";
+import { beginStroke } from "./inkStroke";
 
 export function PdfAnnotator({
   assignment,
@@ -18,7 +20,7 @@ export function PdfAnnotator({
 }) {
   const paperCanvas = useRef<HTMLCanvasElement>(null);
   const inkCanvas = useRef<HTMLCanvasElement>(null);
-  const drawing = useRef(false);
+  const stroke = useRef<ReturnType<typeof beginStroke> | null>(null);
   const [pdf, setPdf] = useState<any>(null);
   const [tool, setTool] = useState<"pen" | "shade" | "eraser">("pen");
   const [message, setMessage] = useState("Loading paper…");
@@ -60,39 +62,23 @@ export function PdfAnnotator({
       }
     })();
   }, [pdf, pageNumber, pages]);
-  const point = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const canvas = inkCanvas.current!;
-    const rect = canvas.getBoundingClientRect();
-    return {
-      x: ((e.clientX - rect.left) * canvas.width) / rect.width,
-      y: ((e.clientY - rect.top) * canvas.height) / rect.height,
-    };
-  };
   const start = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = inkCanvas.current!;
     canvas.setPointerCapture(e.pointerId);
-    const ctx = canvas.getContext("2d")!;
-    const p = point(e);
-    ctx.beginPath();
-    ctx.moveTo(p.x, p.y);
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.globalCompositeOperation =
-      tool === "eraser" ? "destination-out" : "source-over";
-    ctx.strokeStyle = tool === "shade" ? "rgba(255,193,7,.35)" : "#342f4d";
-    ctx.lineWidth = tool === "shade" ? 28 : tool === "eraser" ? 24 : 3;
-    drawing.current = true;
+    stroke.current = beginStroke(canvas, e.nativeEvent, (ctx) => {
+      ctx.globalCompositeOperation =
+        tool === "eraser" ? "destination-out" : "source-over";
+      ctx.strokeStyle = tool === "shade" ? "rgba(255,193,7,.35)" : "#342f4d";
+      ctx.lineWidth = tool === "shade" ? 28 : tool === "eraser" ? 24 : 3;
+    });
   };
   const move = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!drawing.current) return;
-    const ctx = inkCanvas.current!.getContext("2d")!;
-    const p = point(e);
-    ctx.lineTo(p.x, p.y);
-    ctx.stroke();
+    stroke.current?.add(e.nativeEvent);
   };
   const stop = () => {
-    if (!drawing.current) return;
-    drawing.current = false;
+    if (!stroke.current) return;
+    stroke.current.end();
+    stroke.current = null;
     setPages({
       ...pages,
       [pageNumber]: inkCanvas.current!.toDataURL("image/png"),
@@ -212,14 +198,11 @@ export function PdfAnnotator({
         </button>
       </footer>
       {reviewing && (
-        <div
-          className="portal-modal submission-review-modal"
-          onMouseDown={() => !submitting && setReviewing(false)}
+        <ModalScrim
+          className="submission-review-modal"
+          onDismiss={() => !submitting && setReviewing(false)}
         >
-          <section
-            className="submission-review-shell paper-submission-review"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
+          <section className="submission-review-shell paper-submission-review">
             <header>
               <div>
                 <small>FINAL CHECK</small>
@@ -290,7 +273,7 @@ export function PdfAnnotator({
               </div>
             </footer>
           </section>
-        </div>
+        </ModalScrim>
       )}
     </section>
   );

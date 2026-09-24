@@ -23,8 +23,15 @@ export function ThemeToggle() {
 
   function choose(next: Theme) {
     setTheme(next);
-    if (next === "system") delete document.documentElement.dataset.theme;
-    else document.documentElement.dataset.theme = next;
+    const apply = () => {
+      if (next === "system") delete document.documentElement.dataset.theme;
+      else document.documentElement.dataset.theme = next;
+    };
+    // Cross-fade rather than cut: a whole screen jumping from white to near
+    // black in one frame is a flash, and a sensitivity for some readers.
+    // A fade is the gentle form, so it stays under reduced motion too.
+    if (document.startViewTransition) document.startViewTransition(apply);
+    else apply();
     try {
       if (next === "system") localStorage.removeItem(THEME_KEY);
       else localStorage.setItem(THEME_KEY, next);

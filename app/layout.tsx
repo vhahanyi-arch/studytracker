@@ -10,9 +10,13 @@ import './globals.css';
 //
 // Geist and Geist Mono were also loaded here and were referenced nowhere in
 // the stylesheet -- two families fetched on every page load for nothing.
+// Source Serif 4 is drawn in optical sizes: finer, tighter letters for a 48px
+// title, sturdier and more open ones for a 17px heading. Without the opsz axis
+// only one size is shipped and every heading uses it.
 const sourceSerif = Source_Serif_4({
   variable: '--font-source-serif',
   subsets: ['latin'],
+  axes: ['opsz'],
 });
 
 const publicSans = Public_Sans({
