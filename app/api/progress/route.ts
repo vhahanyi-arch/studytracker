@@ -1,6 +1,7 @@
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
+import { PAST_PAPER } from "@/lib/past-paper-practice";
 import type { PracticeSession } from "@/lib/progress";
 
 // The signed-in student's own completed practice sets, one row per set, so the
@@ -14,6 +15,7 @@ const MAX_SESSIONS = 500;
 
 type Row = {
   track: unknown;
+  difficulty?: unknown;
   chapter_id: unknown;
   score: unknown;
   hints_used: unknown;
@@ -31,6 +33,7 @@ const toSession = (source: "maths" | "physics") => (row: Row): PracticeSession =
   // as a perfect one. That is also what the fallback query below produces.
   questions: Number(row.questions ?? 0),
   completedAt: new Date(String(row.completed_at)).toISOString(),
+  pastPaper: row.difficulty === PAST_PAPER,
 });
 
 export async function GET() {
@@ -52,14 +55,14 @@ export async function GET() {
     Promise.all([
       withLength
         ? sql`
-            SELECT stage::text AS track, chapter_id, score, hints_used,
+            SELECT stage::text AS track, chapter_id, difficulty, score, hints_used,
               json_array_length(questions_json::json) AS questions, completed_at
             FROM lower_secondary_practice_sessions
             WHERE student_id=${userId} AND status='completed' AND completed_at IS NOT NULL
             ORDER BY completed_at DESC LIMIT ${MAX_SESSIONS}
           `
         : sql`
-            SELECT stage::text AS track, chapter_id, score, hints_used,
+            SELECT stage::text AS track, chapter_id, difficulty, score, hints_used,
               0 AS questions, completed_at
             FROM lower_secondary_practice_sessions
             WHERE student_id=${userId} AND status='completed' AND completed_at IS NOT NULL

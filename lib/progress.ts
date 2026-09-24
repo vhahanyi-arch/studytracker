@@ -16,6 +16,9 @@ export type PracticeSession = {
   hints: number;
   questions: number;
   completedAt: string;
+  // A set of approved past-paper questions (lib/past-paper-practice.ts). It
+  // counts in every average and trend, but never toward a unit's mastery.
+  pastPaper?: boolean;
 };
 
 export const STRONG_SET = 80;
@@ -105,6 +108,8 @@ export type UnitProgress = {
   chapterId: string;
   source: "maths" | "physics";
   track: string;
+  // Past-paper sets are listed as their own row, never mastered.
+  pastPaper: boolean;
   sets: number;
   firstScore: number;
   latestScore: number;
@@ -119,7 +124,7 @@ export type UnitProgress = {
 export function perUnit(sessions: PracticeSession[]): UnitProgress[] {
   const groups = new Map<string, PracticeSession[]>();
   for (const session of sessions) {
-    const key = `${session.source}:${session.track}:${session.chapterId}`;
+    const key = `${session.source}:${session.track}:${session.chapterId}:${session.pastPaper ? "past" : "set"}`;
     const group = groups.get(key);
     if (group) group.push(session);
     else groups.set(key, [session]);
@@ -133,6 +138,7 @@ export function perUnit(sessions: PracticeSession[]): UnitProgress[] {
       chapterId: first.chapterId,
       source: first.source,
       track: first.track,
+      pastPaper: Boolean(first.pastPaper),
       sets: ordered.length,
       firstScore: first.score,
       latestScore: latest.score,
@@ -140,7 +146,7 @@ export function perUnit(sessions: PracticeSession[]): UnitProgress[] {
       hintRateFirst: hintRate(first),
       hintRateLatest: hintRate(latest),
       strongSets,
-      mastered: strongSets >= SETS_FOR_MASTERY,
+      mastered: !first.pastPaper && strongSets >= SETS_FOR_MASTERY,
       lastActive: latest.completedAt,
     };
   });

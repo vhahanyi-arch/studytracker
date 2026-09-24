@@ -141,6 +141,24 @@ test('a score exactly on the threshold counts as strong',()=>{
  assert.equal(perUnit([s(1,{score:80}),s(2,{score:80})])[0].mastered,true);
 });
 
+test('past-paper sets never master a unit, however well they go',()=>{
+ const [u]=perUnit([s(1,{score:100,pastPaper:true}),s(2,{score:100,pastPaper:true})]);
+ assert.equal(u.pastPaper,true);assert.equal(u.strongSets,2);assert.equal(u.mastered,false);
+});
+
+test('past-paper sets are listed apart from the generated sets of the same unit',()=>{
+ const units=perUnit([s(1,{score:95}),s(2,{score:95,pastPaper:true}),s(3,{score:95})]);
+ const sets=units.find(u=>!u.pastPaper)!,past=units.find(u=>u.pastPaper)!;
+ assert.equal(sets.sets,2);assert.equal(sets.mastered,true);
+ assert.equal(past.sets,1);assert.equal(past.mastered,false);
+});
+
+test('past-paper sets still count in the overall averages and the trend',()=>{
+ const sessions=[s(1,{score:40}),s(2,{score:40}),s(3,{score:90,pastPaper:true}),s(4,{score:90,pastPaper:true})];
+ assert.equal(overall(sessions).sets,4);
+ const t=trend(sessions);assert.ok(t.enough);if(t.enough)assert.equal(t.scoreTo,90);
+});
+
 test('units are listed most recently practised first',()=>{
  const units=perUnit([s(1,{chapterId:'old'}),s(9,{chapterId:'new'})]);
  assert.deepEqual(units.map(u=>u.chapterId),['new','old']);
