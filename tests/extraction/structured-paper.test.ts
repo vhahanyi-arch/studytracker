@@ -2,6 +2,7 @@ import {test} from 'node:test';import assert from 'node:assert/strict';
 import {extractPdfPages} from '@/lib/server-pdf';
 import {structuredPaper,finalAnswer,schemeMarks,schemeFor,schemeCrop,roundingTolerance} from '@/lib/structured-paper';
 import {studentView} from '@/lib/exam-paper-access';
+import {checkPartsFound,paperIdentity} from '@/lib/exam-paper-layout';
 import {markAnswer,compareNumeric} from '@/lib/physics-marking-engine';
 import type {SchemeRow} from '@/lib/cambridge-analysis';
 import type {Answer,Paper} from '@/lib/physics-extraction-schema';
@@ -104,6 +105,24 @@ test('a sideways scheme row is cut as a vertical strip and turned upright',()=>{
 });
 test('rounding tolerance reads powers of ten as a teacher types them',()=>{
  assert.deepEqual(['1.8 × 10^-2 J','1.8 x 10^-2 J','3.0×10^8 J'].map(roundingTolerance),[0.0005,0.0005,5e6]);
+});
+// The June question paper was uploaded with the March mark scheme (2026-09-24).
+const withSeries=(set:Page[],series:string)=>set.map((p,i)=>i?p:{...p,runs:[...p.runs,{text:series,x:300,top:170}]});
+test('a mark scheme for another series is refused, naming both',async()=>{
+ await assert.rejects(read(withSeries(asPhysicsStructured.paper,'May/June 2026'),withSeries(asPhysicsStructured.scheme,'February/March 2026')),
+  /mark scheme is for February\/March 2026, but the question paper is May\/June 2026/);
+ const same=await read(withSeries(asPhysicsStructured.paper,'May/June 2026'),withSeries(asPhysicsStructured.scheme,'May/June 2026'));
+ assert.equal(same.extraction.questions.length,asPhysicsStructured.expected.length);
+});
+test('a scheme whose parts are mostly not on the question paper is refused; one or two missing are only flagged',()=>{
+ assert.throws(()=>checkPartsFound(17,34),/17 of the mark scheme's 34 parts are not on this question paper/);
+ assert.doesNotThrow(()=>checkPartsFound(33,35));
+ assert.doesNotThrow(()=>checkPartsFound(8,10),'two missing of ten: flagged on the parts, not refused');
+});
+test('the paper and series are read from the cover',()=>{
+ const cover=(words:string[])=>[{pageNumber:1,width:595,height:842,words:words.map((text,i)=>({text,x:50+i*40,top:100}))}];
+ assert.deepEqual(paperIdentity(cover(['PHYSICS','9702/22','Paper','2','May/June','2026'])),{code:'9702/22',series:'May/June 2026'});
+ assert.deepEqual(paperIdentity(cover(['PHYSICS','Specimen'])),{code:null,series:null});
 });
 test('a scan is refused with a reason, and so is a scheme with no table',async()=>{
  const blank=await pages([{...A4,runs:[]},{...A4,runs:[]}]);

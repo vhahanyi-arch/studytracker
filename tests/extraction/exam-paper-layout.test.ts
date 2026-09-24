@@ -2,7 +2,7 @@ import {test} from 'node:test';import assert from 'node:assert/strict';
 import {extractPdfPages} from '@/lib/server-pdf';
 import {multipleChoicePaper,questionCrops} from '@/lib/exam-paper-layout';
 import {markAnswer} from '@/lib/physics-marking-engine';
-import {studentView,studentMayOpen} from '@/lib/exam-paper-access';
+import {studentView,studentMayOpen,filesOfPaper} from '@/lib/exam-paper-access';
 import type {Paper,Scheme,Question,Answer} from '@/lib/physics-extraction-schema';
 import {writePdf,A4,type Page} from '../fixtures/synthetic-pdf';
 import {physicsMultipleChoice,asPhysicsStructured,rotatedScheme} from '../fixtures/synthetic-papers';
@@ -119,6 +119,16 @@ test('students receive no answers before they submit',()=>{
  assert.deepEqual(view.schemes[0].points,[]);
  const stepped=studentView({...paper(),schemes:[{...paper().schemes[0],kind:'stepped'}]});
  assert.deepEqual(stepped.schemes[0].points,[{id:'s1',description:'d',marks:1,kind:'exact'}]);
+});
+test('deleting a paper removes its PDFs and every file its students sent, once each',()=>{
+ const file=(id:string)=>({id,name:id,mime:'image/png',size:1});
+ const answer=(questionId:string,f:string|null):Answer=>({questionId,mode:f?'handwritten':'typed',text:'',steps:{},file:f?file(f):null});
+ const submissions=[
+  {id:'s1',paperId:'p',paperRevision:1,name:'A',selfPractice:false,createdAt:'',grades:[],answers:[answer('5','photo-1'),answer('6',null)]},
+  {id:'s2',paperId:'p',paperRevision:1,name:'B',selfPractice:false,createdAt:'',grades:[],answers:[answer('5','photo-1')],wholePaperFiles:[file('page-1'),file('page-2')]},
+ ];
+ assert.deepEqual(filesOfPaper(paper(),submissions),['qp','ms','photo-1','page-1','page-2']);
+ assert.deepEqual(filesOfPaper(paper(),[]),['qp','ms']);
 });
 test('students may open a published question paper, never its scheme or a draft',()=>{
  assert.equal(studentMayOpen(paper(),'qp'),true);

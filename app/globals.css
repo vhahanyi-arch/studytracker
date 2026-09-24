@@ -1638,6 +1638,12 @@ label {
   flex-direction: column;
   gap: 3px;
 }
+/* Quiet until needed: the destructive action sits under the paper's main one. */
+.paper-table .paper-delete {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--fg-orange-54);
+}
 .paper-table b {
   font-size: 15px;
 }

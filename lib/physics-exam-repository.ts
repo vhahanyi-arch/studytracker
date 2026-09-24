@@ -77,6 +77,22 @@ export async function updatePaper(paper: Paper): Promise<void> {
   `;
 }
 
+// A paper's submissions, for deleting it: their files go with it.
+export async function submissionsForPaper(paperId: string): Promise<Submission[]> {
+  const rows = await sql`SELECT payload FROM physics_exam_submissions WHERE paper_id=${paperId}`;
+  return rows.map((row) => parsePayload<Submission>(row.payload));
+}
+
+// Deletes a paper with everything that depends on it, together: students'
+// unfinished attempts, their submissions, then the paper itself.
+export async function deletePaper(paperId: string): Promise<void> {
+  await sql.transaction([
+    sql`DELETE FROM physics_exam_drafts WHERE paper_id=${paperId}`,
+    sql`DELETE FROM physics_exam_submissions WHERE paper_id=${paperId}`,
+    sql`DELETE FROM physics_exam_papers WHERE id=${paperId}`,
+  ]);
+}
+
 export async function submissionsForStudent(studentId: string): Promise<Submission[]> {
   const rows = await sql`
     SELECT payload FROM physics_exam_submissions

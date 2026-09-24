@@ -12,7 +12,7 @@ import {
   analysePaperWithMarkScheme, parseMarkScheme,
   type PdfPageData, type PdfWord, type SchemeRow, type DetectedQuestion,
 } from "./cambridge-analysis";
-import { questionCrops } from "./exam-paper-layout";
+import { questionCrops, checkSamePaper, checkPartsFound } from "./exam-paper-layout";
 import { parseQuantity, roundingTolerance } from "./physics-marking-engine";
 import { validateExtraction } from "./physics-exam-extraction-validation";
 import type { Extraction, MarkingPoint, QuestionCrop, Scheme, SchemeCrop } from "./physics-extraction-schema";
@@ -269,8 +269,10 @@ export function structuredPaper(paperPages: PdfPageData[], schemePages: PdfPageD
     ? paperPages.filter((p) => p.pageNumber < firstSchemePage)
     : paperPages;
 
+  checkSamePaper(paperPages, schemePages);
   const hits = analysePaperWithMarkScheme(questionPages, rows, "Physics", "structured").questions;
   const hitOf = new Map(hits.map((h) => [h.label, h]));
+  checkPartsFound(rows.filter((r) => hitOf.has(r.label)).length, rows.length);
   const ordered = rows.map((r) => hitOf.get(r.label)).filter((h): h is DetectedQuestion => !!h);
   const located = questionCrops(questionPages, rows.map((r) => ({ id: r.label, marks: r.marks ?? 1, sourcePages: hitOf.has(r.label) ? [hitOf.get(r.label)!.page_number] : [] })));
 

@@ -7,17 +7,18 @@ import {
   submissionsForStudent, submissionsForTeacher, getSubmissionWithOwner, insertSubmission, updateSubmission,
   teacherFor, insertExtractionJob, extractionJobsForTeacher, getExtractionJob, claimExtractionJob,
   getExamDraft, saveExamDraft, deleteExamDraft, recordExamCheck, checkedExamQuestions, setOutdatedPaperCrops,
+  submissionsForPaper, deletePaper,
 } from '@/lib/physics-exam-repository';
 import { addCurrentScreenshots } from '@/lib/exam-paper-screenshots';
 import { demoPaper } from '@/lib/physics-exam-demo';
 import { approvePaper, makeSubmission, overrideGrade, SubmitSchema, checkAnswer, CheckSchema } from '@/lib/physics-exam-workflows';
 import { renderPdf, startExtractionFromImages, checkExtraction, cancelExtraction } from '@/lib/physics-exam-extraction';
 import { stepTimer } from '@/lib/step-timer';
-import { getFile, storeFile } from '@/lib/physics-exam-storage';
+import { getFile, storeFile, deleteFiles } from '@/lib/physics-exam-storage';
 import { extractPdfPages } from '@/lib/server-pdf';
 import { multipleChoicePaper, questionCrops, CROPS_VERSION } from '@/lib/exam-paper-layout';
 import { structuredPaper } from '@/lib/structured-paper';
-import { studentView } from '@/lib/exam-paper-access';
+import { studentView, filesOfPaper } from '@/lib/exam-paper-access';
 import { ExamDraftSchema, MAX_DRAFT_BYTES } from '@/lib/exam-drafts';
 import type { Paper, Answer } from '@/lib/physics-extraction-schema';
 
@@ -187,6 +188,22 @@ export async function POST(request: Request) {
       const paper = demoPaper();
       await insertPaper(userId, paper);
       return NextResponse.json({ paper });
+    }
+
+    if (body.action === 'delete-paper') {
+      if (role !== 'teacher') return NextResponse.json({ error: 'Teacher access is required.' }, { status: 403 });
+      // submissions: how many the teacher was warned about. If students have
+      // submitted since, nothing is deleted, so no work goes unannounced.
+      const input = z.object({ paperId: z.string().uuid(), submissions: z.number().int().min(0) }).parse(body);
+      const owner = await getPaperWithOwner(input.paperId);
+      if (!owner || owner.teacherId !== userId) throw Error('Paper not found.');
+      const submissions = await submissionsForPaper(input.paperId);
+      if (submissions.length !== input.submissions)
+        throw Error(`This paper now has ${submissions.length} submission${submissions.length === 1 ? '' : 's'}. Reload the page and try again.`);
+      await deletePaper(input.paperId);
+      await deleteFiles(filesOfPaper(owner.paper, submissions));
+      console.info(`[papers] deleted ${input.paperId} with ${submissions.length} submission(s)`);
+      return NextResponse.json({ deleted: input.paperId });
     }
 
     if (body.action === 'approve') {

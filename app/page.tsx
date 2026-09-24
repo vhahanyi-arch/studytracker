@@ -1063,6 +1063,29 @@ function PhysicsExamTeacher() {
     }
   }
 
+  // Deletes a paper with its students' submissions. The count the teacher is
+  // warned about goes to the server, which refuses if more have arrived since.
+  async function removePaper(paper: PaperSummary) {
+    const count = submissions.filter((s) => s.paperId === paper.id).length;
+    const also = count ? `\n\n${count} student submission${count === 1 ? "" : "s"} for it will be deleted too.` : "";
+    if (!window.confirm(`Delete "${paper.title}"?${also}\n\nThis cannot be undone.`)) return;
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/physics-exam", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "delete-paper", paperId: paper.id, submissions: count }),
+      });
+      const data = await readReply(response);
+      if (!response.ok) throw new Error(data.error || "Could not delete this paper.");
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not delete this paper.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function openReview(paper: typeof reviewing) {
     setError("");
     setReviewing(paper);
@@ -1251,6 +1274,7 @@ function PhysicsExamTeacher() {
                 {paper.status !== "ready" && (
                   <button onClick={() => openReview(paper)}>Review extraction</button>
                 )}
+                <button className="paper-delete" disabled={busy} aria-label={`Delete ${paper.title}`} onClick={() => removePaper(paper)}>Delete</button>
               </div>
             </article>
           ))

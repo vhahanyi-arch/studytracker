@@ -1,7 +1,7 @@
 // What a student may see of an exam paper before submitting it. Answers stay
 // on the server: the mark scheme's expected answers, accepted alternatives,
 // numeric rules and notes are removed, and so is the mark-scheme PDF.
-import type { Paper } from "./physics-extraction-schema";
+import type { Paper, Submission } from "./physics-extraction-schema";
 
 export type StudentScheme = {
   questionId: string;
@@ -25,6 +25,17 @@ export function studentView(paper: Paper): StudentPaper {
       points: s.kind !== "stepped" ? [] : s.points.map((p) => ({ id: p.id, description: p.description, marks: p.marks, kind: p.kind })),
     })),
   };
+}
+
+/**
+ * Every stored file that belongs to a paper, for deleting it: its PDFs, and
+ * each submission's answer photos and whole-paper pages.
+ */
+export function filesOfPaper(paper: Pick<Paper, "files">, submissions: Submission[]): string[] {
+  return [...new Set([
+    ...paper.files.map((f) => f.file.id),
+    ...submissions.flatMap((s) => [...s.answers.flatMap((a) => (a.file ? [a.file.id] : [])), ...(s.wholePaperFiles ?? []).map((f) => f.id)]),
+  ])];
 }
 
 /**

@@ -13,7 +13,7 @@
 // papers -- retrieval always goes through getFile(), which the calling API
 // route is responsible for gating behind proper authentication.
 
-import { put, get } from "@vercel/blob";
+import { put, get, del } from "@vercel/blob";
 import type { StoredFile } from "./physics-extraction-schema";
 import { describeBlobToken } from "./blob-token";
 
@@ -73,4 +73,19 @@ export async function getFile(id: string): Promise<{ meta: StoredFile; bytes: Bu
   const bytes = await streamToBuffer(fileResult.stream);
 
   return { meta, bytes };
+}
+
+/**
+ * Removes stored files and their metadata, for a deleted paper. Best effort:
+ * the paper is already gone from the database, so a file left behind is only
+ * unused storage, and is logged rather than failing the delete.
+ */
+export async function deleteFiles(ids: string[]): Promise<void> {
+  const valid = ids.filter((id) => /^[a-f0-9-]{36}$/.test(id));
+  if (!valid.length) return;
+  try {
+    await logged("del", del(valid.flatMap((id) => [PREFIX + id, PREFIX + id + ".json"])));
+  } catch {
+    // Logged above with the store it was for.
+  }
 }

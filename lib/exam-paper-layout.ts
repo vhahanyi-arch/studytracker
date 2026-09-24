@@ -85,6 +85,41 @@ export function questionCrops(
   }));
 }
 
+// ── Is it the same paper? ──────────────────────────────────────────────────
+// A question paper uploaded with another paper's mark scheme (the June paper
+// with the March scheme: 2026-09-24) gave a draft of parts that do not exist.
+
+/** The component code (9702/22) and exam series (May/June 2026) a PDF's first pages name. */
+export function paperIdentity(pages: PdfPageData[]): { code: string | null; series: string | null } {
+  const text = pages.slice(0, 2).flatMap((p) => p.words.map((w) => w.text)).join(" ").replace(/\s+/g, " ");
+  const series = text.match(/\b(February\/March|May\/June|October\/November)\s+(20\d{2})\b/i);
+  return {
+    code: text.match(/\b(?:0625|9702)\/\d{2}\b/)?.[0] ?? null,
+    series: series ? `${series[1]} ${series[2]}` : null,
+  };
+}
+
+/** Refuses a question paper and mark scheme whose covers name different papers. */
+export function checkSamePaper(paperPages: PdfPageData[], schemePages: PdfPageData[]) {
+  if (paperPages === schemePages) return;
+  const paper = paperIdentity(paperPages), scheme = paperIdentity(schemePages);
+  const differs = (a: string | null, b: string | null) => !!a && !!b && a.toLowerCase() !== b.toLowerCase();
+  if (differs(paper.code, scheme.code) || differs(paper.series, scheme.series)) {
+    const name = (x: typeof paper) => [x.code, x.series].filter(Boolean).join(" ");
+    throw Error(`The mark scheme is for ${name(scheme)}, but the question paper is ${name(paper)}. Choose the mark scheme for the same paper and series.`);
+  }
+}
+
+/**
+ * Refuses a pairing where many of the scheme's parts are not on the question
+ * paper. One or two missing are flagged on their parts instead, as before.
+ */
+export function checkPartsFound(found: number, total: number) {
+  const missing = total - found;
+  if (missing >= 3 && missing / total > 0.25)
+    throw Error(`${missing} of the mark scheme's ${total} parts are not on this question paper. Check both PDFs are for the same paper and series, and that the question paper is complete.`);
+}
+
 function syllabusOf(pages: PdfPageData[]): Extraction["syllabus"] {
   const text = pages.slice(0, 2).flatMap((p) => p.words.map((w) => w.text)).join(" ");
   const code = text.match(/\b(0625|9702)\b/)?.[1];
@@ -98,7 +133,11 @@ function syllabusOf(pages: PdfPageData[]): Extraction["syllabus"] {
 export function multipleChoicePaper(paperPages: PdfPageData[], schemePages: PdfPageData[]): { extraction: Extraction; crops: Record<string, QuestionCrop[]> } {
   const rows = parseMarkScheme(schemePages, "Physics", "multiple_choice");
   if (!rows.length) throw Error("No answer table was found in the mark scheme. Check it is the multiple-choice scheme, with a Question / Answer / Marks table.");
+  checkSamePaper(paperPages, schemePages);
   const analysed = analysePaperWithMarkScheme(paperPages, rows, "Physics", "multiple_choice");
+  // No checkPartsFound here: every multiple-choice scheme numbers 1 to 40, so
+  // another paper's scheme matches anyway, and one unreadable number hides
+  // the ones after it. The cover check above is what catches a mismatch.
   const found = new Map(analysed.questions.map((q) => [q.label, q]));
   let lastPage = 1;
   const crops: Record<string, QuestionCrop[]> = {};
