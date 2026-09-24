@@ -1423,6 +1423,11 @@ label {
   border-radius: 16px;
   width: min(500px, 100%);
   padding: 27px;
+  /* A form taller than the window scrolls inside it; centred with no limit,
+     its top and its submit button were cut off out of reach. */
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .portal-modal .x {
   position: absolute;
