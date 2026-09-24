@@ -6196,6 +6196,12 @@ summary:focus-visible,
 .exam-review-issues.resolved { opacity: 0.6; }
 .exam-review-issues p { margin: 0 0 6px; }
 .exam-review-publish { display: grid; gap: 12px; margin-top: 16px; }
+.exam-review-label { margin: 12px 0 0; font-size: var(--t-small); color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.exam-scheme-shots { display: grid; gap: 6px; margin: 6px 0 12px; }
+.exam-scheme-shots .question-image { min-height: 0; padding: 12px; gap: 8px; }
+.exam-review-mode { display: grid; gap: 6px; margin: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; }
+.exam-review-mode legend { padding: 0 4px; font-weight: 700; }
+.exam-review-tocheck { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .choice-key, .choice-answer { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
 .choice-key > span { font-weight: 700; margin-right: 4px; }
 .choice-key button { min-width: 52px; min-height: 48px; font-size: var(--t-lead); font-weight: 700; }

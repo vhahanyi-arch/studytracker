@@ -12,7 +12,7 @@ type ShotPaper = {
 
 // One download per paper however many questions show it, for the life of the page.
 const papers = new Map<string, Promise<PDFDocumentProxy>>();
-function loadPaper(fileId: string) {
+export function loadPaper(fileId: string) {
   let pending = papers.get(fileId);
   if (!pending) {
     pending = import("pdfjs-dist").then(async (pdfjs) => {

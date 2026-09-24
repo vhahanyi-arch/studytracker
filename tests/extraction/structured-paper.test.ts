@@ -1,6 +1,7 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';
 import {extractPdfPages} from '@/lib/server-pdf';
-import {structuredPaper,finalAnswer,schemeMarks,schemeFor,roundingTolerance} from '@/lib/structured-paper';
+import {structuredPaper,finalAnswer,schemeMarks,schemeFor,schemeCrop,roundingTolerance} from '@/lib/structured-paper';
+import {studentView} from '@/lib/exam-paper-access';
 import {markAnswer,compareNumeric} from '@/lib/physics-marking-engine';
 import type {SchemeRow} from '@/lib/cambridge-analysis';
 import type {Answer,Paper} from '@/lib/physics-extraction-schema';
@@ -67,6 +68,30 @@ test('a paper read without AI publishes, and a student\'s answers are marked or 
  assert.deepEqual([grade('2(b)(ii)').status,grade('2(b)(ii)').proposed],['proposed',2]);
  assert.equal(grade('2(b)(i)').status,'needs_review','wrong on a two-mark part: the teacher decides the method mark');
  for(const id of ['1(a)','2(a)','3(a)','3(b)'])assert.equal(grade(id).status,'needs_review',id);
+});
+test('students receive none of the mark scheme: no answers, points or scheme screenshots',async()=>{
+ const {extraction,crops,schemeCrops}=await read();
+ const paper:Paper={...extraction,id:'p',title:'t',status:'ready',files:[{role:'questions',file:{id:'qp',name:'q.pdf',mime:'application/pdf',size:1}},{role:'scheme',file:{id:'ms',name:'m.pdf',mime:'application/pdf',size:1}}],
+  revision:1,createdAt:'',kind:'structured',reader:'text',crops,schemeCrops};
+ const sent=JSON.stringify(studentView(paper));
+ for(const secret of ['1.5 m s','600 J','120 W','a = (v - u) / t','W = Fs','magnitude and direction','schemeCrops','"ms"'])
+  assert.ok(!sent.includes(secret),`students must not receive ${secret}`);
+ assert.ok(studentView(paper).schemes.every(s=>s.points.length===0));
+});
+test('each part has its mark-scheme rows, for the teacher',async()=>{
+ const {schemeCrops}=await read();
+ assert.deepEqual(Object.keys(schemeCrops),asPhysicsStructured.expected.map(e=>e.label));
+ assert.deepEqual(schemeCrops['2(b)(i)'].map(c=>[c.page,c.rotate]),[[2,0]]);
+ assert.deepEqual(schemeCrops['3(a)'].map(c=>c.page),[3,4],'a row split over a page break has a crop on each page');
+});
+test('a sideways scheme row is cut as a vertical strip and turned upright',()=>{
+ const strip=schemeCrop({page:7,top:0.58,bottom:0.64,rotated:true});
+ assert.deepEqual({...strip,width:+strip.width.toFixed(3)},{page:7,x:0.565,y:0.06,width:0.091,height:0.885,rotate:90});
+ const upright=schemeCrop({page:2,top:0.2,bottom:0.3,rotated:false});
+ assert.equal(upright.rotate,0);assert.ok(upright.y<0.2&&upright.y+upright.height>0.3);
+});
+test('rounding tolerance reads powers of ten as a teacher types them',()=>{
+ assert.deepEqual(['1.8 × 10^-2 J','1.8 x 10^-2 J','3.0×10^8 J'].map(roundingTolerance),[0.0005,0.0005,5e6]);
 });
 test('a scan is refused with a reason, and so is a scheme with no table',async()=>{
  const blank=await pages([{...A4,runs:[]},{...A4,runs:[]}]);

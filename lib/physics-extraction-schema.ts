@@ -36,6 +36,9 @@ export type StoredFile = { id: string; name: string; mime: string; size: number 
 // Where a question sits on the question paper, as fractions of the page, so it
 // can be shown exactly as printed (diagrams, tables and graphs included).
 export type QuestionCrop = { page: number; x: number; y: number; width: number; height: number };
+// A mark-scheme row, for the teacher's review only. rotate 90: the page stores
+// a landscape table sideways, so the crop is a vertical strip turned upright.
+export type SchemeCrop = QuestionCrop & { rotate: 0 | 90 };
 export type Paper = { id: string; title: string; syllabus: string; status: 'draft'|'ready';
  questions: Question[]; schemes: Scheme[]; warnings: string[]; files: {role: 'questions'|'scheme'|'combined'; file: StoredFile}[];
  createdAt: string; revision: number; demo?: boolean;
@@ -46,7 +49,9 @@ export type Paper = { id: string; title: string; syllabus: string; status: 'draf
  cropsVersion?: number;
  // How a structured paper was read: from its PDFs' text (lib/structured-paper.ts)
  // or by the AI model. Papers from before this have none: the AI.
- reader?: 'text'|'ai' };
+ reader?: 'text'|'ai';
+ // Where each part's row is in the mark scheme (papers read from text).
+ schemeCrops?: Record<string, SchemeCrop[]> };
 export type Answer = {
  questionId: string; mode: 'typed'|'handwritten'; text: string; steps: Record<string,string>; file: StoredFile|null;
  // Optional formula/working fields for calculation questions (numeric or stepped kind).

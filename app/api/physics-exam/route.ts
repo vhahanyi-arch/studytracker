@@ -128,12 +128,12 @@ export async function POST(request: Request) {
       if (!withAi) {
         const paperPages = await timer.step('Reading the question paper', async () => extractPdfPages(await bytesOf(question)), 60_000);
         const schemePages = !combined ? await timer.step('Reading the mark scheme', async () => extractPdfPages(await bytesOf(scheme as File)), 60_000) : paperPages;
-        const { extraction, crops } = await timer.step('Finding the questions and answers', async () =>
-          multipleChoice ? multipleChoicePaper(paperPages, schemePages) : structuredPaper(paperPages, schemePages), 60_000);
+        const { extraction, crops, schemeCrops } = await timer.step('Finding the questions and answers', async () =>
+          multipleChoice ? { ...multipleChoicePaper(paperPages, schemePages), schemeCrops: undefined } : structuredPaper(paperPages, schemePages), 60_000);
         const files = await saveFiles();
         const paper: Paper = {
           ...extraction, id: crypto.randomUUID(), title, status: 'draft', files, revision: 0, createdAt: new Date().toISOString(),
-          crops, ...(multipleChoice ? { kind: 'multiple_choice' as const } : { kind: 'structured' as const, reader: 'text' as const, cropsVersion: CROPS_VERSION }),
+          crops, ...(multipleChoice ? { kind: 'multiple_choice' as const } : { kind: 'structured' as const, reader: 'text' as const, cropsVersion: CROPS_VERSION, schemeCrops }),
         };
         await timer.step('Saving the paper', insertPaper(userId, paper), 30_000);
         timer.done();

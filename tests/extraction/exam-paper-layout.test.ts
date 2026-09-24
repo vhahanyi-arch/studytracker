@@ -114,7 +114,11 @@ test('students receive no answers before they submit',()=>{
  const text=JSON.stringify(view);
  assert.ok(!/"expected"|"accepted"|"raw"|"notes"|"warnings"/.test(text),text);
  assert.deepEqual(view.files.map(f=>f.role),['questions']);
- assert.deepEqual(view.schemes[0].points,[{id:'s1',description:'d',marks:1,kind:'exact'}]);
+ // Points label the step fields of a stepped part; on any other part they are
+ // lines of the mark scheme, so they stay on the server.
+ assert.deepEqual(view.schemes[0].points,[]);
+ const stepped=studentView({...paper(),schemes:[{...paper().schemes[0],kind:'stepped'}]});
+ assert.deepEqual(stepped.schemes[0].points,[{id:'s1',description:'d',marks:1,kind:'exact'}]);
 });
 test('students may open a published question paper, never its scheme or a draft',()=>{
  assert.equal(studentMayOpen(paper(),'qp'),true);

@@ -1,6 +1,8 @@
 "use client";
 import { useMemo, useState } from "react";
 import { ExamQuestionShot, type QuestionCrop } from "./ExamQuestionShot";
+import { ExamSchemeShot, type SchemeCrop } from "./ExamSchemeShot";
+import { parseQuantity, roundingTolerance } from "@/lib/physics-marking-engine";
 
 // The teacher's check of an extracted paper before students see it: each
 // question as printed beside what will be used to mark it. Replaces a raw
@@ -10,21 +12,38 @@ import { ExamQuestionShot, type QuestionCrop } from "./ExamQuestionShot";
 type Point = { id: string; description: string; marks: number; kind: string; accepted: string[] };
 type Scheme = {
   questionId: string; raw: string; expected: string; marks: number; kind: string;
-  numeric: { accepted: string[] } | null; accepted: string[]; points: Point[]; notes: string[]; unresolvedRules: string[];
+  numeric: NumericRule | null; accepted: string[]; points: Point[]; notes: string[]; unresolvedRules: string[];
+  finalAnswerAwardsAll?: boolean; sourcePages?: number[];
   [key: string]: unknown;
 };
+type NumericRule = { accepted: string[]; unitRequired: boolean; relativeTolerance: number; absoluteTolerance: number; range: number[] | null };
 type Question = { id: string; text: string; context: string; marks: number; topic: string; sourcePages: number[]; references: string[]; issues: string[] };
 export type ReviewPaper = {
   id: string; title: string; syllabus: string; revision: number; kind?: string;
   questions: Question[]; schemes: Scheme[]; warnings: string[];
   files: Array<{ role: string; file: { id: string; name: string } }>;
   crops?: Record<string, QuestionCrop[]>;
+  // Read from the PDFs' text without AI (lib/structured-paper.ts): mark-scheme
+  // screenshots, and a switch between automatic and teacher marking.
+  reader?: string; schemeCrops?: Record<string, SchemeCrop[]>;
 };
 export type Extraction = { questions: Question[]; schemes: Scheme[]; warnings: string[]; syllabus: string };
 
 const LETTERS = ["A", "B", "C", "D"];
 const isChoice = (s: Scheme | undefined) => !!s && s.kind === "exact" && s.accepted.length <= 1 && (s.accepted.length === 0 || LETTERS.includes(s.accepted[0]));
 const list = (value: string) => value.split(/[;\n]/).map((x) => x.trim()).filter(Boolean);
+const readable = (value: string) => { try { parseQuantity(value); return true; } catch { return false; } };
+// The final answers a teacher types for automatic marking, and what is wrong with them.
+function answerProblem(s: Scheme) {
+  if (s.kind !== "numeric") return "";
+  const values = s.numeric?.accepted ?? [];
+  if (!values.length) return "Type the final answer, with its unit, or choose \"I mark this\".";
+  const bad = values.filter((v) => !readable(v));
+  return bad.length ? `Not a value the marker can read: ${bad.join(", ")}. Write it like 0.87 s or 1.8 × 10^-2 J.` : "";
+}
+// The numeric rule for typed final answers: anything that rounds to them.
+const ruleFor = (values: string[], range: number[] | null = null): NumericRule =>
+  ({ accepted: values, unitRequired: false, relativeTolerance: 0, absoluteTolerance: range || !values.length ? 0 : roundingTolerance(values[0]), range });
 
 export function ExamReview({ paper, busy, error, onBack, onPublish }: {
   paper: ReviewPaper; busy: boolean; error: string;
@@ -37,12 +56,16 @@ export function ExamReview({ paper, busy, error, onBack, onPublish }: {
   const [json, setJson] = useState("");
   const [jsonError, setJsonError] = useState("");
   const multipleChoice = paper.kind === "multiple_choice";
+  const fromText = paper.reader === "text";
 
   const current = (): Extraction => ({
     questions: questions.map((q) => ({ ...q, issues: checked.has(q.id) ? [] : q.issues })),
     schemes, warnings: paper.warnings, syllabus: paper.syllabus,
   });
-  const openIssues = useMemo(() => questions.filter((q) => q.issues.length && !checked.has(q.id)).length, [questions, checked]);
+  const toCheck = useMemo(() => questions.filter((q) => q.issues.length && !checked.has(q.id)), [questions, checked]);
+  const openIssues = toCheck.length;
+  const automatic = schemes.filter((s) => s.kind === "numeric").length;
+  const unreadable = schemes.filter((s) => answerProblem(s)).length;
   const totalMarks = questions.reduce((n, q) => n + q.marks, 0);
 
   const setScheme = (id: string, patch: Partial<Scheme>) =>
@@ -51,6 +74,11 @@ export function ExamReview({ paper, busy, error, onBack, onPublish }: {
     setQuestions((all) => all.map((q) => (q.id === id ? { ...q, marks } : q)));
     setScheme(id, { marks });
   };
+  // Automatic marking from the final answer, or the teacher marks the part.
+  // Switching off keeps the answer, so switching back restores it.
+  const setAutomatic = (s: Scheme, on: boolean) => setScheme(s.questionId, on
+    ? { kind: "numeric", finalAnswerAwardsAll: true, numeric: s.numeric ?? ruleFor([]) }
+    : { kind: "manual", finalAnswerAwardsAll: false, numeric: s.numeric?.accepted.length ? s.numeric : null });
   const toggleChecked = (id: string) => setChecked((all) => {
     const next = new Set(all);
     if (next.has(id)) next.delete(id); else next.add(id);
@@ -70,11 +98,18 @@ export function ExamReview({ paper, busy, error, onBack, onPublish }: {
           <p>Physics exam papers · {multipleChoice ? "multiple choice" : "structured"}</p>
           <h1>Check the extraction</h1>
           <h2>{paper.title} · {questions.length} questions · {totalMarks} marks. Compare each question with how it will be marked, then publish.</h2>
+          {fromText && <p>Read from the PDFs, without AI · {automatic} marked automatically from the final answer · {questions.length - automatic} you mark</p>}
         </div>
         <button onClick={onBack}>← Paper library</button>
       </div>
       {error && <p className="error-text">{error}</p>}
       {paper.warnings.map((w, i) => <p className="reference" key={i}>{w}</p>)}
+      {toCheck.length > 0 && (
+        <nav className="panel exam-review-tocheck" aria-label="Parts to check">
+          <b>Check these first:</b>
+          {toCheck.map((q) => <a key={q.id} href={`#review-${q.id}`}>{q.id}</a>)}
+        </nav>
+      )}
 
       <div className="exam-review">
         {questions.map((q) => {
@@ -88,6 +123,12 @@ export function ExamReview({ paper, busy, error, onBack, onPublish }: {
                 </label>
               </header>
               <ExamQuestionShot paper={paper} question={q} />
+              {fromText && s && !isChoice(s) && (
+                <>
+                  <h4 className="exam-review-label">Mark scheme</h4>
+                  <ExamSchemeShot paper={paper} questionId={q.id} pages={s.sourcePages ?? []} />
+                </>
+              )}
               {!s ? (
                 <p className="error-text">No mark scheme was matched to this question.</p>
               ) : multipleChoice || isChoice(s) ? (
@@ -103,6 +144,19 @@ export function ExamReview({ paper, busy, error, onBack, onPublish }: {
                 </div>
               ) : (
                 <div className="exam-review-scheme">
+                  {fromText && (s.kind === "numeric" || s.kind === "manual") && (
+                    <fieldset className="exam-review-mode">
+                      <legend>How this part is marked</legend>
+                      <label className="check">
+                        <input type="radio" name={`mode-${q.id}`} checked={s.kind === "numeric"} onChange={() => setAutomatic(s, true)} />
+                        Automatically: a correct final answer earns all {q.marks} mark{q.marks === 1 ? "" : "s"}{q.marks > 1 ? "; any other answer comes to you" : ""}
+                      </label>
+                      <label className="check">
+                        <input type="radio" name={`mode-${q.id}`} checked={s.kind === "manual"} onChange={() => setAutomatic(s, false)} />
+                        I mark this
+                      </label>
+                    </fieldset>
+                  )}
                   <label className="pe-field">Expected answer
                     <input value={s.expected} onChange={(e) => setScheme(q.id, { expected: e.target.value })} />
                   </label>
@@ -113,8 +167,22 @@ export function ExamReview({ paper, busy, error, onBack, onPublish }: {
                   )}
                   {s.kind === "numeric" && s.numeric && (
                     <label className="pe-field">Accepted values, with units <small>one per line</small>
-                      <textarea value={s.numeric.accepted.join("\n")} onChange={(e) => setScheme(q.id, { numeric: { ...s.numeric!, accepted: list(e.target.value) } })} />
+                      <textarea value={s.numeric.accepted.join("\n")} onChange={(e) => {
+                        const values = list(e.target.value);
+                        // Typed answers are accepted to their rounding; a range from the scheme stays as it is.
+                        setScheme(q.id, { numeric: fromText ? ruleFor(values, s.numeric!.range) : { ...s.numeric!, accepted: values }, accepted: values });
+                      }} />
+                      {s.numeric.range && <small>Anything from {s.numeric.range[0]} to {s.numeric.range[1]} is accepted.</small>}
                     </label>
+                  )}
+                  {answerProblem(s) && <p className="error-text">{answerProblem(s)}</p>}
+                  {fromText && s.points.length > 0 && (
+                    <details>
+                      <summary>Marking points as read ({s.points.length})</summary>
+                      <ol className="exam-review-points">
+                        {s.points.map((p) => <li key={p.id}>{p.description} <small>· {p.marks} mark{p.marks === 1 ? "" : "s"}</small></li>)}
+                      </ol>
+                    </details>
                   )}
                   {s.kind === "stepped" && (
                     <ol className="exam-review-points">
@@ -162,7 +230,10 @@ export function ExamReview({ paper, busy, error, onBack, onPublish }: {
         {openIssues > 0 && !advanced && (
           <p className="error-text">{openIssues} question{openIssues === 1 ? " has" : "s have"} an issue to check before publishing.</p>
         )}
-        <button disabled={busy || (openIssues > 0 && !advanced)} className="primary" onClick={publish}>
+        {unreadable > 0 && !advanced && (
+          <p className="error-text">{unreadable} automatic part{unreadable === 1 ? " needs" : "s need"} a final answer the marker can read.</p>
+        )}
+        <button disabled={busy || ((openIssues > 0 || unreadable > 0) && !advanced)} className="primary" onClick={publish}>
           {busy ? "Publishing…" : "I have checked the paper: publish for practice"}
         </button>
       </section>

@@ -13,9 +13,10 @@ import {
   type PdfPageData, type PdfWord, type SchemeRow, type DetectedQuestion,
 } from "./cambridge-analysis";
 import { questionCrops } from "./exam-paper-layout";
-import { parseQuantity } from "./physics-marking-engine";
+import { parseQuantity, roundingTolerance } from "./physics-marking-engine";
 import { validateExtraction } from "./physics-exam-extraction-validation";
-import type { Extraction, MarkingPoint, QuestionCrop, Scheme } from "./physics-extraction-schema";
+import type { Extraction, MarkingPoint, QuestionCrop, Scheme, SchemeCrop } from "./physics-extraction-schema";
+import type { SchemeSpan } from "./cambridge-analysis";
 
 // ── Marking points ─────────────────────────────────────────────────────────
 
@@ -119,16 +120,7 @@ export function finalAnswer(text: string): FinalAnswer | null {
   return { accepted: values, range: null, shown: values.join(" or "), partial: values.length < alternatives.length };
 }
 
-/**
- * Accept anything that rounds to the published answer: half a unit in its
- * last written digit, in the answer's own unit ("0.87 s" → ±0.005 s).
- */
-export function roundingTolerance(value: string): number {
-  const mantissa = value.match(/^-?(\d+(?:\.(\d+))?)/);
-  const exponent = Number(value.match(/\*10\^(-?\d+)/)?.[1] ?? 0);
-  const decimals = mantissa?.[2]?.length ?? 0;
-  return 0.5 * 10 ** (exponent - decimals);
-}
+export { roundingTolerance };
 
 // Guidance or wording that means a correct final answer is not the whole
 // story, so a teacher marks the part. RESTRICTED blocks automatic marking
@@ -255,7 +247,7 @@ function looksScanned(pages: PdfPageData[]) {
  * A whole structured paper from its question paper and mark scheme, without
  * AI. For one combined PDF, pass the same pages as both.
  */
-export function structuredPaper(paperPages: PdfPageData[], schemePages: PdfPageData[]): { extraction: Extraction; crops: Record<string, QuestionCrop[]> } {
+export function structuredPaper(paperPages: PdfPageData[], schemePages: PdfPageData[]): { extraction: Extraction; crops: Record<string, QuestionCrop[]>; schemeCrops: Record<string, SchemeCrop[]> } {
   if (looksScanned(paperPages))
     throw Error("This question paper has no selectable text; it looks like a scan. Upload the original Cambridge PDF, or read it with AI.");
   const rows = parseMarkScheme(schemePages, "Physics", "structured");
@@ -311,7 +303,22 @@ export function structuredPaper(paperPages: PdfPageData[], schemePages: PdfPageD
   const total = paperTotal(paperPages);
   const sum = extraction.schemes.reduce((n, s) => n + s.marks, 0);
   if (total && total !== sum) warnings.push(`The paper's total is ${total} marks, but the parts read add up to ${sum}. Check for a missing or misread part.`);
-  return { extraction: validateExtraction(extraction), crops };
+  const schemeCrops = Object.fromEntries(rows.map((r) => [r.label, (r.spans ?? []).map(schemeCrop)]));
+  return { extraction: validateExtraction(extraction), crops, schemeCrops };
+}
+
+/**
+ * A mark-scheme row as a crop of its stored page. The span is in the page as
+ * read, which for a sideways table is turned upright: its rows run across the
+ * stored page's width, so the crop is a vertical strip (rotate 90), leaving
+ * out the running header and footer at the stored page's top and bottom.
+ * Margins measured on real 9702 and 0625 schemes.
+ */
+export function schemeCrop(span: SchemeSpan): SchemeCrop {
+  const start = Math.max(0, span.top - 0.015), end = Math.min(1, span.bottom + 0.016);
+  return span.rotated
+    ? { page: span.page, x: start, y: 0.06, width: end - start, height: 0.885, rotate: 90 }
+    : { page: span.page, x: 0.02, y: Math.max(0, span.top - 0.012), width: 0.96, height: Math.min(1, span.bottom + 0.03) - Math.max(0, span.top - 0.012), rotate: 0 };
 }
 
 function syllabusOf(pages: PdfPageData[]): Extraction["syllabus"] {

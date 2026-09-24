@@ -164,6 +164,19 @@ export function parseQuantity(raw: string) {
   return { value, unit, hasUnit: tail.length > 0 };
 }
 
+/**
+ * Accept anything that rounds to the published answer: half a unit in its
+ * last written digit, in the answer's own unit ("0.87 s" → ±0.005 s,
+ * "1.8 × 10^-2 J" → ±0.0005 J).
+ */
+export function roundingTolerance(value: string): number {
+  const text = value.trim().replace(/\s*[×x*]\s*10\s*\^\s*/, "*10^").replace(/[−–—]/g, "-");
+  const mantissa = text.match(/^-?(\d+(?:\.(\d+))?)/);
+  const exponent = Number(text.match(/\*10\^(-?\d+)/)?.[1] ?? 0);
+  const decimals = mantissa?.[2]?.length ?? 0;
+  return 0.5 * 10 ** (exponent - decimals);
+}
+
 export type Comparison = { result: "match" | "miss" | "review"; reason: string };
 
 export function compareNumeric(answer: string, rule: NumericRule): Comparison {
