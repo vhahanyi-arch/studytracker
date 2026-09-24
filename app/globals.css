@@ -6254,11 +6254,17 @@ summary:focus-visible,
 .review-list { display: grid; gap: 6px; }
 .review-list > div { display: flex; flex-wrap: wrap; gap: 6px; }
 
-/* The theme choice in the top bar, which is dark in both themes. */
-.theme-toggle { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 999px; }
-.theme-toggle button { display: grid; place-items: center; width: 30px; height: 28px; padding: 0; border: 0; border-radius: 999px; background: transparent; color: rgba(255, 255, 255, 0.72); }
-.theme-toggle button[aria-checked="true"] { background: rgba(255, 255, 255, 0.18); color: #fff; }
+/* The theme choice. In the top bar it takes the theme's own colours, since
+   the bar is white in light mode and dark in dark mode; the chosen option is
+   filled in solid so it reads at a glance either way. */
+.theme-toggle { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--sheet); }
+.theme-toggle button { display: grid; place-items: center; width: 30px; height: 28px; padding: 0; border: 0; border-radius: 999px; background: transparent; color: var(--muted); }
+.theme-toggle button[aria-checked="true"] { background: var(--ink); color: var(--sheet); }
 .theme-toggle svg { width: 16px; height: 16px; }
+/* The sign-in page's brand panel is dark in both themes. */
+.signin-brand .theme-toggle { border-color: rgba(255, 255, 255, 0.24); background: transparent; }
+.signin-brand .theme-toggle button { color: rgba(255, 255, 255, 0.78); }
+.signin-brand .theme-toggle button[aria-checked="true"] { background: #fff; color: #17212e; }
 .signin-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 
 /* ── Dark mode ────────────────────────────────────────────────────────────
