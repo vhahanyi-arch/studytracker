@@ -44,7 +44,11 @@ test('a correct final answer scores full marks, in any reasonable form; a wrong 
 test('the marks printed on the paper are checked against the scheme',async()=>{
  const paper=asPhysicsStructured.paper.map(p=>({...p,runs:p.runs.map(r=>r.text==='[2]'&&r.top===240?{...r,text:'[3]'}:r)}));
  const {extraction:x}=await read(paper);
- assert.match(x.questions.find(q=>q.id==='1(b)')!.issues.join(),/prints \[3\] .* scheme gives 2/);
+ const q=x.questions.find(q=>q.id==='1(b)')!,s=x.schemes.find(s=>s.questionId==='1(b)')!;
+ assert.match(q.issues.join(),/prints \[3\] .* codes add up to 2; \[3\] is used/);
+ assert.deepEqual([q.marks,s.marks],[3,3],'the printed mark is the part\'s mark');
+ assert.equal(s.kind,'manual','a reading that disagrees with the paper is not marked automatically');
+ assert.deepEqual(s.numeric?.accepted,['1.5 m s^-2'],'its answer is kept, for the teacher to switch back on');
 });
 test('the paper total is checked against the parts read',async()=>{
  const paper=asPhysicsStructured.paper.map(p=>({...p,runs:p.runs.map(r=>r.text.includes('total mark for this paper is 12')?{...r,text:r.text.replace('12','15')}:r)}));
@@ -146,6 +150,10 @@ test('an alternative method is shown but its marks are not added',()=>{
  const r=row('8(b)',[['C1','V = IR'],['A1','= 16 V'],['C1','OR alternative route'],['A1','= 16 V']]);
  const {scheme}=schemeFor(r,schemeMarks(r),'Calculate the p.d.');
  assert.equal(scheme.marks,2);assert.equal(scheme.points.length,4);assert.match(scheme.points[2].description,/^\(alternative\)/);
+});
+test('"Alternative methods:" starts an alternative too, as 9702 schemes put it',()=>{
+ const r=row('1(b)(iv)',[['C1','v2 = 2as'],['A1','speed = 8.7 m s –1'],['C1','Alternative methods: t = 34.6'],['A1','speed = 8.7 m s –1'],['C1','OR v = at'],['A1','v = 8.7']]);
+ assert.equal(schemeFor(r,schemeMarks(r),'Determine the speed.').scheme.marks,2);
 });
 
 // ── When a correct final answer is not the whole story ─────────────────────

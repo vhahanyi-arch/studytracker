@@ -46,7 +46,8 @@ export function schemeMarks(row: SchemeRow): SchemeMark[] {
       else if (text) lead.push(text);
       continue;
     }
-    if (marks.length && /^OR\b/i.test(text)) alternative = true;
+    // "OR alternative route" (0625), "Alternative methods: …" (9702).
+    if (marks.length && /^(?:OR\b|alternative(?:ly|\s+(?:methods?|routes?|answers?))?\b)/i.test(text)) alternative = true;
     // Several codes in one cell ("B1 B1") are several points with one text.
     codes.forEach((code, i) => marks.push({
       code: code[0], type: code[1], marks: Number(code[2]), alternative,
@@ -296,9 +297,17 @@ export function structuredPaper(paperPages: PdfPageData[], schemePages: PdfPageD
     const marks = schemeMarks(row);
     const { scheme, issues: schemeIssues } = schemeFor(row, marks, text, schemePages[0]?.pageNumber ?? 1);
     issues.push(...schemeIssues);
+    // The paper's printed [n] is the part's mark. The scheme's codes can add up
+    // to more (alternative methods laid out in ways not recognised), so when
+    // they disagree the printed mark is used and the part is flagged.
     const printed = printedMarks(words);
-    if (hit && printed && printed !== scheme.marks)
-      issues.push(`The paper prints [${printed}] for this part but the mark scheme gives ${scheme.marks}. Check its marks.`);
+    if (hit && printed && printed !== scheme.marks) {
+      issues.push(`The paper prints [${printed}] for this part but its mark-scheme codes add up to ${scheme.marks}; [${printed}] is used. Check its marks and marking.`);
+      scheme.marks = printed;
+      // A reading that disagrees with the paper is not certain enough to mark
+      // by itself. The answer is kept, so the teacher can switch it back on.
+      if (scheme.kind === "numeric") Object.assign(scheme, { kind: "manual", finalAnswerAwardsAll: false });
+    }
     extraction.questions.push({
       id: row.label, text: text.slice(0, 2000) || `Question ${row.label}`, context: "",
       marks: scheme.marks, topic: hit?.topic || "General skills",
