@@ -28,6 +28,14 @@ export function makeSubmission(paper:Paper,name:string,selfPractice:boolean,answ
   wholePaperFiles:hasWholePaper?wholePaperFiles:undefined,
   grades:paper.questions.map(q=>markAnswer(q,paper.schemes.find(s=>s.questionId===q.id),answers.find(a=>a.questionId===q.id)!,selfPractice))};
 }
+// One answer marked on its own while practising. The expected answer is part
+// of the result, which is why the route records every check.
+export const CheckSchema=z.object({paperId:z.string().uuid(),questionId:z.string().max(40),text:z.string().max(20000),steps:z.record(z.string(),z.string().max(10000)).default({})});
+export function checkAnswer(paper:Paper,input:z.infer<typeof CheckSchema>){
+ const q=paper.questions.find(x=>x.id===input.questionId);if(!q)throw Error('Question not found.');
+ const g=markAnswer(q,paper.schemes.find(s=>s.questionId===q.id),{questionId:q.id,mode:'typed',text:input.text,steps:input.steps,file:null},true);
+ return {questionId:q.id,marks:q.marks,proposed:g.proposed,status:g.status,reason:g.reason,expected:g.expected,points:g.points};
+}
 export function overrideGrade(submission:Submission,questionId:string,score:number,note:string,paper:Paper):Submission{
  const q=paper.questions.find(q=>q.id===questionId); if(!q||!Number.isInteger(score)||score<0||score>q.marks)throw Error('Enter a whole mark within the question maximum.');
  if(!note.trim())throw Error('Add a review note for the audit trail.');

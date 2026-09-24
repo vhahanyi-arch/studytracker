@@ -39,7 +39,7 @@ import { QuestionImage } from '@/components/QuestionImage';
 import { PdfAnnotator } from '@/components/PdfAnnotator';
 import { type PaperQuestion, displayCrop } from '@/lib/paper-questions';
 import { ExamReview, type ReviewPaper, type Extraction } from '@/components/exam/ExamReview';
-import { ExamQuestionShot, type QuestionCrop } from '@/components/exam/ExamQuestionShot';
+import { ExamAttempt, type AttemptPaper } from '@/components/exam/ExamAttempt';
 import { generateHomeworkDraftFromText, type HomeworkDraft } from '@/lib/homework-draft';
 
 export default function Home() {
@@ -1330,29 +1330,16 @@ function ReviewForm({ max, busy, defaultScore, onSave }: { max: number; busy: bo
 }
 
 function PhysicsExamStudent({ back }: { back: () => void }) {
-  type PaperSummary = { id: string; title: string; syllabus: string; status: string;
-    files: Array<{ role: string; file: { id: string; name: string } }>;
-    questions: Array<{ id: string; text: string; context: string; marks: number; topic: string; sourcePages: number[]; references: string[] }>;
-    schemes: Array<{ questionId: string; kind: string; points: Array<{ id: string; description: string; marks: number; kind: string }> }>;
-    kind?: string; crops?: Record<string, QuestionCrop[]> };
-  type Draft = { mode: "typed" | "handwritten"; text: string; steps: Record<string, string>; file: { id: string; name: string } | null; formula?: string; working?: string };
   type Grade = { questionId: string; proposed: number | null; final: number | null; status: string; reason: string;
     points: Array<{ id: string; description: string; marks: number; hit: boolean | null }>; expected: string };
-  type SubmissionResult = { id: string; grades: Grade[] };
+  type SubmissionResult = { id: string; grades: Grade[]; selfPractice?: boolean };
 
-  const blank = (): Draft => ({ mode: "typed", text: "", steps: {}, file: null, formula: "", working: "" });
-
-  const [papers, setPapers] = useState<PaperSummary[]>([]);
+  const { user } = useUser();
+  const [papers, setPapers] = useState<AttemptPaper[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [openPaper, setOpenPaper] = useState<PaperSummary | null>(null);
-  const [index, setIndex] = useState(0);
-  const [drafts, setDrafts] = useState<Record<string, Draft>>({});
-  const [wholePaperFiles, setWholePaperFiles] = useState<Array<{ id: string; name: string }>>([]);
-  const [name, setName] = useState("");
-  const [practice, setPractice] = useState(false);
-  const [result, setResult] = useState<{ paper: PaperSummary; submission: SubmissionResult } | null>(null);
+  const [openPaper, setOpenPaper] = useState<AttemptPaper | null>(null);
+  const [result, setResult] = useState<{ paper: AttemptPaper; submission: SubmissionResult } | null>(null);
 
   async function load() {
     setLoading(true);
@@ -1369,90 +1356,35 @@ function PhysicsExamStudent({ back }: { back: () => void }) {
   }
   useEffect(() => { load(); }, []);
 
-  function update(id: string, patch: Partial<Draft>) {
-    setDrafts((d) => ({ ...d, [id]: { ...(d[id] || blank()), ...patch } }));
-  }
-
-  async function attach(file: File): Promise<{ id: string; name: string } | null> {
-    setBusy(true);
-    try {
-      const form = new FormData();
-      form.set("action", "attachment");
-      form.set("file", file);
-      const response = await fetch("/api/physics-exam", { method: "POST", body: form });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Could not upload this file.");
-      return data.file;
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not upload this file.");
-      return null;
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  function useWholePaperMode(paper: PaperSummary) {
-    setDrafts(Object.fromEntries(paper.questions.map((q) => [q.id, { ...(drafts[q.id] || blank()), mode: "handwritten" as const }])));
-  }
-
-  async function submit() {
-    if (!openPaper) return;
-    setBusy(true);
-    setError("");
-    try {
-      const response = await fetch("/api/physics-exam", {
-        method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          action: "submit", paperId: openPaper.id, name: name.trim() || "Student", selfPractice: practice,
-          wholePaperFiles: wholePaperFiles.map((f) => f.id),
-          answers: openPaper.questions.map((q) => {
-            const a = drafts[q.id] || blank();
-            return { questionId: q.id, mode: a.mode, text: a.text, steps: a.steps, fileId: a.file?.id ?? null, formula: a.formula || undefined, working: a.working || undefined };
-          }),
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Could not submit this paper.");
-      setResult({ paper: openPaper, submission: data.submission });
-      setOpenPaper(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not submit this paper.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const statusLabel: Record<string, string> = { needs_review: "Needs teacher review", proposed: "Proposed mark", self_practice: "Self-practice mark", confirmed: "Teacher confirmed" };
+  const statusLabel: Record<string, string> = { needs_review: "Your teacher will mark this", proposed: "Waiting for your teacher to confirm", self_practice: "Practice mark", confirmed: "Confirmed by your teacher" };
 
   if (result) {
     const totalMarks = result.paper.questions.reduce((n, q) => n + q.marks, 0);
     const awarded = result.submission.grades.reduce((n, g) => n + (g.final ?? 0), 0);
+    const waiting = result.submission.grades.filter((g) => g.final === null).length;
     return (
       <>
         <div className="portal-heading">
           <div>
             <p>Physics exam papers</p>
             <h1>{result.paper.title}</h1>
-            <h2>Submitted — {awarded} / {totalMarks} confirmed so far</h2>
+            <h2>Submitted · {awarded} / {totalMarks}{waiting ? ` so far, ${waiting} question${waiting === 1 ? "" : "s"} still to be marked by your teacher` : ""}</h2>
           </div>
           <button onClick={() => { setResult(null); load(); }}>← Back to papers</button>
         </div>
-        <div className="error-text" style={{ background: "var(--bg-violet-96-f)", color: "inherit" }}>
-          Proposed marks are not final grades. Anything needing your teacher's judgment is excluded from the total until they confirm it.
-        </div>
         {result.submission.grades.map((grade) => {
           const question = result.paper.questions.find((q) => q.id === grade.questionId);
+          const verdict = grade.final === null ? "review" : grade.final === question?.marks ? "right" : grade.final > 0 ? "part" : "wrong";
           return (
             <section className="answer-card" key={grade.questionId}>
               <div className="section-heading">
-                <h3>{grade.questionId} {question?.topic ? "· " + question.topic : ""}</h3>
-                <span className={"badge " + (grade.status === "confirmed" ? "green" : "amber")}>{statusLabel[grade.status] || grade.status}</span>
+                <h3>Question {grade.questionId}</h3>
+                <span className={"badge " + (grade.final !== null ? "green" : "amber")}>{statusLabel[grade.status] || grade.status}</span>
               </div>
-              {question && <p>{question.text}</p>}
-              <p>{grade.reason}</p>
-              <div className="grade-line">
-                Proposed: <strong>{grade.proposed === null ? "Needs review" : grade.proposed + " / " + (question?.marks ?? "?")}</strong>
-                <span>Final: <strong>{grade.final === null ? "Not confirmed" : grade.final + " / " + (question?.marks ?? "?")}</strong></span>
+              <div className={"check-result " + verdict}>
+                <b>{grade.final === null ? "Not marked yet" : `${grade.final} / ${question?.marks ?? "?"}`}</b>
+                {grade.expected && verdict !== "right" && <p>Expected answer: {grade.expected}</p>}
+                {grade.final === null && <p>{grade.reason}</p>}
               </div>
             </section>
           );
@@ -1462,125 +1394,10 @@ function PhysicsExamStudent({ back }: { back: () => void }) {
   }
 
   if (openPaper) {
-    const question = openPaper.questions[index];
-    const scheme = openPaper.schemes.find((s) => s.questionId === question?.id);
-    const draft = drafts[question?.id || ""] || blank();
-    const isNumeric = scheme?.kind === "numeric";
-    const isStepped = scheme?.kind === "stepped";
-    const isChoice = openPaper.kind === "multiple_choice";
     return (
-      <>
-        <div className="portal-heading">
-          <div>
-            <p>Physics exam papers</p>
-            <h1>{openPaper.title}</h1>
-            <h2>{openPaper.syllabus} · {openPaper.questions.length} questions · {openPaper.questions.reduce((n, q) => n + q.marks, 0)} marks</h2>
-            {openPaper.files.filter((f) => f.role !== "scheme").map((f) => (
-              <a key={f.file.id} href={"/api/physics-exam/files/" + f.file.id} target="_blank" rel="noreferrer" className="reference">
-                View full original question paper ↗
-              </a>
-            ))}
-          </div>
-          <button onClick={() => setOpenPaper(null)}>← Paper library</button>
-        </div>
-        {error && <p className="error-text">{error}</p>}
-        <div className="answer-layout">
-          <section className="answer-card">
-            <div className="section-heading">
-              <b>Question {question?.id}</b>
-              <span className="badge">{question?.marks} marks</span>
-            </div>
-            {question && <ExamQuestionShot paper={openPaper} question={question} />}
-            {isChoice && question ? (
-              <div className="choice-answer" role="radiogroup" aria-label={`Your answer to question ${question.id}`}>
-                {["A", "B", "C", "D"].map((letter) => (
-                  <button key={letter} type="button" role="radio" aria-checked={draft.text === letter}
-                    className={draft.text === letter ? "primary" : ""}
-                    onClick={() => update(question.id, { mode: "typed", text: draft.text === letter ? "" : letter })}>
-                    {letter}
-                  </button>
-                ))}
-              </div>
-            ) : <>
-            <div className="setup-head" style={{ margin: "14px 0" }}>
-              {(["typed", "handwritten"] as const).map((m) => (
-                <button key={m} className={draft.mode === m ? "primary" : ""} onClick={() => question && update(question.id, { mode: m })}>
-                  {m === "typed" ? "Type an answer" : "Upload handwriting"}
-                </button>
-              ))}
-            </div>
-            {draft.mode === "typed" ? (
-              <>
-                {isNumeric ? (
-                  <>
-                    <label className="pe-field">Formula used<input value={draft.formula || ""} onChange={(e) => question && update(question.id, { formula: e.target.value })} placeholder="e.g. F = ma" /></label>
-                    <label className="pe-field">Working / substitution<textarea value={draft.working || ""} onChange={(e) => question && update(question.id, { working: e.target.value })} placeholder="Show your substitution and calculation steps." /></label>
-                    <label className="pe-field">Final answer<input value={draft.text} onChange={(e) => question && update(question.id, { text: e.target.value })} placeholder="Include units where needed." /></label>
-                    <p className="reference">Formula and working are for your own technique and for teacher review — only the final answer is auto-marked.</p>
-                  </>
-                ) : isStepped ? (
-                  <p className="reference">This question is marked point by point below — there is no single overall answer field.</p>
-                ) : (
-                  <label className="pe-field">Your answer<textarea value={draft.text} onChange={(e) => question && update(question.id, { text: e.target.value })} placeholder="Show working and include units where needed." /></label>
-                )}
-                {isStepped && scheme?.points.map((p, pi) => (
-                  <label key={p.id} className="pe-field">{p.kind === "numeric" ? p.description : "Step " + (pi + 1)} · {p.marks} mark
-                    {p.kind === "numeric" ? (
-                      <input value={draft.steps[p.id] || ""} onChange={(e) => question && update(question.id, { steps: { ...draft.steps, [p.id]: e.target.value } })} placeholder="Numeric answer for this step, with units." />
-                    ) : (
-                      <textarea value={draft.steps[p.id] || ""} onChange={(e) => question && update(question.id, { steps: { ...draft.steps, [p.id]: e.target.value } })} placeholder="Explain or state your evidence for this step." />
-                    )}
-                  </label>
-                ))}
-              </>
-            ) : (
-              <div>
-                <p>Handwritten answers always go to teacher review.</p>
-                <label className="file-drop">↑ Photo or scan
-                  <input type="file" disabled={busy} accept="application/pdf,image/png,image/jpeg" onChange={async (e) => {
-                    const f = e.target.files?.[0]; if (!f || !question) return;
-                    const uploaded = await attach(f); if (uploaded) update(question.id, { file: uploaded });
-                  }} />
-                </label>
-                {draft.file && <a href={"/api/physics-exam/files/" + draft.file.id} target="_blank" rel="noreferrer">{draft.file.name} ↗</a>}
-              </div>
-            )}
-            </>}
-            <div className="grade-line">
-              <span>{index + 1} of {openPaper.questions.length}</span>
-              <button disabled={!index} onClick={() => setIndex(index - 1)}>Previous</button>
-              <button disabled={index === openPaper.questions.length - 1} onClick={() => setIndex(index + 1)}>Next question →</button>
-            </div>
-          </section>
-          <aside className="panel">
-            <h3>Questions</h3>
-            {openPaper.questions.map((q, i) => (
-              <button key={q.id} className={index === i ? "primary" : ""} style={{ display: "block", width: "100%", marginBottom: "6px" }} onClick={() => setIndex(i)}>
-                {q.id} <small>· {q.marks} marks {drafts[q.id]?.text || drafts[q.id]?.file ? "· answered" : ""}</small>
-              </button>
-            ))}
-            <div className="file-drop" style={{ marginTop: "16px" }}>
-              <b>Handwrote the whole paper?</b>
-              <p className="reference">Upload a photo or scan of each page instead of answering question by question.</p>
-              <label className="file-drop">↑ Add a page
-                <input type="file" disabled={busy} accept="application/pdf,image/png,image/jpeg" onChange={async (e) => {
-                  const f = e.target.files?.[0]; if (!f) return;
-                  useWholePaperMode(openPaper);
-                  const uploaded = await attach(f);
-                  if (uploaded) setWholePaperFiles((files) => [...files, uploaded]);
-                  e.target.value = "";
-                }} />
-              </label>
-              {wholePaperFiles.length > 0 && (
-                <ul>{wholePaperFiles.map((f, i) => <li key={f.id}>Page {i + 1}: {f.name}</li>)}</ul>
-              )}
-            </div>
-            <label className="pe-field">Your name<input value={name} onChange={(e) => setName(e.target.value)} placeholder="Student" /></label>
-            <label className="check"><input type="checkbox" checked={practice} onChange={(e) => setPractice(e.target.checked)} /> Self-practice: accept supported automatic marks without teacher confirmation.</label>
-            <button disabled={busy} className="primary" onClick={submit}>{busy ? "Submitting…" : "Submit paper →"}</button>
-          </aside>
-        </div>
-      </>
+      <ExamAttempt key={openPaper.id} paper={openPaper} userId={user?.id}
+        onBack={() => setOpenPaper(null)}
+        onSubmitted={(submission) => { setResult({ paper: openPaper, submission: submission as SubmissionResult }); setOpenPaper(null); }} />
     );
   }
 
@@ -1590,7 +1407,7 @@ function PhysicsExamStudent({ back }: { back: () => void }) {
         <div>
           <p>Physics exam papers</p>
           <h1>Exam papers</h1>
-          <h2>Papers your teacher has published for practice.</h2>
+          <h2>Papers your teacher has published for practice. Your answers are saved as you go.</h2>
         </div>
         <button onClick={back}>← Back</button>
       </div>
@@ -1599,18 +1416,18 @@ function PhysicsExamStudent({ back }: { back: () => void }) {
         {loading ? (
           <p>Loading…</p>
         ) : !papers.length ? (
-          <p>No papers available yet — check back once your teacher has published one.</p>
+          <p>No papers available yet. Check back once your teacher has published one.</p>
         ) : (
           papers.map((paper, i) => (
             <article key={paper.id}>
               <span>{i + 1}</span>
               <div>
                 <b>{paper.title}</b>
-                <small>{paper.syllabus} · {paper.questions.length} questions · {paper.questions.reduce((n, q) => n + q.marks, 0)} marks</small>
+                <small>{paper.syllabus}{paper.kind === "multiple_choice" ? " · multiple choice" : ""} · {paper.questions.length} questions · {paper.questions.reduce((n, q) => n + q.marks, 0)} marks</small>
               </div>
               <span></span>
               <div>
-                <button onClick={() => { setOpenPaper(paper); setIndex(0); setDrafts({}); setWholePaperFiles([]); }}>Open paper</button>
+                <button onClick={() => setOpenPaper(paper)}>Open paper</button>
               </div>
             </article>
           ))

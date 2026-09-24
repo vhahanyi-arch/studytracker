@@ -33,16 +33,18 @@ export const openDraftStore = () =>
     request.onerror = () => reject(request.error);
   });
 
-export async function readAnswerDraft(key: string) {
+// The store holds any draft shape; the key says whose and for what. Papers &
+// assignments and Exam papers both keep their drafts here.
+export async function readStoredDraft<T>(key: string) {
   const database = await openDraftStore();
-  return new Promise<AnswerDraft | null>((resolve, reject) => {
+  return new Promise<T | null>((resolve, reject) => {
     const request = database.transaction("drafts").objectStore("drafts").get(key);
-    request.onsuccess = () => resolve((request.result as AnswerDraft) || null);
+    request.onsuccess = () => resolve((request.result as T) || null);
     request.onerror = () => reject(request.error);
   }).finally(() => database.close());
 }
 
-export async function writeAnswerDraft(key: string, draft: AnswerDraft) {
+export async function writeStoredDraft<T>(key: string, draft: T) {
   const database = await openDraftStore();
   return new Promise<void>((resolve, reject) => {
     const transaction = database.transaction("drafts", "readwrite");
@@ -51,6 +53,9 @@ export async function writeAnswerDraft(key: string, draft: AnswerDraft) {
     transaction.onerror = () => reject(transaction.error);
   }).finally(() => database.close());
 }
+
+export const readAnswerDraft = (key: string) => readStoredDraft<AnswerDraft>(key);
+export const writeAnswerDraft = (key: string, draft: AnswerDraft) => writeStoredDraft(key, draft);
 
 export async function removeAnswerDraft(key: string) {
   const database = await openDraftStore();

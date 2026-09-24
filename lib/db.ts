@@ -300,6 +300,19 @@ async function applySchema() {
     CREATE INDEX IF NOT EXISTS physics_exam_jobs_teacher_idx
     ON physics_exam_jobs (teacher_id)
   `;
+  // A student's unfinished attempt at an exam paper; see lib/exam-drafts.ts.
+  await sql`
+    CREATE TABLE IF NOT EXISTS physics_exam_drafts (
+      student_id TEXT NOT NULL,
+      paper_id UUID NOT NULL,
+      payload JSONB NOT NULL,
+      -- Questions the student had marked while practising, kept apart from the
+      -- payload the browser writes, so it cannot be cleared from the client.
+      checked JSONB NOT NULL DEFAULT '[]'::jsonb,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (student_id, paper_id)
+    )
+  `;
 }
 
 export async function ensureSchema() {

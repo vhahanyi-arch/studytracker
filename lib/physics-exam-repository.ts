@@ -154,6 +154,47 @@ export async function claimExtractionJob(id: string): Promise<boolean> {
   return rows.length > 0;
 }
 
+// ── Unfinished attempts ────────────────────────────────────────────────────
+
+export async function getExamDraft(studentId: string, paperId: string): Promise<unknown | null> {
+  const rows = await sql`
+    SELECT payload FROM physics_exam_drafts WHERE student_id=${studentId} AND paper_id=${paperId}
+  `;
+  return rows.length ? parsePayload<unknown>(rows[0].payload) : null;
+}
+
+export async function saveExamDraft(studentId: string, paperId: string, draft: unknown): Promise<void> {
+  await sql`
+    INSERT INTO physics_exam_drafts (student_id, paper_id, payload)
+    VALUES (${studentId}, ${paperId}, ${JSON.stringify(draft)})
+    ON CONFLICT (student_id, paper_id) DO UPDATE SET payload=EXCLUDED.payload, updated_at=NOW()
+  `;
+}
+
+// A question the student has had marked while working. Recorded on the
+// server, so a paper with checked answers is always submitted as practice.
+export async function recordExamCheck(studentId: string, paperId: string, questionId: string): Promise<void> {
+  await sql`
+    INSERT INTO physics_exam_drafts (student_id, paper_id, payload, checked)
+    VALUES (${studentId}, ${paperId}, 'null'::jsonb, ${JSON.stringify([questionId])}::jsonb)
+    ON CONFLICT (student_id, paper_id) DO UPDATE SET
+      checked = CASE WHEN physics_exam_drafts.checked ? ${questionId} THEN physics_exam_drafts.checked
+                     ELSE physics_exam_drafts.checked || EXCLUDED.checked END,
+      updated_at = NOW()
+  `;
+}
+
+export async function checkedExamQuestions(studentId: string, paperId: string): Promise<string[]> {
+  const rows = await sql`
+    SELECT checked FROM physics_exam_drafts WHERE student_id=${studentId} AND paper_id=${paperId}
+  `;
+  return rows.length ? parsePayload<string[]>(rows[0].checked) : [];
+}
+
+export async function deleteExamDraft(studentId: string, paperId: string): Promise<void> {
+  await sql`DELETE FROM physics_exam_drafts WHERE student_id=${studentId} AND paper_id=${paperId}`;
+}
+
 // Same enrollment-lookup pattern as teacherFor() in app/api/physics/practice/route.ts:
 // checks the direct enrollment table first, falling back to assignment-linkage.
 // Shared here (rather than duplicated per-route, as it was before) so the main

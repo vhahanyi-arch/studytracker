@@ -8,7 +8,8 @@
 // cold lambda issued thirty sequential round trips to Neon before it could
 // serve its first request.
 // 2: physics_exam_jobs, for extractions running in the background.
-export const SCHEMA_VERSION = 2;
+// 3: physics_exam_drafts, for exam answers saved as the student works.
+export const SCHEMA_VERSION = 3;
 
 /**
  * Whether the DDL still needs applying, given the newest stamp in the table.

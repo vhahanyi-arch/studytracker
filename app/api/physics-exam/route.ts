@@ -6,14 +6,16 @@ import {
   papersForTeacher, papersForStudent, getPaperWithOwner, insertPaper, updatePaper,
   submissionsForStudent, submissionsForTeacher, getSubmissionWithOwner, insertSubmission, updateSubmission,
   teacherFor, insertExtractionJob, extractionJobsForTeacher, getExtractionJob, claimExtractionJob,
+  getExamDraft, saveExamDraft, deleteExamDraft, recordExamCheck, checkedExamQuestions,
 } from '@/lib/physics-exam-repository';
 import { demoPaper } from '@/lib/physics-exam-demo';
-import { approvePaper, makeSubmission, overrideGrade, SubmitSchema } from '@/lib/physics-exam-workflows';
+import { approvePaper, makeSubmission, overrideGrade, SubmitSchema, checkAnswer, CheckSchema } from '@/lib/physics-exam-workflows';
 import { startExtraction, checkExtraction, cancelExtraction } from '@/lib/physics-exam-extraction';
 import { getFile, storeFile } from '@/lib/physics-exam-storage';
 import { extractPdfPages } from '@/lib/server-pdf';
 import { multipleChoicePaper, questionCrops } from '@/lib/exam-paper-layout';
 import { studentView } from '@/lib/exam-paper-access';
+import { ExamDraftSchema, MAX_DRAFT_BYTES } from '@/lib/exam-drafts';
 import type { Paper, Answer } from '@/lib/physics-extraction-schema';
 
 export const runtime = 'nodejs';
@@ -161,6 +163,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ paper });
     }
 
+    if (body.action === 'check') {
+      if (role !== 'student') return NextResponse.json({ error: 'Student access is required.' }, { status: 403 });
+      const input = CheckSchema.parse(body);
+      const owner = await getPaperWithOwner(input.paperId);
+      if (!owner || owner.paper.status !== 'ready' || owner.teacherId !== (await teacherFor(userId))) throw Error('Paper not found.');
+      const grade = checkAnswer(owner.paper, input);
+      await recordExamCheck(userId, input.paperId, input.questionId);
+      return NextResponse.json({ grade });
+    }
+
+    if (body.action === 'draft-load' || body.action === 'draft-save') {
+      if (role !== 'student') return NextResponse.json({ error: 'Student access is required.' }, { status: 403 });
+      const paperId = z.string().uuid().parse(body.paperId);
+      const owner = await getPaperWithOwner(paperId);
+      if (!owner || owner.paper.status !== 'ready' || owner.teacherId !== (await teacherFor(userId))) throw Error('Paper not found.');
+      if (body.action === 'draft-load') return NextResponse.json({ draft: await getExamDraft(userId, paperId) });
+      if (JSON.stringify(body.draft ?? null).length > MAX_DRAFT_BYTES) throw Error('This draft is too large to save.');
+      await saveExamDraft(userId, paperId, ExamDraftSchema.parse(body.draft));
+      return NextResponse.json({ saved: true });
+    }
+
     if (body.action === 'submit') {
       if (role !== 'student') return NextResponse.json({ error: 'Student access is required.' }, { status: 403 });
       const input = SubmitSchema.parse(body);
@@ -168,12 +191,17 @@ export async function POST(request: Request) {
       if (!owner) throw Error('Paper not found.');
       const myTeacherId = await teacherFor(userId);
       if (!myTeacherId || myTeacherId !== owner.teacherId) throw Error('Paper not found.');
+      // Answers checked while working were seen with their marks, so the
+      // paper counts as practice whatever the student chose.
+      const practised = (await checkedExamQuestions(userId, input.paperId)).length > 0;
       const answers: Answer[] = await Promise.all(input.answers.map(async (a) => ({ ...a, file: a.fileId ? (await getFile(a.fileId)).meta : null })));
       const wholePaperFiles = input.wholePaperFiles?.length
         ? await Promise.all(input.wholePaperFiles.map(async (id) => (await getFile(id)).meta))
         : undefined;
-      const submission = makeSubmission(owner.paper, user.fullName || user.username || 'Student', input.selfPractice, answers, wholePaperFiles);
+      const submission = makeSubmission(owner.paper, user.fullName || user.username || 'Student', input.selfPractice || practised, answers, wholePaperFiles);
       await insertSubmission(userId, submission);
+      // Submitted, so the unfinished copy has served its purpose.
+      await deleteExamDraft(userId, input.paperId).catch(() => undefined);
       return NextResponse.json({ submission });
     }
 

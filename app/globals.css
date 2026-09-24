@@ -6204,6 +6204,56 @@ summary:focus-visible,
 .paper-kind { border: 0; padding: 0; margin: 0 0 12px; display: grid; gap: 6px; }
 .paper-kind legend { font-weight: 700; margin-bottom: 4px; }
 
+/* The student's answering screen (components/exam/ExamAttempt.tsx). */
+.attempt-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 0 0 10px; font-size: var(--t-small); color: var(--muted); }
+.save-state.saving { color: var(--muted); }
+.save-state.saved { color: var(--fg-teal-50); }
+.save-state.offline { color: var(--fg-amber-49-b); }
+.attempt-clock { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink); }
+.attempt-clock.low { color: var(--fg-amber-49-b); }
+.attempt-clock.over { color: var(--fg-rose-45); }
+/* Every question in view at once, like the front of an exam paper. */
+.q-strip { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 0; margin-bottom: 12px; background: var(--paper); }
+.q-chip { min-width: 44px; min-height: 36px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--sheet); font-size: var(--t-small); font-weight: 600; }
+.q-chip.answered { background: var(--bg-teal-96); border-color: var(--line-teal-84); }
+.q-chip.flagged { box-shadow: inset 0 -3px 0 var(--fg-amber-49-b); }
+.q-chip.right { background: var(--bg-green-96); }
+.q-chip.wrong { background: var(--bg-rose-95); }
+.q-chip.current { border-color: var(--ink); border-width: 2px; }
+.q-chip.finish { font-weight: 700; }
+.attempt-card { display: grid; gap: 12px; }
+.attempt-card-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.attempt-card-head b { white-space: nowrap; }
+.attempt-card-head .flag { margin-left: auto; white-space: nowrap; }
+.attempt-card-head .flag.on { color: var(--fg-amber-49-b); border-color: var(--fg-amber-49-b); }
+.shot-button { display: block; position: relative; width: 100%; padding: 0; border: 0; background: none; text-align: inherit; cursor: zoom-in; }
+.shot-button .exam-question-shots { margin: 0; }
+.shot-hint { position: absolute; right: 8px; bottom: 8px; padding: 2px 8px; border-radius: 6px; background: var(--sheet); color: var(--muted); font-size: var(--t-fine); }
+.shot-zoom { position: fixed; inset: 0; z-index: 50; overflow: auto; padding: 56px 12px 24px; background: rgba(12, 16, 22, 0.86); }
+.shot-zoom .question-image { padding: 0; background: none; }
+/* Enlarged: at least print size, so a phone scrolls sideways rather than
+   shrinking the text; a wide screen shows it whole. */
+.shot-zoom .question-image canvas { width: max(760px, min(1200px, 100%)); max-width: none; height: auto; }
+.shot-zoom-close { position: fixed; top: 10px; right: 12px; z-index: 51; }
+.attempt-answer { display: grid; gap: 10px; }
+.attempt-answer .final-answer input { font-size: var(--t-lead); }
+.linkish { justify-self: start; padding: 0; border: 0; background: none; color: var(--accent); text-decoration: underline; font-size: var(--t-small); }
+.check-button { justify-self: start; }
+.check-result { padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); }
+.check-result p { margin: 4px 0 0; }
+.check-result.right { background: var(--bg-green-96); color: var(--fg-green-49); }
+.check-result.part, .check-result.review { background: var(--bg-amber-97); color: var(--fg-amber-49-b); }
+.check-result.wrong { background: var(--bg-rose-95); color: var(--fg-rose-45); }
+.attempt-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; }
+.attempt-start { display: grid; gap: 14px; }
+.mode-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.mode-card { display: grid; gap: 4px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--sheet); text-align: left; }
+.mode-card span { color: var(--muted); font-size: var(--t-small); font-weight: 400; }
+.mode-card.selected { border: 2px solid var(--accent); }
+.attempt-timer select { max-width: 320px; }
+.review-list { display: grid; gap: 6px; }
+.review-list > div { display: flex; flex-wrap: wrap; gap: 6px; }
+
 /* ── Dark mode ────────────────────────────────────────────────────────────
    Follows the device setting. Each variable below was a hard-coded colour;
    its light value is the colour that was there, and its dark value was
