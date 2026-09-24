@@ -6254,6 +6254,13 @@ summary:focus-visible,
 .review-list { display: grid; gap: 6px; }
 .review-list > div { display: flex; flex-wrap: wrap; gap: 6px; }
 
+/* The theme choice in the top bar, which is dark in both themes. */
+.theme-toggle { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 999px; }
+.theme-toggle button { display: grid; place-items: center; width: 30px; height: 28px; padding: 0; border: 0; border-radius: 999px; background: transparent; color: rgba(255, 255, 255, 0.72); }
+.theme-toggle button[aria-checked="true"] { background: rgba(255, 255, 255, 0.18); color: #fff; }
+.theme-toggle svg { width: 16px; height: 16px; }
+.signin-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
 /* ── Dark mode ────────────────────────────────────────────────────────────
    Follows the device setting. Each variable below was a hard-coded colour;
    its light value is the colour that was there, and its dark value was
@@ -6472,7 +6479,8 @@ summary:focus-visible,
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  /*  The device setting, unless Light was chosen in the app.  */
+  :root:not([data-theme="light"]) {
     --bg-amber-96: #281f05;
     --bg-amber-96-b: #271f11;
     --bg-amber-96-c: #261f13;
@@ -6675,7 +6683,7 @@ summary:focus-visible,
     --line-violet-91-b: #343239;
     --line-violet-91-c: #34323e;
   }
-  :root {
+  :root:not([data-theme="light"]) {
     --maths: #60a6a0;
     --physics: #79a8ec;
     --ink: #f1f7ff;
@@ -6693,23 +6701,275 @@ summary:focus-visible,
     --physics: #79a8ec;
     --maroon: #fb999f;
   }
-  .pe-redesign {
+  :root:not([data-theme="light"]) .pe-redesign {
     --ink: #f1f7ff;
     --paper: #13171c;
     --accent: #f38386;
     --muted: #939ca9;
     --line: #303336;
   }
-  .portal-main:has(.subject-slab.maths) {
+  :root:not([data-theme="light"]) .portal-main:has(.subject-slab.maths) {
     --subject: #7cb8b3;
     --subject-tint: #28312f;
   }
-  .portal-main:has(.subject-slab.physics) {
+  :root:not([data-theme="light"]) .portal-main:has(.subject-slab.physics) {
     --subject: #93bffc;
     --subject-tint: #2b3036;
   }
-  .portal-main:has(.subject-slab.classroom) {
+  :root:not([data-theme="light"]) .portal-main:has(.subject-slab.classroom) {
     --subject: #ffafb3;
     --subject-tint: #362d2e;
   }
 }
+
+/*  Chosen in the app (components/ThemeToggle.tsx): the same dark values, whatever the device says.  */
+
+:root[data-theme="dark"] {
+    --bg-amber-96: #281f05;
+    --bg-amber-96-b: #271f11;
+    --bg-amber-96-c: #261f13;
+    --bg-amber-97: #262013;
+    --bg-amber-97-b: #262013;
+    --bg-amber-97-c: #271f13;
+    --bg-amber-97-d: #26200f;
+    --bg-amber-97-e: #261f13;
+    --bg-amber-97-f: #262011;
+    --bg-amber-97-g: #251f17;
+    --bg-amber-97-h: #26200e;
+    --bg-amber-98: #252015;
+    --bg-amber-98-b: #242017;
+    --bg-amber-99: #1d1b15;
+    --bg-blue-24-a47: #ffffff77;
+    --bg-blue-96: #1b2128;
+    --bg-blue-96-b: #1d2028;
+    --bg-green-96: #18231d;
+    --bg-grey-93: #0f0e12;
+    --bg-grey-94: #111014;
+    --bg-grey-94-b: #111013;
+    --bg-grey-94-c: #0e1310;
+    --bg-grey-95: #131215;
+    --bg-grey-95-b: #121114;
+    --bg-grey-95-c: #141216;
+    --bg-grey-95-d: #121115;
+    --bg-grey-95-e: #141316;
+    --bg-grey-95-f: #121115;
+    --bg-grey-96: #131416;
+    --bg-grey-96-b: #161517;
+    --bg-grey-96-c: #151417;
+    --bg-grey-96-d: #161518;
+    --bg-grey-96-e: #161518;
+    --bg-grey-96-f: #151417;
+    --bg-grey-96-g: #161517;
+    --bg-grey-96-h: #151417;
+    --bg-grey-97: #161618;
+    --bg-grey-97-b: #161617;
+    --bg-grey-98: #1b1a1d;
+    --bg-grey-98-b: #19191b;
+    --bg-grey-98-c: #171b20;
+    --bg-grey-98-d: #19191d;
+    --bg-grey-98-e: #19191b;
+    --bg-grey-98-f: #18181a;
+    --bg-grey-98-g: #1a1a1c;
+    --bg-grey-98-h: #1a191d;
+    --bg-grey-99: #1b1b1c;
+    --bg-grey-99-b: #181c1b;
+    --bg-grey-99-c: #171b21;
+    --bg-grey-99-d: #1e1c17;
+    --bg-grey-99-e: #181c21;
+    --bg-grey-99-f: #1a1e1c;
+    --bg-grey-99-g: #1b1b1d;
+    --bg-grey-100: #1a1e24;
+    --bg-grey-100-a96: #1a1e24f5;
+    --bg-grey-100-a97: #1a1e24f7;
+    --bg-grey-100-a98: #1a1e24fa;
+    --bg-orange-95: #291d19;
+    --bg-orange-96: #271f17;
+    --bg-orange-96-b: #271e1d;
+    --bg-orange-97: #271e1c;
+    --bg-pink-94: #211f26;
+    --bg-rose-94: #160f10;
+    --bg-rose-95: #291d1d;
+    --bg-rose-95-b: #271e1f;
+    --bg-teal-95: #17241f;
+    --bg-teal-96: #182320;
+    --bg-teal-96-b: #182320;
+    --bg-teal-96-c: #192320;
+    --bg-teal-96-d: #19231f;
+    --bg-teal-96-e: #17231f;
+    --bg-teal-96-f: #18231f;
+    --bg-teal-97: #131917;
+    --bg-teal-97-b: #192320;
+    --bg-teal-97-c: #1a2320;
+    --bg-teal-97-d: #131917;
+    --bg-teal-97-e: #1a231f;
+    --bg-teal-97-f: #19231f;
+    --bg-teal-97-g: #1a231f;
+    --bg-teal-98: #141a18;
+    --bg-violet-22-a72: #ffffffb8;
+    --bg-violet-94: #211f29;
+    --bg-violet-95: #211e2a;
+    --bg-violet-95-b: #211f2a;
+    --bg-violet-95-c: #211f29;
+    --bg-violet-96: #131419;
+    --bg-violet-96-b: #211f27;
+    --bg-violet-96-c: #211f27;
+    --bg-violet-96-d: #201f28;
+    --bg-violet-96-e: #211f28;
+    --bg-violet-96-f: #1e2028;
+    --bg-violet-97: #18171d;
+    --bg-violet-97-b: #211f27;
+    --bg-violet-98: #19181d;
+    --fg-amber-49: #a69f8d;
+    --fg-amber-49-b: #ba9d63;
+    --fg-amber-51: #be9253;
+    --fg-amber-52: #b48e4a;
+    --fg-amber-55: #b58343;
+    --fg-amber-55-b: #b78440;
+    --fg-amber-58: #ab7b31;
+    --fg-amber-59: #a9772b;
+    --fg-amber-60: #837a65;
+    --fg-amber-62: #a16d17;
+    --fg-amber-63: #a06a1b;
+    --fg-amber-69: #8c5a00;
+    --fg-amber-72: #7d5500;
+    --fg-amber-72-b: #825400;
+    --fg-amber-72-c: #835500;
+    --fg-blue-24: #f1f7ff;
+    --fg-blue-48: #7ea5e7;
+    --fg-blue-49: #74a2e9;
+    --fg-blue-50: #939ca9;
+    --fg-blue-57: #4d89c0;
+    --fg-blue-66: #606b79;
+    --fg-blue-67: #5f6874;
+    --fg-blue-75: #4d5662;
+    --fg-green-49: #7ca78b;
+    --fg-green-57: #349054;
+    --fg-orange-50: #e18a73;
+    --fg-orange-53: #c2864d;
+    --fg-orange-54: #e96e5d;
+    --fg-orange-63: #c0564f;
+    --fg-orange-67: #b64c3c;
+    --fg-pink-45: #afabba;
+    --fg-pink-53: #958fa2;
+    --fg-pink-53-b: #95909f;
+    --fg-pink-60: #7f7b87;
+    --fg-rose-45: #fb999f;
+    --fg-rose-49: #e58a86;
+    --fg-rose-50: #eb8580;
+    --fg-teal-49: #62aa93;
+    --fg-teal-50: #5aa48f;
+    --fg-teal-52: #529f89;
+    --fg-teal-52-b: #539c8d;
+    --fg-teal-56: #39937c;
+    --fg-teal-58: #2c8c75;
+    --fg-teal-59: #228970;
+    --fg-teal-60: #1c876e;
+    --fg-teal-60-b: #18866d;
+    --fg-violet-33: #e0daef;
+    --fg-violet-34: #dcd8ed;
+    --fg-violet-41: #bfbacc;
+    --fg-violet-42: #bdb7cc;
+    --fg-violet-43: #b6b3c5;
+    --fg-violet-48: #a5a1b2;
+    --fg-violet-49: #a29dad;
+    --fg-violet-49-b: #a09cae;
+    --fg-violet-50: #9c99a8;
+    --fg-violet-51: #9995a5;
+    --fg-violet-52: #9894a3;
+    --fg-violet-53: #928f9c;
+    --fg-violet-53-b: #93909e;
+    --fg-violet-54: #908d9d;
+    --fg-violet-55: #8c8898;
+    --fg-violet-56: #8a8695;
+    --fg-violet-57: #868494;
+    --fg-violet-57-b: #7384bb;
+    --fg-violet-67: #6b6773;
+    --line-amber-76: #6d4f00;
+    --line-amber-87: #493808;
+    --line-amber-88: #483600;
+    --line-amber-91: #3e3114;
+    --line-amber-97: #372f1a;
+    --line-blue-85: #393f46;
+    --line-grey-91: #333136;
+    --line-grey-94: #2d3034;
+    --line-grey-95: #302f33;
+    --line-grey-95-b: #302f33;
+    --line-grey-96: #2d3032;
+    --line-pink-89: #37353e;
+    --line-pink-89-b: #38353f;
+    --line-pink-89-c: #38353d;
+    --line-pink-91: #333138;
+    --line-pink-91-b: #343238;
+    --line-rose-45: #fb999f;
+    --line-teal-75: #155e4c;
+    --line-teal-79: #0d5443;
+    --line-teal-82: #044d3b;
+    --line-teal-84: #11493b;
+    --line-teal-84-b: #16473e;
+    --line-teal-88: #1b3e37;
+    --line-teal-88-b: #1d3e35;
+    --line-teal-89: #1d3b32;
+    --line-teal-96: #26322e;
+    --line-violet-84: #433f4e;
+    --line-violet-85: #423e4e;
+    --line-violet-87: #3b3942;
+    --line-violet-87-b: #3d3a46;
+    --line-violet-88: #3b3842;
+    --line-violet-88-b: #3b3746;
+    --line-violet-88-c: #3b3846;
+    --line-violet-88-d: #3b3744;
+    --line-violet-89: #383640;
+    --line-violet-90: #37343c;
+    --line-violet-90-b: #37343b;
+    --line-violet-90-c: #36343a;
+    --line-violet-90-d: #353339;
+    --line-violet-91: #353239;
+    --line-violet-91-b: #343239;
+    --line-violet-91-c: #34323e;
+  }
+
+:root[data-theme="dark"] {
+    --maths: #60a6a0;
+    --physics: #79a8ec;
+    --ink: #f1f7ff;
+    --muted: #939ca9;
+    --accent: #f38386;
+    --line: #303336;
+    --paper: #13171c;
+    --sheet: #1a1e24;
+    --ink: #f1f7ff;
+    --paper: #111315;
+    --sheet: #1a1e24;
+    --line: #2e3236;
+    --muted: #939ca9;
+    --maths: #60a6a0;
+    --physics: #79a8ec;
+    --maroon: #fb999f;
+  }
+
+:root[data-theme="dark"] .pe-redesign {
+    --ink: #f1f7ff;
+    --paper: #13171c;
+    --accent: #f38386;
+    --muted: #939ca9;
+    --line: #303336;
+  }
+
+:root[data-theme="dark"] .portal-main:has(.subject-slab.maths) {
+    --subject: #7cb8b3;
+    --subject-tint: #28312f;
+  }
+
+:root[data-theme="dark"] .portal-main:has(.subject-slab.physics) {
+    --subject: #93bffc;
+    --subject-tint: #2b3036;
+  }
+
+:root[data-theme="dark"] .portal-main:has(.subject-slab.classroom) {
+    --subject: #ffafb3;
+    --subject-tint: #362d2e;
+  }
+
+:root[data-theme="light"] { color-scheme: light; }
+
+:root[data-theme="dark"] { color-scheme: dark; }

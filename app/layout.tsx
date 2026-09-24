@@ -1,3 +1,4 @@
+import { THEME_BOOT } from '@/lib/theme';
 import type { Metadata } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
 import { Source_Serif_4, Public_Sans } from 'next/font/google';
@@ -58,7 +59,11 @@ export default function RootLayout({
           fontFamily: 'var(--font-public-sans), Arial, sans-serif',
         },
       }}
-    ><html lang="en">
+    >{/* suppressHydrationWarning: THEME_BOOT sets data-theme before React loads. */}
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+      </head>
       <body
         className={`${sourceSerif.variable} ${publicSans.variable} antialiased`}
       >

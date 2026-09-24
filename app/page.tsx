@@ -40,6 +40,7 @@ import { PdfAnnotator } from '@/components/PdfAnnotator';
 import { type PaperQuestion, displayCrop } from '@/lib/paper-questions';
 import { ExamReview, type ReviewPaper, type Extraction } from '@/components/exam/ExamReview';
 import { ExamAttempt, type AttemptPaper } from '@/components/exam/ExamAttempt';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { generateHomeworkDraftFromText, type HomeworkDraft } from '@/lib/homework-draft';
 
 export default function Home() {
@@ -49,7 +50,10 @@ export default function Home() {
         <div className="signin">
           <aside className="signin-brand">
             <div>
-              <Logo />
+              <div className="signin-head">
+                <Logo />
+                <ThemeToggle />
+              </div>
               <h1>Plan, practise and mark Cambridge Mathematics and Physics.</h1>
               <ul className="signin-levels">
                 {(
@@ -297,6 +301,7 @@ function Shell({
         <Logo />
         <div>
           <PreviewBadge />
+          <ThemeToggle />
           <UserButton />
           <span className={`portal-avatar ${role.toLowerCase()}`}>
             {initials}
