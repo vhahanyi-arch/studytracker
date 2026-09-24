@@ -18,6 +18,31 @@ import type { StoredFile } from "./physics-extraction-schema";
 
 const PREFIX = "physics-exam/";
 
+// The Blob SDK retries network and server errors ten times with doubling
+// waits, which adds up to many minutes: an upload to a store it cannot reach
+// looked like a silent hang until Vercel killed the function. Two retries
+// still ride out a blip, and a real failure now surfaces in seconds.
+process.env.VERCEL_BLOB_RETRIES ??= "2";
+
+// Which store the token is for, for the logs. A read-write token is
+// vercel_blob_rw_<storeId>_<secret>; only the store id is ever logged.
+function tokenStore() {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) return "no BLOB_READ_WRITE_TOKEN set";
+  const parts = token.split("_");
+  return parts.length >= 5 && parts[0] === "vercel" ? `store_${parts[3]}` : "an unrecognised token format";
+}
+
+async function logged<T>(what: string, work: Promise<T>): Promise<T> {
+  try {
+    return await work;
+  } catch (error) {
+    const e = error instanceof Error ? error : new Error(String(error));
+    console.error(`[blob] ${what} failed: ${e.name}: ${e.message} (token is for ${tokenStore()})`);
+    throw error;
+  }
+}
+
 async function streamToBuffer(stream: ReadableStream<Uint8Array>): Promise<Buffer> {
   const chunks: Uint8Array[] = [];
   const reader = stream.getReader();
@@ -39,8 +64,8 @@ export async function storeFile(file: File, kind: "pdf" | "answer"): Promise<Sto
   if (!mime || (kind === "pdf" && mime !== "application/pdf")) throw Error("Use a valid PDF" + (kind === "answer" ? ", PNG or JPEG" : "") + ".");
 
   const meta: StoredFile = { id: crypto.randomUUID(), name: file.name.slice(0, 200), mime, size: bytes.length };
-  await put(PREFIX + meta.id, bytes, { access: "private", contentType: mime });
-  await put(PREFIX + meta.id + ".json", JSON.stringify(meta), { access: "private", contentType: "application/json" });
+  await logged("put", put(PREFIX + meta.id, bytes, { access: "private", contentType: mime }));
+  await logged("put", put(PREFIX + meta.id + ".json", JSON.stringify(meta), { access: "private", contentType: "application/json" }));
   return meta;
 }
 
