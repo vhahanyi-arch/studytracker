@@ -26,7 +26,11 @@ export async function extractPdfPages(data: Uint8Array): Promise<PdfPageData[]> 
   runtime.Path2D ||= class Path2D {};
   runtime.pdfjsWorker ||= await import("pdfjs-dist/legacy/build/pdf.worker.mjs");
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  const pdf = await pdfjs.getDocument({ data }).promise;
+  // Only text is read here, so fonts the PDF does not embed need no glyph
+  // data. Without this, pdf.js in Node looks for its standard font files for
+  // each such font and logs "Ensure that the `standardFontDataUrl` API
+  // parameter is provided", dozens of times per paper. renderPdf does the same.
+  const pdf = await pdfjs.getDocument({ data, useSystemFonts: true }).promise;
   const pages: PdfPageData[] = [];
 
   for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
