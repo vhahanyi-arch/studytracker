@@ -6,8 +6,9 @@ import {
   papersForTeacher, papersForStudent, getPaperWithOwner, insertPaper, updatePaper,
   submissionsForStudent, submissionsForTeacher, getSubmissionWithOwner, insertSubmission, updateSubmission,
   teacherFor, insertExtractionJob, extractionJobsForTeacher, getExtractionJob, claimExtractionJob,
-  getExamDraft, saveExamDraft, deleteExamDraft, recordExamCheck, checkedExamQuestions,
+  getExamDraft, saveExamDraft, deleteExamDraft, recordExamCheck, checkedExamQuestions, setMissingPaperCrops,
 } from '@/lib/physics-exam-repository';
+import { addMissingScreenshots } from '@/lib/exam-paper-screenshots';
 import { demoPaper } from '@/lib/physics-exam-demo';
 import { approvePaper, makeSubmission, overrideGrade, SubmitSchema, checkAnswer, CheckSchema } from '@/lib/physics-exam-workflows';
 import { renderPdf, startExtractionFromImages, checkExtraction, cancelExtraction } from '@/lib/physics-exam-extraction';
@@ -37,6 +38,10 @@ async function screenshotsFor(files: Paper['files'], questions: Paper['questions
   }
 }
 
+// Papers saved before screenshots existed get them on first load.
+const withScreenshots = (papers: Paper[]) =>
+  addMissingScreenshots(papers, (paper) => screenshotsFor(paper.files, paper.questions), setMissingPaperCrops);
+
 export async function GET() {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: 'Please sign in.' }, { status: 401 });
@@ -45,7 +50,7 @@ export async function GET() {
   await ensureSchema();
   try {
     if (user.publicMetadata.role === 'teacher') {
-      const [papers, submissions, jobs] = await Promise.all([papersForTeacher(userId), submissionsForTeacher(userId), extractionJobsForTeacher(userId)]);
+      const [papers, submissions, jobs] = await Promise.all([papersForTeacher(userId).then(withScreenshots), submissionsForTeacher(userId), extractionJobsForTeacher(userId)]);
       return NextResponse.json({
         papers, submissions, config: { vision: !!process.env.OPENAI_API_KEY },
         jobs: jobs.map(({ id, title, createdAt }) => ({ id, title, createdAt })),
@@ -54,7 +59,7 @@ export async function GET() {
     if (user.publicMetadata.role !== 'student')
       return NextResponse.json({ error: 'Access denied.' }, { status: 403 });
     const teacherId = await teacherFor(userId);
-    const [papers, submissions] = await Promise.all([papersForStudent(teacherId), submissionsForStudent(userId)]);
+    const [papers, submissions] = await Promise.all([papersForStudent(teacherId).then(withScreenshots), submissionsForStudent(userId)]);
     // Students get each paper without its answers; see lib/exam-paper-access.ts.
     return NextResponse.json({ papers: papers.map(studentView), submissions, config: { vision: !!process.env.OPENAI_API_KEY } });
   } catch {
