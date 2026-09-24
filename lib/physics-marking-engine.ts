@@ -67,8 +67,16 @@ const BASE_UNITS: Record<string, Unit> = {
   Bq: u(1, 0, 0, -1, 0, 0, 0, 0),
   Gy: u(1, 0, 2, -2, 0, 0, 0, 0),
   rad: u(1, 0, 0, 0, 0, 0, 0, 0),
+  // Angles in degrees ("θ = 30°"), converted through radians.
+  "°": u(Math.PI / 180, 0, 0, 0, 0, 0, 0, 0),
+  deg: u(Math.PI / 180, 0, 0, 0, 0, 0, 0, 0),
   min: u(60, 0, 0, 1, 0, 0, 0, 0),
   h: u(3600, 0, 0, 1, 0, 0, 0, 0),
+  // Half-lives ("940 yrs"): a Julian year.
+  yr: u(31557600, 0, 0, 1, 0, 0, 0, 0),
+  yrs: u(31557600, 0, 0, 1, 0, 0, 0, 0),
+  year: u(31557600, 0, 0, 1, 0, 0, 0, 0),
+  years: u(31557600, 0, 0, 1, 0, 0, 0, 0),
   L: u(0.001, 0, 3, 0, 0, 0, 0, 0),
   eV: u(1.602176634e-19, 1, 2, -2, 0, 0, 0, 0),
 };
@@ -93,13 +101,16 @@ const combineUnits = (a: Unit, b: Unit, sign = 1): Unit => ({
 });
 
 export function parseUnit(raw: string): Unit {
+  // Degrees Celsius is a scale with an offset, not a unit to multiply through;
+  // without this "°C" would read as degrees of angle times coulombs.
+  if (/°\s*C\b/.test(raw)) throw new Error("Temperature units need interpretation");
   const s = normalizeMath(raw)
     .replace(/\./g, "*")
     .replace(/\bper\b/g, "/")
     .replace(/\s*([*/^()])\s*/g, "$1")
     .replace(/\s+/g, "*");
   if (!s) return BASE_UNITS["1"];
-  const tokens = s.match(/[A-Za-zΩμµ]+|[+-]?\d+|[*/^()]/g) ?? [];
+  const tokens = s.match(/[A-Za-zΩμµ]+|°|[+-]?\d+|[*/^()]/g) ?? [];
   if (tokens.join("") !== s) throw new Error("Unsupported unit expression");
   let at = 0;
   function factor(): Unit {

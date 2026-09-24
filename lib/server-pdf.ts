@@ -57,6 +57,7 @@ export async function extractPdfPages(data: Uint8Array): Promise<PdfPageData[]> 
       pageNumber,
       width: rotatedPage ? viewport.height : viewport.width,
       height: rotatedPage ? viewport.width : viewport.height,
+      rotated: rotatedPage,
       words: items
         .map((item) => {
           const transform = (item.transform as number[] | undefined) || [];

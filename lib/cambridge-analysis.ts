@@ -15,6 +15,9 @@ export type PdfPageData = {
   width: number;
   height: number;
   words: PdfWord[];
+  // A landscape table stored sideways on a portrait page, read turned upright:
+  // x is then the PDF's y and top its x (see lib/server-pdf.ts).
+  rotated?: boolean;
 };
 
 export type SchemePoint = {
@@ -29,7 +32,13 @@ export type SchemeRow = {
   marks: number | null;
   guidance: string;
   points: SchemePoint[];
+  // Where the row sits in the mark scheme, as fractions of the page as read
+  // (a landscape table stored sideways is read turned upright). A row split
+  // over a page break has one span per page.
+  spans?: SchemeSpan[];
 };
+
+export type SchemeSpan = { page: number; top: number; bottom: number; rotated: boolean };
 
 export type DetectedQuestion = {
   label: string;
@@ -269,8 +278,11 @@ export function parseMarkScheme(
           label: string;
           points: SchemePoint[];
           answerWords: PdfWord[];
+          top: number;
+          bottom: number;
           }
         | undefined;
+      const rotatedPage = page.rotated === true;
       const finishActive = () => {
         if (!active) return;
         const points = uniqueSchemePoints(
@@ -325,6 +337,7 @@ export function parseMarkScheme(
           marks: inferMarks(points),
           guidance,
           points,
+          spans: [{ page: page.pageNumber, top: active.top / page.height, bottom: active.bottom / page.height, rotated: rotatedPage }],
         });
         active = undefined;
       };
@@ -361,6 +374,7 @@ export function parseMarkScheme(
             /[\d(]/.test(compactQuestion);
           if (!validQuestionCell) {
             if (active) {
+              active.bottom = row.top;
               active.points.push(point);
               active.answerWords.push(
                 ...row.words.filter(
@@ -402,6 +416,8 @@ export function parseMarkScheme(
             answerWords: row.words.filter(
               (word) => word.x >= answerStart && word.x < marksStart,
             ),
+            top: row.top,
+            bottom: row.top,
           };
         });
       finishActive();
@@ -416,6 +432,7 @@ export function parseMarkScheme(
       return;
     }
     existing.points = uniqueSchemePoints([...existing.points, ...row.points]);
+    existing.spans = [...(existing.spans ?? []), ...(row.spans ?? [])];
     existing.answer ||= row.answer;
     existing.marks = inferMarks(existing.points);
     existing.guidance = [existing.guidance, row.guidance]

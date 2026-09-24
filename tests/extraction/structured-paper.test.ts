@@ -1,0 +1,137 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';
+import {extractPdfPages} from '@/lib/server-pdf';
+import {structuredPaper,finalAnswer,schemeMarks,schemeFor,roundingTolerance} from '@/lib/structured-paper';
+import {markAnswer,compareNumeric} from '@/lib/physics-marking-engine';
+import type {SchemeRow} from '@/lib/cambridge-analysis';
+import type {Answer} from '@/lib/physics-extraction-schema';
+import {writePdf,A4,type Page} from '../fixtures/synthetic-pdf';
+import {asPhysicsStructured} from '../fixtures/synthetic-papers';
+
+// Structured papers read from their PDFs' text, without AI. Checked by hand on
+// real 9702 and 0625 papers (not committed); these use synthetic ones.
+const pages=(p:Page[])=>extractPdfPages(writePdf(p));
+const read=async(paper=asPhysicsStructured.paper,scheme=asPhysicsStructured.scheme)=>structuredPaper(await pages(paper),await pages(scheme));
+const typed=(questionId:string,text:string):Answer=>({questionId,mode:'typed',text,steps:{},file:null});
+
+// ── The whole paper ────────────────────────────────────────────────────────
+test('every part in the scheme is found, with its marks, and nothing flagged',async()=>{
+ const {extraction:x,crops}=await read();
+ assert.deepEqual(x.questions.map(q=>[q.id,q.marks]),asPhysicsStructured.expected.map(e=>[e.label,e.marks]));
+ assert.deepEqual(x.questions.flatMap(q=>q.issues),[]);
+ assert.deepEqual(x.warnings,[]);
+ for(const e of asPhysicsStructured.expected){
+  const own=crops[e.label].at(-1)!;
+  assert.equal(own.page,e.page,e.label);assert.ok(own.height<1,`${e.label} is cropped`);
+ }
+});
+test('a calculation with one final answer is marked automatically; the rest go to the teacher',async()=>{
+ const {extraction:x}=await read();
+ const kinds=Object.fromEntries(x.schemes.map(s=>[s.questionId,s.kind==='numeric'?s.accepted.join('|'):'teacher']));
+ assert.deepEqual(kinds,{'1(a)':'teacher','1(b)':'1.5 m s^-2','2(a)':'teacher','2(b)(i)':'600 J','2(b)(ii)':'120 W','3(a)':'teacher','3(b)':'teacher'});
+ assert.match(x.questions.find(q=>q.id==='3(b)')!.text,/Show that/,'"show that" is why 3(b) is not automatic');
+});
+test('a correct final answer scores full marks, in any reasonable form; a wrong one goes to the teacher',async()=>{
+ const {extraction:x}=await read();
+ const mark=(id:string,text:string)=>markAnswer(x.questions.find(q=>q.id===id)!,x.schemes.find(s=>s.questionId===id),typed(id,text));
+ for(const answer of ['1.5','1.5 m s-2','1.50 m/s^2','1.5 m s⁻²'])assert.equal(mark('1(b)',answer).proposed,2,answer);
+ for(const answer of ['600','600 J','6.0 × 10^2 J','0.6 kJ'])assert.equal(mark('2(b)(i)',answer).proposed,2,answer);
+ assert.equal(mark('1(b)','2.0').status,'needs_review','a miss on a two-mark part may still earn the method mark');
+ assert.equal(mark('1(b)','1.5 N').status,'needs_review','wrong units are not full marks');
+ assert.equal(mark('3(b)','8.0').status,'needs_review');
+});
+test('the marks printed on the paper are checked against the scheme',async()=>{
+ const paper=asPhysicsStructured.paper.map(p=>({...p,runs:p.runs.map(r=>r.text==='[2]'&&r.top===240?{...r,text:'[3]'}:r)}));
+ const {extraction:x}=await read(paper);
+ assert.match(x.questions.find(q=>q.id==='1(b)')!.issues.join(),/prints \[3\] .* scheme gives 2/);
+});
+test('the paper total is checked against the parts read',async()=>{
+ const paper=asPhysicsStructured.paper.map(p=>({...p,runs:p.runs.map(r=>r.text.includes('total mark for this paper is 12')?{...r,text:r.text.replace('12','15')}:r)}));
+ const {extraction:x}=await read(paper);
+ assert.match(x.warnings.join(),/total is 15 marks, but the parts read add up to 12/);
+});
+test('one combined PDF gives the same paper',async()=>{
+ const combined=await pages([...asPhysicsStructured.paper,...asPhysicsStructured.scheme]);
+ const {extraction:x}=structuredPaper(combined,combined);
+ assert.deepEqual(x.questions.map(q=>[q.id,q.marks,q.issues.length]),asPhysicsStructured.expected.map(e=>[e.label,e.marks,0]));
+});
+test('a scan is refused with a reason, and so is a scheme with no table',async()=>{
+ const blank=await pages([{...A4,runs:[]},{...A4,runs:[]}]);
+ assert.throws(()=>structuredPaper(blank,blank),/looks like a scan/);
+ const paper=await pages(asPhysicsStructured.paper);
+ assert.throws(()=>structuredPaper(paper,paper),/No mark scheme table was found/);
+});
+
+// ── Final answers as schemes print them ────────────────────────────────────
+// Invented values, in the layouts the real schemes use.
+const cases:Array<[string,string[],[number,number]|null]>=[
+ ['v = 34 m s –1',['34 m s^-1'],null],
+ ['E = 2.6 × 10 –3 J',['2.6*10^-3 J'],null],
+ ['7.0 × 10 5 Pa',['7.0*10^5 Pa'],null],
+ ['52 000 kg',['52000 kg'],null],
+ ['4.0 × 10 6 (J)',['4.0*10^6 J'],null],
+ ['( I =) 2.7 × 10 –8 A',['2.7*10^-8 A'],null],
+ ['( V 3 = 4 × 3 =) 12 V',['12 V'],null],
+ ['2.0 kg m / s OR 2.0 N s',['2.0 kg m / s','2.0 N s'],null],
+ ['speed in range 0.20 to 0.35 m / s 2',['0.20 m / s^2'],[0.20,0.35]],
+ ['310–360 m / s',['310 m / s'],[310,360]],
+ ['angle = 45°',['45 °'],null],
+ ['path difference = (50 – 35) / 6 = 1.5 λ',['1.5'],null],
+ ['(3 × 10 12 atoms remain after) 620 yrs or 2 half-lives',['620 yrs'],null],
+ ['ratio = 0.64 Page 9 of 12',['0.64'],null],
+];
+for(const [text,accepted,range] of cases)test(`final answer: ${text}`,()=>{
+ const found=finalAnswer(text);
+ assert.ok(found,text);assert.deepEqual([found.accepted,found.range],[accepted,range]);
+});
+for(const text of ['e.g. 330 m / s gives 15 000 Hz','1 1 2 charge = − − + = 0 3 3 3','25 °C','line starts at (0, 8.5) and crosses the axis','particles are at rest'])
+ test(`not a plain final answer: ${text}`,()=>assert.equal(finalAnswer(text),null));
+test('anything that rounds to the published answer is accepted',()=>{
+ assert.deepEqual(['0.87 s','16 m s^-1','1.8*10^-2 J','6.0 cm'].map(roundingTolerance),[0.005,0.5,0.0005,0.05]);
+});
+
+// ── Marking points ─────────────────────────────────────────────────────────
+const row=(label:string,points:Array<[string,string,string?]>):SchemeRow=>({label,answer:'',marks:null,guidance:'',points:points.map(([marks,answer,guidance=''])=>({marks,answer,guidance}))});
+test('continuation lines join their point, and a page footer is dropped',()=>{
+ const marks=schemeMarks(row('1(a)',[['C1','F = ma'],['','F = 2.0 × 3.0'],['A1','= 6.0 N'],['','Page 4 of 12']]));
+ assert.deepEqual(marks.map(m=>[m.code,m.text]),[['C1','F = ma\nF = 2.0 × 3.0'],['A1','= 6.0 N']]);
+});
+test('an alternative method is shown but its marks are not added',()=>{
+ const r=row('8(b)',[['C1','V = IR'],['A1','= 16 V'],['C1','OR alternative route'],['A1','= 16 V']]);
+ const {scheme}=schemeFor(r,schemeMarks(r),'Calculate the p.d.');
+ assert.equal(scheme.marks,2);assert.equal(scheme.points.length,4);assert.match(scheme.points[2].description,/^\(alternative\)/);
+});
+
+// ── When a correct final answer is not the whole story ─────────────────────
+const kindOf=(points:Array<[string,string,string?]>,question='Calculate the force.')=>{
+ const r=row('1(a)',points);return schemeFor(r,schemeMarks(r),question).scheme.kind;
+};
+test('automatic only when a correct final answer earns every mark',()=>{
+ assert.equal(kindOf([['C1','F = ma'],['A1','= 6.0 N']]),'numeric');
+ assert.equal(kindOf([['A1','F MAX = 0.45 N']]),'numeric','"MAX" in an answer is not the guidance "max"');
+ assert.equal(kindOf([['M1','F = ma'],['A1','= 6.0 N']]),'manual','an M mark needs the method');
+ assert.equal(kindOf([['B1','F = ma'],['A1','= 6.0 N']]),'manual','a B mark is a separate fact');
+ assert.equal(kindOf([['A1','= 6.0 N'],['A1','= 3.0 m']]),'manual','two answers');
+ assert.equal(kindOf([['C1','F = ma'],['A1','= 6.0 N']],'Show that the force is about 6 N.'),'manual');
+ assert.equal(kindOf([['C1','F = ma'],['A1','= 6.0 N']],'Estimate the force.'),'manual');
+ assert.equal(kindOf([['C1','F = ma'],['A1','= 6.0 N','ecf from (a)']]),'manual');
+ assert.equal(kindOf([['C1','F = ma'],['A1','= 6.0 N','do not accept 6 N']]),'manual');
+});
+test('on a one-mark part, anything that could make a right answer miss stays with the teacher',()=>{
+ assert.equal(kindOf([['A1','= 6.0 N']]),'numeric');
+ assert.equal(kindOf([['A1','= 6.0 N','allow 6 N']]),'manual','other forms are allowed');
+ assert.equal(kindOf([['A1','= 6.0 N']],'Use your answer in (a) to calculate the force.'),'manual');
+ assert.equal(kindOf([['A1','= 6000 N']]),'manual','precision of 6000 is unclear');
+ assert.equal(kindOf([['A1','= 620 yrs or 2 half-lives']]),'manual','only some forms can be checked');
+ assert.equal(kindOf([['A1','= 6.0 N']],'Give your answer in terms of λ.'),'numeric','"your answer in terms of" is not an earlier answer');
+ assert.equal(kindOf([['C1','F = ma'],['A1','= 6.0 N','allow 6 N']]),'numeric','on two marks a miss still reaches the teacher');
+});
+
+// ── Units the schemes use ──────────────────────────────────────────────────
+const rule=(accepted:string)=>({accepted:[accepted],unitRequired:false,relativeTolerance:0,absoluteTolerance:0.5,range:null});
+test('angles in degrees, with or without the sign, or in radians',()=>{
+ for(const answer of ['45','45°','45 °','0.785398 rad'])assert.equal(compareNumeric(answer,rule('45 °')).result,'match',answer);
+ assert.equal(compareNumeric('45 m',rule('45 °')).result,'miss');
+});
+test('years, for half-lives',()=>{
+ for(const answer of ['620','620 years','620 yr'])assert.equal(compareNumeric(answer,rule('620 yrs')).result,'match',answer);
+});

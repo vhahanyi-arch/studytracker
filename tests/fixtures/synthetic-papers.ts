@@ -235,7 +235,7 @@ export const asPhysicsStructured: SyntheticSet = {
   subject: "Physics",
   mode: "structured",
   paper: [
-    cover("0999/22", "PHYSICS Paper 2 AS Level Structured Questions", 13),
+    cover("0999/22", "PHYSICS Paper 2 AS Level Structured Questions", 12),
     {
       ...A4,
       runs: [
@@ -266,7 +266,7 @@ export const asPhysicsStructured: SyntheticSet = {
     },
   ],
   scheme: [
-    schemeTitle("0999/22", "PHYSICS Paper 2 Mark Scheme", 13),
+    schemeTitle("0999/22", "PHYSICS Paper 2 Mark Scheme", 12),
     landscape([
       ...header(66.1, AS),
       ...row(90, AS, { label: "1(a)", answer: "quantity with magnitude and direction", marks: "B1" }),
