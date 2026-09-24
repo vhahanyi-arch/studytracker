@@ -55,14 +55,16 @@ export async function insertPaper(teacherId: string, paper: Paper): Promise<void
   `;
 }
 
-// Adds screenshot crops to a paper saved before they existed. Only the crops
-// are written, and only if the paper still has none, so a teacher's edit
-// made meanwhile is never overwritten.
-export async function setMissingPaperCrops(id: string, crops: NonNullable<Paper["crops"]>): Promise<void> {
+// Gives a paper current screenshot crops, when it has none or older ones
+// (see lib/exam-paper-screenshots.ts). Only the crops and their version are
+// written, and only while the saved ones are still older, so a teacher's
+// edit made meanwhile is never overwritten.
+export async function setOutdatedPaperCrops(id: string, crops: NonNullable<Paper["crops"]>, version: number): Promise<void> {
   await sql`
     UPDATE physics_exam_papers
-    SET payload = jsonb_set(payload, '{crops}', ${JSON.stringify(crops)}::jsonb)
-    WHERE id=${id} AND NOT (payload ? 'crops')
+    SET payload = payload || ${JSON.stringify({ crops, cropsVersion: version })}::jsonb
+    WHERE id=${id}
+      AND COALESCE((payload->>'cropsVersion')::int, CASE WHEN payload ? 'crops' THEN 1 ELSE 0 END) < ${version}
   `;
 }
 

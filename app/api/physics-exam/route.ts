@@ -6,16 +6,16 @@ import {
   papersForTeacher, papersForStudent, getPaperWithOwner, insertPaper, updatePaper,
   submissionsForStudent, submissionsForTeacher, getSubmissionWithOwner, insertSubmission, updateSubmission,
   teacherFor, insertExtractionJob, extractionJobsForTeacher, getExtractionJob, claimExtractionJob,
-  getExamDraft, saveExamDraft, deleteExamDraft, recordExamCheck, checkedExamQuestions, setMissingPaperCrops,
+  getExamDraft, saveExamDraft, deleteExamDraft, recordExamCheck, checkedExamQuestions, setOutdatedPaperCrops,
 } from '@/lib/physics-exam-repository';
-import { addMissingScreenshots } from '@/lib/exam-paper-screenshots';
+import { addCurrentScreenshots } from '@/lib/exam-paper-screenshots';
 import { demoPaper } from '@/lib/physics-exam-demo';
 import { approvePaper, makeSubmission, overrideGrade, SubmitSchema, checkAnswer, CheckSchema } from '@/lib/physics-exam-workflows';
 import { renderPdf, startExtractionFromImages, checkExtraction, cancelExtraction } from '@/lib/physics-exam-extraction';
 import { stepTimer } from '@/lib/step-timer';
 import { getFile, storeFile } from '@/lib/physics-exam-storage';
 import { extractPdfPages } from '@/lib/server-pdf';
-import { multipleChoicePaper, questionCrops } from '@/lib/exam-paper-layout';
+import { multipleChoicePaper, questionCrops, CROPS_VERSION } from '@/lib/exam-paper-layout';
 import { studentView } from '@/lib/exam-paper-access';
 import { ExamDraftSchema, MAX_DRAFT_BYTES } from '@/lib/exam-drafts';
 import type { Paper, Answer } from '@/lib/physics-extraction-schema';
@@ -38,9 +38,10 @@ async function screenshotsFor(files: Paper['files'], questions: Paper['questions
   }
 }
 
-// Papers saved before screenshots existed get them on first load.
+// Papers saved before screenshots existed, or with older ones, get current
+// ones on first load.
 const withScreenshots = (papers: Paper[]) =>
-  addMissingScreenshots(papers, (paper) => screenshotsFor(paper.files, paper.questions), setMissingPaperCrops);
+  addCurrentScreenshots(papers, CROPS_VERSION, (paper) => screenshotsFor(paper.files, paper.questions), setOutdatedPaperCrops);
 
 export async function GET() {
   const { userId } = await auth();
@@ -156,7 +157,9 @@ export async function POST(request: Request) {
         const state = await checkExtraction(job.responseId, job.pages);
         if (state.state === 'running') return NextResponse.json({ status: 'running' });
         if (!(await claimExtractionJob(job.id))) return NextResponse.json({ status: 'gone' });
-        const paper: Paper = { ...state.extraction, id: crypto.randomUUID(), title: job.title, status: 'draft', files: job.files, revision: 0, createdAt: new Date().toISOString(), kind: 'structured', crops: await screenshotsFor(job.files, state.extraction.questions) };
+        const paper: Paper = { ...state.extraction, id: crypto.randomUUID(), title: job.title, status: 'draft', files: job.files, revision: 0, createdAt: new Date().toISOString(), kind: 'structured' };
+        const crops = await screenshotsFor(job.files, state.extraction.questions);
+        if (crops) Object.assign(paper, { crops, cropsVersion: CROPS_VERSION });
         await insertPaper(userId, paper);
         return NextResponse.json({ status: 'done', paper });
       } catch (e) {

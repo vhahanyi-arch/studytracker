@@ -45,6 +45,11 @@ export type DetectedQuestion = {
   expected_answer: string | null;
   mark_scheme_notes: string | null;
   topic: string;
+  // Where the label's own row is, and for a roman subpart such as 1(b)(ii),
+  // where its part (b) begins: the opening text and any diagram that every
+  // subpart of (b) relies on. Fractions of the page height.
+  label_y?: number;
+  part_start?: { page: number; y: number };
 };
 
 type TextRow = { top: number; words: PdfWord[] };
@@ -56,6 +61,7 @@ type Marker = {
   page: number;
   top: number;
   cropTop: number;
+  partStart?: { page: number; top: number };
 };
 
 const romanPart = /^(?:i{1,3}|iv|v|vi{0,3}|ix|x)$/i;
@@ -546,6 +552,7 @@ function extractPaperMarkers(
         page: page.pageNumber,
         top: row.top / page.height,
         cropTop,
+        partStart: partsOfCandidate.roman && letterTop ? { ...letterTop } : undefined,
       });
     }
   }
@@ -673,6 +680,8 @@ export function analysePaperWithMarkScheme(
           ? "The accepted response is shown graphically in the mark scheme and must be checked by the teacher."
           : null),
       topic: topicFor(subject, instruction, lowerSecondaryStage),
+      label_y: marker.top,
+      ...(marker.partStart ? { part_start: { page: marker.partStart.page, y: marker.partStart.top } } : {}),
     });
   });
 

@@ -41,7 +41,9 @@ export type Paper = { id: string; title: string; syllabus: string; status: 'draf
  createdAt: string; revision: number; demo?: boolean;
  // Kept outside ExtractionSchema, which is the model's strict output schema.
  // Papers from before these existed have neither: structured, whole pages.
- kind?: 'structured'|'multiple_choice'; crops?: Record<string, QuestionCrop[]> };
+ kind?: 'structured'|'multiple_choice'; crops?: Record<string, QuestionCrop[]>;
+ // How the crops were worked out (CROPS_VERSION in lib/exam-paper-layout.ts).
+ cropsVersion?: number };
 export type Answer = {
  questionId: string; mode: 'typed'|'handwritten'; text: string; steps: Record<string,string>; file: StoredFile|null;
  // Optional formula/working fields for calculation questions (numeric or stepped kind).

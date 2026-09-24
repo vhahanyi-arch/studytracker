@@ -4,7 +4,7 @@ import {multipleChoicePaper,questionCrops} from '@/lib/exam-paper-layout';
 import {markAnswer} from '@/lib/physics-marking-engine';
 import {studentView,studentMayOpen} from '@/lib/exam-paper-access';
 import type {Paper,Scheme,Question,Answer} from '@/lib/physics-extraction-schema';
-import {writePdf,type Page} from '../fixtures/synthetic-pdf';
+import {writePdf,A4,type Page} from '../fixtures/synthetic-pdf';
 import {physicsMultipleChoice,asPhysicsStructured,rotatedScheme} from '../fixtures/synthetic-papers';
 
 const pages=(p:Page[])=>extractPdfPages(writePdf(p));
@@ -47,14 +47,46 @@ test('extracted questions are located on the paper by their labels',async()=>{
  const paper=await pages(asPhysicsStructured.paper);
  const crops=questionCrops(paper,asPhysicsStructured.expected.map(e=>({id:e.label,marks:e.marks,sourcePages:[e.page]})));
  for(const e of asPhysicsStructured.expected){
-  assert.equal(crops[e.label].length,1,e.label);assert.equal(crops[e.label][0].page,e.page,e.label);
-  assert.ok(crops[e.label][0].height<1,`${e.label} is a crop, not a whole page`);
+  const own=crops[e.label].at(-1)!;
+  assert.equal(own.page,e.page,e.label);
+  assert.ok(own.height<1,`${e.label} is a crop, not a whole page`);
  }
- assert.ok(crops['2(b)(i)'][0].y<crops['2(b)(ii)'][0].y);
+ assert.ok(crops['2(b)(i)'][0].y<crops['2(b)(ii)'].at(-1)!.y);
 });
 test('a question running onto the next page gets that page too',async()=>{
  const crops=questionCrops(await pages(asPhysicsStructured.paper),[{id:'2(b)(ii)',marks:2,sourcePages:[2,3]},{id:'3(a)',marks:2,sourcePages:[3]}]);
- assert.deepEqual(crops['2(b)(ii)'].slice(1),[{page:3,x:0,y:0,width:1,height:1}]);
+ assert.deepEqual(crops['2(b)(ii)'].at(-1),{page:3,x:0,y:0,width:1,height:1});
+});
+// A subpart relies on its part's opening: the set-up and usually the diagram.
+const top=(y:number)=>y/A4.height;
+test('a later subpart shows the opening of its part above it; the first already includes it',async()=>{
+ const paper=await pages(asPhysicsStructured.paper);
+ const crops=questionCrops(paper,asPhysicsStructured.expected.map(e=>({id:e.label,marks:e.marks,sourcePages:[e.page]})));
+ assert.equal(crops['2(b)(i)'].length,1,'(i) starts at (b), so it has the opening already');
+ assert.ok(crops['2(b)(i)'][0].y<top(390));
+ const [opening,own]=crops['2(b)(ii)'];
+ assert.equal(opening.page,2);
+ assert.ok(opening.y<top(390)&&opening.y>top(345),'from the (b) line');
+ assert.ok(opening.y+opening.height<top(430)&&opening.y+opening.height>top(400),'down to the (i) line');
+ assert.ok(own.y>top(500)&&own.y<top(540),'then the subpart itself');
+ for(const label of ['1(a)','1(b)','2(a)','3(a)','3(b)'])assert.equal(crops[label].length,1,`${label} has no subparts`);
+});
+test('an opening at the foot of the page before (i) is shown from that page',async()=>{
+ const run=(top:number,x:number,text:string,bold=false)=>({text,x,top,bold});
+ const paper=await pages([
+  {...A4,runs:[run(72.6,49.6,'1',true),run(72.6,72.3,'(a)',true),run(72.6,95,'Define momentum.'),run(120,300,'..............................'),run(120,532.3,'[1]'),
+   run(640,72.3,'(b)',true),run(640,95,'A ball of mass 0.20 kg is dropped from rest, as shown in Fig. 1.1.'),run(720,250,'Fig. 1.1')]},
+  {...A4,runs:[run(72.6,96,'(i)',true),run(72.6,118,'Calculate its speed after 0.50 s.'),run(150,532.3,'[2]'),
+   run(260,92.9,'(ii)',true),run(260,118,'State the energy change as it falls.'),run(320,532.3,'[1]')]},
+ ]);
+ const crops=questionCrops(paper,[{id:'1(a)',marks:1,sourcePages:[1]},{id:'1(b)(i)',marks:2,sourcePages:[1,2]},{id:'1(b)(ii)',marks:1,sourcePages:[1,2]}]);
+ for(const label of ['1(b)(i)','1(b)(ii)']){
+  const [opening,own]=crops[label];
+  assert.equal(crops[label].length,2,label);
+  assert.deepEqual([opening.page,own.page],[1,2],label);
+  assert.ok(opening.y<top(640)&&opening.y>top(600),`${label}: from the (b) line`);
+  assert.ok(opening.y+opening.height<=0.95,`${label}: above the page footer`);
+ }
 });
 test('a question that cannot be located falls back to its whole pages',async()=>{
  const crops=questionCrops(await pages(asPhysicsStructured.paper),[{id:'9(z)',marks:1,sourcePages:[2,3]}]);
