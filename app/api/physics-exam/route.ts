@@ -10,7 +10,8 @@ import {
 } from '@/lib/physics-exam-repository';
 import { demoPaper } from '@/lib/physics-exam-demo';
 import { approvePaper, makeSubmission, overrideGrade, SubmitSchema, checkAnswer, CheckSchema } from '@/lib/physics-exam-workflows';
-import { startExtraction, checkExtraction, cancelExtraction } from '@/lib/physics-exam-extraction';
+import { renderPdf, startExtractionFromImages, checkExtraction, cancelExtraction } from '@/lib/physics-exam-extraction';
+import { stepTimer } from '@/lib/step-timer';
 import { getFile, storeFile } from '@/lib/physics-exam-storage';
 import { extractPdfPages } from '@/lib/server-pdf';
 import { multipleChoicePaper, questionCrops } from '@/lib/exam-paper-layout';
@@ -62,6 +63,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const arrived = Date.now();
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: 'Please sign in.' }, { status: 401 });
   const clerk = await clerkClient();
@@ -78,7 +80,12 @@ export async function POST(request: Request) {
     if (origin && host && new URL(origin).host !== host) throw Error('Cross-origin write rejected.');
 
     if ((request.headers.get('content-type') || '').includes('multipart/form-data')) {
-      const form = await request.formData();
+      // Uploads are timed step by step (see lib/step-timer.ts): each step has
+      // its own deadline, so a hang is reported by name, and the durations are
+      // in the production logs.
+      const timer = stepTimer('upload ' + crypto.randomUUID().slice(0, 8));
+      console.info(`[upload] sign-in and schema check: ${Date.now() - arrived} ms, body ${request.headers.get('content-length') ?? '?'} bytes`);
+      const form = await timer.step('Receiving the files', request.formData(), 120_000);
       const action = form.get('action');
 
       if (action === 'attachment') {
@@ -95,26 +102,37 @@ export async function POST(request: Request) {
       const question = form.get('questions'), scheme = form.get('scheme');
       if (!(question instanceof File) || (!combined && !(scheme instanceof File)))
         throw Error('Select both PDFs, or choose a combined PDF.');
-      const q = await storeFile(question, 'pdf');
-      const m = !combined ? await storeFile(scheme as File, 'pdf') : null;
+      const [q, m] = await timer.step('Saving the PDFs', Promise.all([
+        storeFile(question, 'pdf'),
+        !combined ? storeFile(scheme as File, 'pdf') : Promise.resolve(null),
+      ]), 60_000);
       const files: Paper['files'] = [{ role: combined ? 'combined' : 'questions', file: q }, ...(m ? [{ role: 'scheme' as const, file: m }] : [])];
       const title = String(form.get('title') || question.name).slice(0, 200);
+      // The bytes are already here; reading them back from storage only cost time.
+      const bytesOf = async (file: File) => new Uint8Array(await file.arrayBuffer());
       // Multiple choice needs no model: the questions and the answer key are
       // read from the PDFs' text, in seconds, so the draft is saved at once.
       if (multipleChoice) {
-        const read = async (id: string) => extractPdfPages(new Uint8Array((await getFile(id)).bytes));
-        const paperPages = await read(q.id);
-        const schemePages = m ? await read(m.id) : paperPages;
+        const paperPages = await timer.step('Reading the question paper', async () => extractPdfPages(await bytesOf(question)), 60_000);
+        const schemePages = !combined ? await timer.step('Reading the mark scheme', async () => extractPdfPages(await bytesOf(scheme as File)), 60_000) : paperPages;
         const { extraction, crops } = multipleChoicePaper(paperPages, schemePages);
         const paper: Paper = { ...extraction, id: crypto.randomUUID(), title, status: 'draft', files, revision: 0, createdAt: new Date().toISOString(), kind: 'multiple_choice', crops };
-        await insertPaper(userId, paper);
+        await timer.step('Saving the paper', insertPaper(userId, paper), 30_000);
+        timer.done();
         return NextResponse.json({ paper });
       }
       // Only starts the extraction: the model's reading of a whole paper runs
       // past this function's time limit, so the page polls extraction-status.
-      const started = await startExtraction(await Promise.all(files.map(async (f) => ({ role: f.role, bytes: new Uint8Array((await getFile(f.file.id)).bytes) }))));
+      const documents = [{ role: files[0].role, bytes: await bytesOf(question) }, ...(!combined ? [{ role: 'scheme' as const, bytes: await bytesOf(scheme as File) }] : [])];
+      const rendered = await timer.step('Turning the pages into images', async () => {
+        const out = [];
+        for (const d of documents) out.push({ role: d.role, images: await renderPdf(d.bytes) });
+        return out;
+      }, 120_000);
+      const started = await timer.step('Starting the AI extraction', startExtractionFromImages(rendered), 120_000);
       const job = { id: crypto.randomUUID(), teacherId: userId, title, responseId: started.responseId, files, pages: started.pages };
-      await insertExtractionJob(job);
+      await timer.step('Saving the job', insertExtractionJob(job), 30_000);
+      timer.done();
       return NextResponse.json({ job: { id: job.id, title: job.title, createdAt: new Date().toISOString() } }, { status: 202 });
     }
 
