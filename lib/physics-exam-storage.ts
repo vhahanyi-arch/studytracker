@@ -15,6 +15,7 @@
 
 import { put, get } from "@vercel/blob";
 import type { StoredFile } from "./physics-extraction-schema";
+import { describeBlobToken } from "./blob-token";
 
 const PREFIX = "physics-exam/";
 
@@ -24,21 +25,12 @@ const PREFIX = "physics-exam/";
 // still ride out a blip, and a real failure now surfaces in seconds.
 process.env.VERCEL_BLOB_RETRIES ??= "2";
 
-// Which store the token is for, for the logs. A read-write token is
-// vercel_blob_rw_<storeId>_<secret>; only the store id is ever logged.
-function tokenStore() {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  if (!token) return "no BLOB_READ_WRITE_TOKEN set";
-  const parts = token.split("_");
-  return parts.length >= 5 && parts[0] === "vercel" ? `store_${parts[3]}` : "an unrecognised token format";
-}
-
 async function logged<T>(what: string, work: Promise<T>): Promise<T> {
   try {
     return await work;
   } catch (error) {
     const e = error instanceof Error ? error : new Error(String(error));
-    console.error(`[blob] ${what} failed: ${e.name}: ${e.message} (token is for ${tokenStore()})`);
+    console.error(`[blob] ${what} failed: ${e.name}: ${e.message} (token is for ${describeBlobToken(process.env.BLOB_READ_WRITE_TOKEN)})`);
     throw error;
   }
 }
