@@ -16,6 +16,7 @@ import { stepTimer } from '@/lib/step-timer';
 import { getFile, storeFile } from '@/lib/physics-exam-storage';
 import { extractPdfPages } from '@/lib/server-pdf';
 import { multipleChoicePaper, questionCrops, CROPS_VERSION } from '@/lib/exam-paper-layout';
+import { structuredPaper } from '@/lib/structured-paper';
 import { studentView } from '@/lib/exam-paper-access';
 import { ExamDraftSchema, MAX_DRAFT_BYTES } from '@/lib/exam-drafts';
 import type { Paper, Answer } from '@/lib/physics-extraction-schema';
@@ -103,30 +104,42 @@ export async function POST(request: Request) {
       if (action !== 'extract') throw Error('Unknown upload action.');
       if (role !== 'teacher') return NextResponse.json({ error: 'Teacher access is required.' }, { status: 403 });
       const multipleChoice = form.get('kind') === 'multiple_choice';
-      if (!multipleChoice && !process.env.OPENAI_API_KEY) throw Error('Configure OPENAI_API_KEY in .env before uploading papers.');
+      // Structured papers are read from their text unless AI is asked for; see
+      // lib/structured-paper.ts. AI remains for scans, while it is configured.
+      const withAi = !multipleChoice && form.get('reader') === 'ai';
+      if (withAi && !process.env.OPENAI_API_KEY) throw Error('Reading with AI is not set up on this site. Read the paper from its PDF instead.');
       const combined = form.get('combined') === 'true';
       const question = form.get('questions'), scheme = form.get('scheme');
       if (!(question instanceof File) || (!combined && !(scheme instanceof File)))
         throw Error('Select both PDFs, or choose a combined PDF.');
-      const [q, m] = await timer.step('Saving the PDFs', Promise.all([
-        storeFile(question, 'pdf'),
-        !combined ? storeFile(scheme as File, 'pdf') : Promise.resolve(null),
-      ]), 60_000);
-      const files: Paper['files'] = [{ role: combined ? 'combined' : 'questions', file: q }, ...(m ? [{ role: 'scheme' as const, file: m }] : [])];
       const title = String(form.get('title') || question.name).slice(0, 200);
       // The bytes are already here; reading them back from storage only cost time.
       const bytesOf = async (file: File) => new Uint8Array(await file.arrayBuffer());
-      // Multiple choice needs no model: the questions and the answer key are
-      // read from the PDFs' text, in seconds, so the draft is saved at once.
-      if (multipleChoice) {
+      const saveFiles = async (): Promise<Paper['files']> => {
+        const [q, m] = await timer.step('Saving the PDFs', Promise.all([
+          storeFile(question, 'pdf'),
+          !combined ? storeFile(scheme as File, 'pdf') : Promise.resolve(null),
+        ]), 60_000);
+        return [{ role: combined ? 'combined' : 'questions', file: q }, ...(m ? [{ role: 'scheme' as const, file: m }] : [])];
+      };
+      // Read straight from the PDFs' text, in seconds, so the draft is saved at
+      // once. Read before saving, so a scan or a wrong scheme is refused
+      // without leaving files behind.
+      if (!withAi) {
         const paperPages = await timer.step('Reading the question paper', async () => extractPdfPages(await bytesOf(question)), 60_000);
         const schemePages = !combined ? await timer.step('Reading the mark scheme', async () => extractPdfPages(await bytesOf(scheme as File)), 60_000) : paperPages;
-        const { extraction, crops } = multipleChoicePaper(paperPages, schemePages);
-        const paper: Paper = { ...extraction, id: crypto.randomUUID(), title, status: 'draft', files, revision: 0, createdAt: new Date().toISOString(), kind: 'multiple_choice', crops };
+        const { extraction, crops } = await timer.step('Finding the questions and answers', async () =>
+          multipleChoice ? multipleChoicePaper(paperPages, schemePages) : structuredPaper(paperPages, schemePages), 60_000);
+        const files = await saveFiles();
+        const paper: Paper = {
+          ...extraction, id: crypto.randomUUID(), title, status: 'draft', files, revision: 0, createdAt: new Date().toISOString(),
+          crops, ...(multipleChoice ? { kind: 'multiple_choice' as const } : { kind: 'structured' as const, reader: 'text' as const, cropsVersion: CROPS_VERSION }),
+        };
         await timer.step('Saving the paper', insertPaper(userId, paper), 30_000);
         timer.done();
         return NextResponse.json({ paper });
       }
+      const files = await saveFiles();
       // Only starts the extraction: the model's reading of a whole paper runs
       // past this function's time limit, so the page polls extraction-status.
       const documents = [{ role: files[0].role, bytes: await bytesOf(question) }, ...(!combined ? [{ role: 'scheme' as const, bytes: await bytesOf(scheme as File) }] : [])];
@@ -157,7 +170,7 @@ export async function POST(request: Request) {
         const state = await checkExtraction(job.responseId, job.pages);
         if (state.state === 'running') return NextResponse.json({ status: 'running' });
         if (!(await claimExtractionJob(job.id))) return NextResponse.json({ status: 'gone' });
-        const paper: Paper = { ...state.extraction, id: crypto.randomUUID(), title: job.title, status: 'draft', files: job.files, revision: 0, createdAt: new Date().toISOString(), kind: 'structured' };
+        const paper: Paper = { ...state.extraction, id: crypto.randomUUID(), title: job.title, status: 'draft', files: job.files, revision: 0, createdAt: new Date().toISOString(), kind: 'structured', reader: 'ai' };
         const crops = await screenshotsFor(job.files, state.extraction.questions);
         if (crops) Object.assign(paper, { crops, cropsVersion: CROPS_VERSION });
         await insertPaper(userId, paper);

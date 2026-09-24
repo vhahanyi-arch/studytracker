@@ -3,7 +3,8 @@ import {extractPdfPages} from '@/lib/server-pdf';
 import {structuredPaper,finalAnswer,schemeMarks,schemeFor,roundingTolerance} from '@/lib/structured-paper';
 import {markAnswer,compareNumeric} from '@/lib/physics-marking-engine';
 import type {SchemeRow} from '@/lib/cambridge-analysis';
-import type {Answer} from '@/lib/physics-extraction-schema';
+import type {Answer,Paper} from '@/lib/physics-extraction-schema';
+import {approvePaper,makeSubmission} from '@/lib/physics-exam-workflows';
 import {writePdf,A4,type Page} from '../fixtures/synthetic-pdf';
 import {asPhysicsStructured} from '../fixtures/synthetic-papers';
 
@@ -53,6 +54,19 @@ test('one combined PDF gives the same paper',async()=>{
  const combined=await pages([...asPhysicsStructured.paper,...asPhysicsStructured.scheme]);
  const {extraction:x}=structuredPaper(combined,combined);
  assert.deepEqual(x.questions.map(q=>[q.id,q.marks,q.issues.length]),asPhysicsStructured.expected.map(e=>[e.label,e.marks,0]));
+});
+test('a paper read without AI publishes, and a student\'s answers are marked or sent to the teacher',async()=>{
+ const {extraction,crops}=await read();
+ const draft:Paper={...extraction,id:'p',title:'t',status:'draft',files:[],revision:0,createdAt:'',kind:'structured',reader:'text',crops};
+ const paper=approvePaper(draft,extraction);
+ assert.deepEqual([paper.status,paper.reader,paper.crops],['ready','text',crops],'publishing keeps how it was read and its screenshots');
+ const said:Record<string,string>={'1(b)':'1.5 m/s^2','2(b)(i)':'650 J','2(b)(ii)':'120'};
+ const submission=makeSubmission(paper,'S',false,paper.questions.map(q=>typed(q.id,said[q.id]??'a written answer')));
+ const grade=(id:string)=>submission.grades.find(g=>g.questionId===id)!;
+ assert.deepEqual([grade('1(b)').status,grade('1(b)').proposed],['proposed',2],'right: full marks, for the teacher to confirm');
+ assert.deepEqual([grade('2(b)(ii)').status,grade('2(b)(ii)').proposed],['proposed',2]);
+ assert.equal(grade('2(b)(i)').status,'needs_review','wrong on a two-mark part: the teacher decides the method mark');
+ for(const id of ['1(a)','2(a)','3(a)','3(b)'])assert.equal(grade(id).status,'needs_review',id);
 });
 test('a scan is refused with a reason, and so is a scheme with no table',async()=>{
  const blank=await pages([{...A4,runs:[]},{...A4,runs:[]}]);

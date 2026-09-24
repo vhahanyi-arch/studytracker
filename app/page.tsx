@@ -985,6 +985,11 @@ function PhysicsExamTeacher() {
   const [combined, setCombined] = useState(false);
   const [reviewing, setReviewing] = useState<PaperSummary | null>(null);
   const [paperKind, setPaperKind] = useState<"structured" | "multiple_choice">("structured");
+  // Structured papers are read from their PDFs' text; AI is an option only
+  // while the site has a model configured (config.vision), mainly for scans.
+  const [aiAvailable, setAiAvailable] = useState(false);
+  const [useAi, setUseAi] = useState(false);
+  const readingWithAi = paperKind === "structured" && useAi && aiAvailable;
   const [reviewingSubmission, setReviewingSubmission] = useState<Submission | null>(null);
   const [jobs, setJobs] = useState<Array<{ id: string; title: string; createdAt: string }>>([]);
   const [pollTick, setPollTick] = useState(0);
@@ -998,6 +1003,7 @@ function PhysicsExamTeacher() {
       setPapers(data.papers || []);
       setSubmissions(data.submissions || []);
       setJobs(data.jobs || []);
+      setAiAvailable(!!data.config?.vision);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load papers.");
     } finally {
@@ -1071,6 +1077,7 @@ function PhysicsExamTeacher() {
       form.set("action", "extract");
       form.set("combined", String(combined));
       form.set("kind", paperKind);
+      if (readingWithAi) form.set("reader", "ai");
       const response = await fetch("/api/physics-exam", { method: "POST", body: form });
       const data = await readReply(response);
       if (!response.ok) throw new Error(data.error || "Extraction failed.");
@@ -1288,13 +1295,19 @@ function PhysicsExamTeacher() {
               <legend>Paper type</legend>
               <label className="check">
                 <input type="radio" name="paperKind" checked={paperKind === "structured"} onChange={() => setPaperKind("structured")} />
-                Structured (written answers) · read by the OpenAI model, takes a few minutes
+                Structured (written answers) · read straight from the PDFs in seconds, no AI
               </label>
               <label className="check">
                 <input type="radio" name="paperKind" checked={paperKind === "multiple_choice"} onChange={() => setPaperKind("multiple_choice")} />
                 Multiple choice (Paper 1) · read straight from the PDF in seconds, no AI
               </label>
             </fieldset>
+            {paperKind === "structured" && aiAvailable && (
+              <label className="check">
+                <input type="checkbox" checked={useAi} onChange={(e) => setUseAi(e.target.checked)} />
+                Read with AI instead · for scanned papers; takes a few minutes
+              </label>
+            )}
             <label>Paper title<input name="title" placeholder="e.g. AS Physics · Questions 5–8" required /></label>
             <label className="check">
               <input type="checkbox" checked={combined} onChange={(e) => setCombined(e.target.checked)} />
@@ -1308,10 +1321,10 @@ function PhysicsExamTeacher() {
                 <input name="scheme" type="file" accept="application/pdf" required />
               </label>
             )}
-            <small>PDF · up to 25 MB each{paperKind === "structured" ? " · scans supported" : " · needs the original Cambridge PDFs, not scans"}. Separate files are best: students can open the question paper, and a combined PDF would show them the mark scheme too.</small>
+            <small>PDF · up to 25 MB each{readingWithAi ? " · scans supported" : " · needs the original Cambridge PDFs, not scans"}. Separate files are best: students can open the question paper, and a combined PDF would show them the mark scheme too.</small>
             {error && <p className="error-text">{error}</p>}
-            <button disabled={busy} className="primary full">{busy ? (paperKind === "multiple_choice" ? "Reading the paper…" : "Uploading and starting…") : "Extract questions →"}</button>
-            {paperKind === "structured" && <small>Page images are sent to the configured OpenAI model. A whole paper takes a few minutes to read, and appears in your list when it is ready.</small>}
+            <button disabled={busy} className="primary full">{busy ? (readingWithAi ? "Uploading and starting…" : "Reading the paper…") : "Extract questions →"}</button>
+            {readingWithAi && <small>Page images are sent to the configured OpenAI model. A whole paper takes a few minutes to read, and appears in your list when it is ready.</small>}
           </form>
         </div>
       )}

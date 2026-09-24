@@ -30,6 +30,11 @@ test('multiple-choice papers keep their own crops',async()=>{
  const [p]=await addCurrentScreenshots([paper('mcq',{kind:'multiple_choice',crops:old})],2,never,never,quiet);
  assert.equal(p.crops,old);
 });
+test('structured papers read from their text keep their own crops',async()=>{
+ const never=async()=>{throw Error('should not run');};
+ const [p]=await addCurrentScreenshots([paper('text',{kind:'structured',reader:'text',crops:old,cropsVersion:1})],2,never,never,quiet);
+ assert.equal(p.crops,old);
+});
 test('when the question paper cannot be read, the paper keeps what it had and nothing is saved',async()=>{
  const lines:string[]=[];let saves=0;
  const [p]=await addCurrentScreenshots([paper('v1',{crops:old})],2,async()=>undefined,async()=>{saves++;},l=>lines.push(l));

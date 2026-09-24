@@ -6,8 +6,10 @@
 // happens once. Best effort: if the question paper cannot be read, the paper
 // is served as before and the next load tries again.
 //
-// Multiple-choice papers are left alone: their crops come from their own
-// reading (multipleChoicePaper), which none of this changes.
+// Multiple-choice papers, and structured papers read from their text, are left
+// alone: their crops come from their own reading (multipleChoicePaper,
+// structuredPaper, which adds continuations questionCrops cannot), which none
+// of this changes.
 import type { Paper } from "./physics-extraction-schema";
 
 type Crops = NonNullable<Paper["crops"]>;
@@ -23,7 +25,7 @@ export async function addCurrentScreenshots(
   log: (line: string) => void = console.warn,
 ): Promise<Paper[]> {
   return Promise.all(papers.map(async (paper) => {
-    if (paper.kind === "multiple_choice" || cropsVersionOf(paper) >= version) return paper;
+    if (paper.kind === "multiple_choice" || paper.reader === "text" || cropsVersionOf(paper) >= version) return paper;
     const crops = await find(paper);
     if (!crops) {
       log(`[screenshots] could not place the questions of paper ${paper.id}; keeping what it had`);
