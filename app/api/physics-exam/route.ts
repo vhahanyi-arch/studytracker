@@ -11,12 +11,28 @@ import { demoPaper } from '@/lib/physics-exam-demo';
 import { approvePaper, makeSubmission, overrideGrade, SubmitSchema } from '@/lib/physics-exam-workflows';
 import { startExtraction, checkExtraction, cancelExtraction } from '@/lib/physics-exam-extraction';
 import { getFile, storeFile } from '@/lib/physics-exam-storage';
+import { extractPdfPages } from '@/lib/server-pdf';
+import { multipleChoicePaper, questionCrops } from '@/lib/exam-paper-layout';
+import { studentView } from '@/lib/exam-paper-access';
 import type { Paper, Answer } from '@/lib/physics-extraction-schema';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
 
 const MAX_EXTRACTION_MS = 30 * 60 * 1000;
+
+// Screenshot positions for extracted questions. Best effort: without them the
+// paper still works, showing each question's whole pages instead.
+async function screenshotsFor(files: Paper['files'], questions: Paper['questions']) {
+  try {
+    const source = files.find((f) => f.role !== 'scheme');
+    if (!source) return undefined;
+    const pages = await extractPdfPages(new Uint8Array((await getFile(source.file.id)).bytes));
+    return questionCrops(pages, questions);
+  } catch {
+    return undefined;
+  }
+}
 
 export async function GET() {
   const { userId } = await auth();
@@ -36,7 +52,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Access denied.' }, { status: 403 });
     const teacherId = await teacherFor(userId);
     const [papers, submissions] = await Promise.all([papersForStudent(teacherId), submissionsForStudent(userId)]);
-    return NextResponse.json({ papers, submissions, config: { vision: !!process.env.OPENAI_API_KEY } });
+    // Students get each paper without its answers; see lib/exam-paper-access.ts.
+    return NextResponse.json({ papers: papers.map(studentView), submissions, config: { vision: !!process.env.OPENAI_API_KEY } });
   } catch {
     return NextResponse.json({ error: 'Cannot read storage. Check the database connection and migrations.' }, { status: 500 });
   }
@@ -70,7 +87,8 @@ export async function POST(request: Request) {
 
       if (action !== 'extract') throw Error('Unknown upload action.');
       if (role !== 'teacher') return NextResponse.json({ error: 'Teacher access is required.' }, { status: 403 });
-      if (!process.env.OPENAI_API_KEY) throw Error('Configure OPENAI_API_KEY in .env before uploading papers.');
+      const multipleChoice = form.get('kind') === 'multiple_choice';
+      if (!multipleChoice && !process.env.OPENAI_API_KEY) throw Error('Configure OPENAI_API_KEY in .env before uploading papers.');
       const combined = form.get('combined') === 'true';
       const question = form.get('questions'), scheme = form.get('scheme');
       if (!(question instanceof File) || (!combined && !(scheme instanceof File)))
@@ -78,10 +96,22 @@ export async function POST(request: Request) {
       const q = await storeFile(question, 'pdf');
       const m = !combined ? await storeFile(scheme as File, 'pdf') : null;
       const files: Paper['files'] = [{ role: combined ? 'combined' : 'questions', file: q }, ...(m ? [{ role: 'scheme' as const, file: m }] : [])];
+      const title = String(form.get('title') || question.name).slice(0, 200);
+      // Multiple choice needs no model: the questions and the answer key are
+      // read from the PDFs' text, in seconds, so the draft is saved at once.
+      if (multipleChoice) {
+        const read = async (id: string) => extractPdfPages(new Uint8Array((await getFile(id)).bytes));
+        const paperPages = await read(q.id);
+        const schemePages = m ? await read(m.id) : paperPages;
+        const { extraction, crops } = multipleChoicePaper(paperPages, schemePages);
+        const paper: Paper = { ...extraction, id: crypto.randomUUID(), title, status: 'draft', files, revision: 0, createdAt: new Date().toISOString(), kind: 'multiple_choice', crops };
+        await insertPaper(userId, paper);
+        return NextResponse.json({ paper });
+      }
       // Only starts the extraction: the model's reading of a whole paper runs
       // past this function's time limit, so the page polls extraction-status.
       const started = await startExtraction(await Promise.all(files.map(async (f) => ({ role: f.role, bytes: new Uint8Array((await getFile(f.file.id)).bytes) }))));
-      const job = { id: crypto.randomUUID(), teacherId: userId, title: String(form.get('title') || question.name).slice(0, 200), responseId: started.responseId, files, pages: started.pages };
+      const job = { id: crypto.randomUUID(), teacherId: userId, title, responseId: started.responseId, files, pages: started.pages };
       await insertExtractionJob(job);
       return NextResponse.json({ job: { id: job.id, title: job.title, createdAt: new Date().toISOString() } }, { status: 202 });
     }
@@ -101,7 +131,7 @@ export async function POST(request: Request) {
         const state = await checkExtraction(job.responseId, job.pages);
         if (state.state === 'running') return NextResponse.json({ status: 'running' });
         if (!(await claimExtractionJob(job.id))) return NextResponse.json({ status: 'gone' });
-        const paper: Paper = { ...state.extraction, id: crypto.randomUUID(), title: job.title, status: 'draft', files: job.files, revision: 0, createdAt: new Date().toISOString() };
+        const paper: Paper = { ...state.extraction, id: crypto.randomUUID(), title: job.title, status: 'draft', files: job.files, revision: 0, createdAt: new Date().toISOString(), kind: 'structured', crops: await screenshotsFor(job.files, state.extraction.questions) };
         await insertPaper(userId, paper);
         return NextResponse.json({ status: 'done', paper });
       } catch (e) {

@@ -222,6 +222,14 @@ export function markAnswer(q: Question, s: Scheme | undefined, a: Answer, selfPr
 
   if (s.kind === "exact") {
     const hit = s.accepted.some((x) => normalizeText(x) === normalizeText(a.text));
+    // A multiple-choice key is one letter, so there are no alternatives for a
+    // teacher to weigh: another letter, or none, is simply wrong.
+    const choice = /^[a-d]$/;
+    const multipleChoice = s.accepted.length > 0 && s.accepted.every((x) => choice.test(normalizeText(x)));
+    if (!hit && multipleChoice && (choice.test(normalizeText(a.text)) || !a.text.trim())) {
+      grade.points = [{ id: "answer", description: s.expected, marks: q.marks, hit: false }];
+      return finish(0, a.text.trim() ? "Not the correct option." : "No option was chosen.");
+    }
     if (!hit) return review("Not an explicit accepted short answer; a teacher will check alternatives.");
     grade.points = [{ id: "answer", description: s.expected, marks: q.marks, hit: true }];
     return finish(q.marks, "Matches an explicit accepted alternative.");

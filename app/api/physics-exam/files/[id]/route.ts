@@ -3,6 +3,7 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import { sql, ensureSchema } from "@/lib/db";
 import { getFile } from "@/lib/physics-exam-storage";
 import { teacherFor } from "@/lib/physics-exam-repository";
+import { studentMayOpen } from "@/lib/exam-paper-access";
 
 export const runtime = "nodejs";
 
@@ -40,12 +41,14 @@ async function canAccessFile(userId: string, role: unknown, fileId: string): Pro
     if (ownSubmission.length > 0) return true;
     const myTeacherId = await teacherFor(userId);
     if (!myTeacherId) return false;
-    const teacherPaper = await sql`
-      SELECT 1 FROM physics_exam_papers
+    // Only a published paper's question pages: not its mark scheme, and
+    // nothing from a draft the teacher has not released.
+    const teacherPapers = await sql`
+      SELECT payload FROM physics_exam_papers
       WHERE teacher_id=${myTeacherId} AND payload::text LIKE ${"%" + fileId + "%"}
-      LIMIT 1
     `;
-    return teacherPaper.length > 0;
+    return teacherPapers.some((row) =>
+      studentMayOpen(typeof row.payload === "string" ? JSON.parse(row.payload) : row.payload, fileId));
   }
   return false;
 }

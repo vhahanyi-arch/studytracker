@@ -38,6 +38,8 @@ import { DrawingPad } from '@/components/DrawingPad';
 import { QuestionImage } from '@/components/QuestionImage';
 import { PdfAnnotator } from '@/components/PdfAnnotator';
 import { type PaperQuestion, displayCrop } from '@/lib/paper-questions';
+import { ExamReview, type ReviewPaper, type Extraction } from '@/components/exam/ExamReview';
+import { ExamQuestionShot, type QuestionCrop } from '@/components/exam/ExamQuestionShot';
 import { generateHomeworkDraftFromText, type HomeworkDraft } from '@/lib/homework-draft';
 
 export default function Home() {
@@ -960,9 +962,7 @@ function startedAgo(iso: string) {
 }
 
 function PhysicsExamTeacher() {
-  type PaperSummary = { id: string; title: string; syllabus: string; status: string; revision: number;
-    questions: Array<{ id: string; text: string; context: string; marks: number; topic: string; sourcePages: number[]; references: string[]; issues: string[] }>;
-    schemes: Array<{ questionId: string; raw: string }>; warnings: string[] };
+  type PaperSummary = ReviewPaper & { status: string };
   type Grade = { questionId: string; proposed: number | null; final: number | null; status: string; reason: string;
     points: Array<{ id: string; description: string; marks: number; hit: boolean | null }>; expected: string;
     history: Array<{ score: number; note: string; at: string }> };
@@ -979,7 +979,7 @@ function PhysicsExamTeacher() {
   const [busy, setBusy] = useState(false);
   const [combined, setCombined] = useState(false);
   const [reviewing, setReviewing] = useState<PaperSummary | null>(null);
-  const [editJson, setEditJson] = useState("");
+  const [paperKind, setPaperKind] = useState<"structured" | "multiple_choice">("structured");
   const [reviewingSubmission, setReviewingSubmission] = useState<Submission | null>(null);
   const [jobs, setJobs] = useState<Array<{ id: string; title: string; createdAt: string }>>([]);
   const [pollTick, setPollTick] = useState(0);
@@ -1053,8 +1053,8 @@ function PhysicsExamTeacher() {
   }
 
   function openReview(paper: typeof reviewing) {
+    setError("");
     setReviewing(paper);
-    if (paper) setEditJson(JSON.stringify({ questions: paper.questions, schemes: paper.schemes, warnings: paper.warnings, syllabus: paper.syllabus }, null, 2));
   }
 
   async function upload(e: React.FormEvent<HTMLFormElement>) {
@@ -1065,11 +1065,16 @@ function PhysicsExamTeacher() {
       const form = new FormData(e.currentTarget);
       form.set("action", "extract");
       form.set("combined", String(combined));
+      form.set("kind", paperKind);
       const response = await fetch("/api/physics-exam", { method: "POST", body: form });
       const data = await readReply(response);
       if (!response.ok) throw new Error(data.error || "Extraction failed.");
       setUploadOpen(false);
-      setJobs((current) => [...current, data.job]);
+      // Multiple choice is read at once; a structured paper is still being read.
+      if (data.paper) {
+        await load();
+        openReview(data.paper);
+      } else setJobs((current) => [...current, data.job]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Extraction failed.");
     } finally {
@@ -1077,14 +1082,11 @@ function PhysicsExamTeacher() {
     }
   }
 
-  async function approve() {
+  async function approve(extraction: Extraction) {
     if (!reviewing) return;
     setBusy(true);
     setError("");
     try {
-      let extraction: unknown;
-      try { extraction = JSON.parse(editJson); }
-      catch { throw new Error("The extraction is not valid JSON."); }
       const response = await fetch("/api/physics-exam", {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ action: "approve", paperId: reviewing.id, revision: reviewing.revision, extraction }),
@@ -1177,42 +1179,7 @@ function PhysicsExamTeacher() {
   }
 
   if (reviewing) {
-    return (
-      <>
-        <div className="portal-heading">
-          <div>
-            <p>Physics exam papers</p>
-            <h1>Check the extraction</h1>
-            <h2>Compare every question, mark allocation, and rule with the source pages before publishing.</h2>
-          </div>
-          <button onClick={() => setReviewing(null)}>← Paper library</button>
-        </div>
-        {error && <p className="error-text">{error}</p>}
-        {reviewing.warnings.map((w, i) => <p key={i}>{w}</p>)}
-        <div className="extraction-grid">
-          {reviewing.questions.map((q) => (
-            <section className="panel" key={q.id}>
-              <h3>{q.id} <span className="badge">{q.marks} marks</span></h3>
-              <p>{q.context}</p>
-              <p>{q.text}</p>
-              <small>{q.topic} · PDF pages {q.sourcePages.join(", ")}</small>
-              {q.references.map((r) => <p className="reference" key={r}>{r}</p>)}
-              {q.issues.map((i) => <p className="error-text" key={i}>{i}</p>)}
-            </section>
-          ))}
-        </div>
-        <section className="panel">
-          <h2>Correct structured extraction</h2>
-          <p>Edit text, IDs, marks, accepted answers, and rules below. Clear an issue only after resolving it against the PDF.</p>
-          <label className="pe-field">Extraction JSON
-            <textarea className="json" spellCheck={false} value={editJson} onChange={(e) => setEditJson(e.target.value)} />
-          </label>
-          <button disabled={busy} className="primary" onClick={approve}>
-            {busy ? "Publishing…" : "I verified the paper — publish for practice"}
-          </button>
-        </section>
-      </>
-    );
+    return <ExamReview key={reviewing.id} paper={reviewing} busy={busy} error={error} onBack={() => setReviewing(null)} onPublish={approve} />;
   }
 
   return (
@@ -1312,6 +1279,17 @@ function PhysicsExamTeacher() {
         <div className="portal-modal" onMouseDown={() => !busy && setUploadOpen(false)}>
           <form onMouseDown={(e) => e.stopPropagation()} onSubmit={upload}>
             <h3>Upload a paper</h3>
+            <fieldset className="paper-kind">
+              <legend>Paper type</legend>
+              <label className="check">
+                <input type="radio" name="paperKind" checked={paperKind === "structured"} onChange={() => setPaperKind("structured")} />
+                Structured (written answers) · read by the OpenAI model, takes a few minutes
+              </label>
+              <label className="check">
+                <input type="radio" name="paperKind" checked={paperKind === "multiple_choice"} onChange={() => setPaperKind("multiple_choice")} />
+                Multiple choice (Paper 1) · read straight from the PDF in seconds, no AI
+              </label>
+            </fieldset>
             <label>Paper title<input name="title" placeholder="e.g. AS Physics · Questions 5–8" required /></label>
             <label className="check">
               <input type="checkbox" checked={combined} onChange={(e) => setCombined(e.target.checked)} />
@@ -1325,10 +1303,10 @@ function PhysicsExamTeacher() {
                 <input name="scheme" type="file" accept="application/pdf" required />
               </label>
             )}
-            <small>PDF · up to 25 MB each · scans supported</small>
+            <small>PDF · up to 25 MB each{paperKind === "structured" ? " · scans supported" : " · needs the original Cambridge PDFs, not scans"}. Separate files are best: students can open the question paper, and a combined PDF would show them the mark scheme too.</small>
             {error && <p className="error-text">{error}</p>}
-            <button disabled={busy} className="primary full">{busy ? "Uploading and starting…" : "Extract questions →"}</button>
-            <small>Page images are sent to the configured OpenAI model. A whole paper takes a few minutes to read, and appears in your list when it is ready.</small>
+            <button disabled={busy} className="primary full">{busy ? (paperKind === "multiple_choice" ? "Reading the paper…" : "Uploading and starting…") : "Extract questions →"}</button>
+            {paperKind === "structured" && <small>Page images are sent to the configured OpenAI model. A whole paper takes a few minutes to read, and appears in your list when it is ready.</small>}
           </form>
         </div>
       )}
@@ -1355,7 +1333,8 @@ function PhysicsExamStudent({ back }: { back: () => void }) {
   type PaperSummary = { id: string; title: string; syllabus: string; status: string;
     files: Array<{ role: string; file: { id: string; name: string } }>;
     questions: Array<{ id: string; text: string; context: string; marks: number; topic: string; sourcePages: number[]; references: string[] }>;
-    schemes: Array<{ questionId: string; kind: string; points: Array<{ id: string; description: string; marks: number; kind: string }> }> };
+    schemes: Array<{ questionId: string; kind: string; points: Array<{ id: string; description: string; marks: number; kind: string }> }>;
+    kind?: string; crops?: Record<string, QuestionCrop[]> };
   type Draft = { mode: "typed" | "handwritten"; text: string; steps: Record<string, string>; file: { id: string; name: string } | null; formula?: string; working?: string };
   type Grade = { questionId: string; proposed: number | null; final: number | null; status: string; reason: string;
     points: Array<{ id: string; description: string; marks: number; hit: boolean | null }>; expected: string };
@@ -1488,6 +1467,7 @@ function PhysicsExamStudent({ back }: { back: () => void }) {
     const draft = drafts[question?.id || ""] || blank();
     const isNumeric = scheme?.kind === "numeric";
     const isStepped = scheme?.kind === "stepped";
+    const isChoice = openPaper.kind === "multiple_choice";
     return (
       <>
         <div className="portal-heading">
@@ -1510,16 +1490,18 @@ function PhysicsExamStudent({ back }: { back: () => void }) {
               <b>Question {question?.id}</b>
               <span className="badge">{question?.marks} marks</span>
             </div>
-            {question?.context && <p>{question.context}</p>}
-            <p>{question?.text}</p>
-            {question && question.references.length > 0 && question.references.map((r) => <p className="reference" key={r}>{r}</p>)}
-            {question && openPaper.files.filter((f) => f.role !== "scheme").map((f) =>
-              question.sourcePages.map((p) => (
-                <a key={f.file.id + p} className="reference" href={"/api/physics-exam/files/" + f.file.id + "#page=" + p} target="_blank" rel="noreferrer" style={{ display: "inline-block", marginRight: "10px" }}>
-                  View original · p. {p} ↗
-                </a>
-              ))
-            )}
+            {question && <ExamQuestionShot paper={openPaper} question={question} />}
+            {isChoice && question ? (
+              <div className="choice-answer" role="radiogroup" aria-label={`Your answer to question ${question.id}`}>
+                {["A", "B", "C", "D"].map((letter) => (
+                  <button key={letter} type="button" role="radio" aria-checked={draft.text === letter}
+                    className={draft.text === letter ? "primary" : ""}
+                    onClick={() => update(question.id, { mode: "typed", text: draft.text === letter ? "" : letter })}>
+                    {letter}
+                  </button>
+                ))}
+              </div>
+            ) : <>
             <div className="setup-head" style={{ margin: "14px 0" }}>
               {(["typed", "handwritten"] as const).map((m) => (
                 <button key={m} className={draft.mode === m ? "primary" : ""} onClick={() => question && update(question.id, { mode: m })}>
@@ -1563,6 +1545,7 @@ function PhysicsExamStudent({ back }: { back: () => void }) {
                 {draft.file && <a href={"/api/physics-exam/files/" + draft.file.id} target="_blank" rel="noreferrer">{draft.file.name} ↗</a>}
               </div>
             )}
+            </>}
             <div className="grade-line">
               <span>{index + 1} of {openPaper.questions.length}</span>
               <button disabled={!index} onClick={() => setIndex(index - 1)}>Previous</button>

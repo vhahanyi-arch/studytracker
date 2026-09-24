@@ -33,9 +33,15 @@ export type Scheme = z.infer<typeof SchemeSchema>;
 export type Question = z.infer<typeof QuestionSchema>;
 export type Extraction = z.infer<typeof ExtractionSchema>;
 export type StoredFile = { id: string; name: string; mime: string; size: number };
+// Where a question sits on the question paper, as fractions of the page, so it
+// can be shown exactly as printed (diagrams, tables and graphs included).
+export type QuestionCrop = { page: number; x: number; y: number; width: number; height: number };
 export type Paper = { id: string; title: string; syllabus: string; status: 'draft'|'ready';
  questions: Question[]; schemes: Scheme[]; warnings: string[]; files: {role: 'questions'|'scheme'|'combined'; file: StoredFile}[];
- createdAt: string; revision: number; demo?: boolean };
+ createdAt: string; revision: number; demo?: boolean;
+ // Kept outside ExtractionSchema, which is the model's strict output schema.
+ // Papers from before these existed have neither: structured, whole pages.
+ kind?: 'structured'|'multiple_choice'; crops?: Record<string, QuestionCrop[]> };
 export type Answer = {
  questionId: string; mode: 'typed'|'handwritten'; text: string; steps: Record<string,string>; file: StoredFile|null;
  // Optional formula/working fields for calculation questions (numeric or stepped kind).

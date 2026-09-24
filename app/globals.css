@@ -6177,6 +6177,33 @@ summary:focus-visible,
   .circuit-symbols ul { grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); }
 }
 
+/* ---------------------------------------------------------------
+   Exam papers: question screenshots, the teacher's review, and
+   multiple-choice answers. Colours come from the variables, so
+   the dark theme below covers these too.
+   --------------------------------------------------------------- */
+.exam-question-shots { display: grid; gap: 8px; margin: 12px 0; }
+.exam-question-shots .question-image { min-height: 0; padding: 12px; }
+.exam-review { display: grid; gap: 16px; }
+.exam-review-item > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.exam-review-item h3 { margin: 0; }
+.exam-review-marks { display: flex; align-items: center; gap: 8px; font-size: var(--t-small); color: var(--muted); }
+.exam-review-marks input { width: 4.5em; }
+.exam-review-scheme { display: grid; gap: 10px; }
+.exam-review-raw { white-space: pre-wrap; font-size: var(--t-small); color: var(--muted); }
+.exam-review-points { margin: 0; padding-left: 1.2em; }
+.exam-review-issues { margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: var(--bg-amber-97); color: var(--fg-amber-49-b); }
+.exam-review-issues.resolved { opacity: 0.6; }
+.exam-review-issues p { margin: 0 0 6px; }
+.exam-review-publish { display: grid; gap: 12px; margin-top: 16px; }
+.choice-key, .choice-answer { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+.choice-key > span { font-weight: 700; margin-right: 4px; }
+.choice-key button { min-width: 52px; min-height: 48px; font-size: var(--t-lead); font-weight: 700; }
+/* Big enough to tap without aiming, on a phone held in one hand. */
+.choice-answer button { min-width: 64px; min-height: 56px; font-size: var(--t-lead); font-weight: 700; }
+.paper-kind { border: 0; padding: 0; margin: 0 0 12px; display: grid; gap: 6px; }
+.paper-kind legend { font-weight: 700; margin-bottom: 4px; }
+
 /* ── Dark mode ────────────────────────────────────────────────────────────
    Follows the device setting. Each variable below was a hard-coded colour;
    its light value is the colour that was there, and its dark value was
