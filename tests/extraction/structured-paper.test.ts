@@ -2,6 +2,7 @@ import {test} from 'node:test';import assert from 'node:assert/strict';
 import {extractPdfPages} from '@/lib/server-pdf';
 import {structuredPaper,finalAnswer,schemeMarks,schemeFor,schemeCrop,roundingTolerance} from '@/lib/structured-paper';
 import {studentView} from '@/lib/exam-paper-access';
+import {acceptedFromScheme} from '@/lib/accepted-answers';
 import {checkPartsFound,paperIdentity} from '@/lib/exam-paper-layout';
 import {markAnswer,compareNumeric} from '@/lib/physics-marking-engine';
 import type {SchemeRow} from '@/lib/cambridge-analysis';
@@ -198,6 +199,23 @@ test('on a one-mark part, anything that could make a right answer miss stays wit
  assert.equal(kindOf([['A1','= 620 yrs or 2 half-lives']]),'manual','only some forms can be checked');
  assert.equal(kindOf([['A1','= 6.0 N']],'Give your answer in terms of λ.'),'numeric','"your answer in terms of" is not an earlier answer');
  assert.equal(kindOf([['C1','F = ma'],['A1','= 6.0 N','allow 6 N']]),'numeric','on two marks a miss still reaches the teacher');
+});
+
+// ── Word answers marked automatically ──────────────────────────────────────
+test('accepted answers are suggested from the scheme: alternatives split, bracketed words optional',()=>{
+ assert.deepEqual(acceptedFromScheme('rate of change of velocity or change in velocity / time (taken)'),
+  ['rate of change of velocity','change in velocity / time','change in velocity / time taken']);
+ assert.deepEqual(acceptedFromScheme('light-dependent resistor OR LDR'),['light-dependent resistor','LDR']);
+ assert.deepEqual(acceptedFromScheme('a quark and an antiquark Page 11 of 12'),['a quark and an antiquark']);
+});
+test('a word answer that matches an accepted answer scores; any other goes to the teacher, never 0',()=>{
+ const q={id:'2(a)',text:'(a) Define acceleration.',context:'',marks:1,topic:'',sourcePages:[4],references:[],issues:[]};
+ const accepted=acceptedFromScheme('rate of change of velocity or change in velocity / time (taken)');
+ const s={questionId:'2(a)',raw:'',expected:accepted[0],marks:1,kind:'exact' as const,numeric:null,accepted,points:[],notes:[],unresolvedRules:[],finalAnswerAwardsAll:false,sourcePages:[1]};
+ const mark=(text:string)=>markAnswer(q,s,typed('2(a)',text));
+ for(const answer of ['Rate of change of velocity.','change in velocity / time taken','  CHANGE IN VELOCITY / TIME '])
+  assert.deepEqual([mark(answer).status,mark(answer).proposed],['proposed',1],answer);
+ assert.equal(mark('it is how fast velocity changes').status,'needs_review');
 });
 
 // ── Units the schemes use ──────────────────────────────────────────────────

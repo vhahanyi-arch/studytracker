@@ -87,6 +87,11 @@ test('an opening at the foot of the page before (i) is shown from that page',asy
   assert.ok(opening.y<top(640)&&opening.y>top(600),`${label}: from the (b) line`);
   assert.ok(opening.y+opening.height<=0.95,`${label}: above the page footer`);
  }
+ // 1(a) is on its own: it stops where (b) begins, not at the foot of the page.
+ const [a]=crops['1(a)'];
+ assert.equal(crops['1(a)'].length,1);
+ assert.ok(a.y+a.height<top(640),'1(a) does not run into the opening of (b)');
+ assert.ok(a.y+a.height>top(120),'but keeps its own answer line');
 });
 test('a question that cannot be located falls back to its whole pages',async()=>{
  const crops=questionCrops(await pages(asPhysicsStructured.paper),[{id:'9(z)',marks:1,sourcePages:[2,3]}]);

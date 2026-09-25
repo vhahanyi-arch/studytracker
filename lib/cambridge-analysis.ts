@@ -59,6 +59,10 @@ export type DetectedQuestion = {
   // subpart of (b) relies on. Fractions of the page height.
   label_y?: number;
   part_start?: { page: number; y: number };
+  // Where this part's printed content begins: its question number for the
+  // first part of a question, its "(b)" for the first subpart of (b), else its
+  // own label. The part before it ends there, even across a page break.
+  opening_start?: { page: number; y: number };
 };
 
 type TextRow = { top: number; words: PdfWord[] };
@@ -71,6 +75,7 @@ type Marker = {
   top: number;
   cropTop: number;
   partStart?: { page: number; top: number };
+  openingStart?: { page: number; top: number };
 };
 
 const romanPart = /^(?:i{1,3}|iv|v|vi{0,3}|ix|x)$/i;
@@ -570,6 +575,9 @@ function extractPaperMarkers(
         top: row.top / page.height,
         cropTop,
         partStart: partsOfCandidate.roman && letterTop ? { ...letterTop } : undefined,
+        openingStart: firstForMain && mainTop ? { ...mainTop }
+          : firstForLetter && letterTop ? { ...letterTop }
+          : { page: page.pageNumber, top: row.top / page.height },
       });
     }
   }
@@ -663,7 +671,14 @@ export function analysePaperWithMarkScheme(
       .slice(schemeRows.indexOf(schemeRow) + 1)
       .map((row) => markerByLabel.get(row.label))
       .find((candidate) => candidate?.page === marker.page);
-    const bottom = later ? Math.max(marker.cropTop + 0.07, later.cropTop - 0.006) : 0.965;
+    // Also stop where the next part's opening begins on this page: "2(b)"
+    // starting at the foot of the page belongs to 2(b)(i) overleaf, not 2(a).
+    const next = schemeRows
+      .slice(schemeRows.indexOf(schemeRow) + 1)
+      .map((row) => markerByLabel.get(row.label))
+      .find(Boolean);
+    const opening = next?.openingStart?.page === marker.page && next.openingStart.top > marker.cropTop + 0.02 ? next.openingStart.top - 0.006 : 1;
+    const bottom = Math.min(later ? Math.max(marker.cropTop + 0.07, later.cropTop - 0.006) : 0.965, opening);
     const words = page.words.filter((word) => {
       const top = word.top / page.height;
       return top >= marker.cropTop && top <= bottom;
@@ -699,6 +714,7 @@ export function analysePaperWithMarkScheme(
       topic: topicFor(subject, instruction, lowerSecondaryStage),
       label_y: marker.top,
       ...(marker.partStart ? { part_start: { page: marker.partStart.page, y: marker.partStart.top } } : {}),
+      ...(marker.openingStart ? { opening_start: { page: marker.openingStart.page, y: marker.openingStart.top } } : {}),
     });
   });
 

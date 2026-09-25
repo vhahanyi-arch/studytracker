@@ -24,7 +24,8 @@ function withContinuations(first: QuestionCrop, sourcePages: number[]): Question
 
 // Bumped when crops are worked out differently, so saved papers get new ones.
 // 2: roman subparts show their part's opening above them.
-export const CROPS_VERSION = 2;
+// 3: a part stops where the next part's opening begins, not at the page foot.
+export const CROPS_VERSION = 3;
 
 const MARGIN = 0.006;
 const PAGE_TOP = 0.055;

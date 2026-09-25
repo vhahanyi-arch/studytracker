@@ -211,16 +211,17 @@ const isBlank = (page: PdfPageData) => /\bBLANK PAGE\b/.test(page.words.map((w) 
  * pages skipped). The last part stops at its own page.
  */
 function continuation(hit: DetectedQuestion, next: DetectedQuestion | undefined, pages: PdfPageData[]): QuestionCrop[] {
-  if (!next || next.page_number <= hit.page_number) return [];
+  if (!next) return [];
+  // The next part's content may begin before its label: its question number
+  // or "(b)" opening. If that is on this page, this part does not continue.
+  const start = next.opening_start ?? { page: next.page_number, y: next.crop_y + 0.006 };
+  if (start.page <= hit.page_number) return [];
   const crops: QuestionCrop[] = [];
-  for (let page = hit.page_number + 1; page < next.page_number; page++) {
+  for (let page = hit.page_number + 1; page < start.page; page++) {
     const data = pages.find((p) => p.pageNumber === page);
     if (data && !isBlank(data)) crops.push({ page, x: 0, y: 0, width: 1, height: 1 });
   }
-  // Up to where the next part's own screenshot starts, which for the first
-  // part of a question is its number and opening, not its "(a)".
-  const y = next.crop_y + 0.006;
-  if (y > 0.12) crops.push(band(next.page_number, PAGE_TOP, y - 0.006));
+  if (start.y > 0.12) crops.push(band(start.page, PAGE_TOP, start.y - 0.006));
   return crops;
 }
 

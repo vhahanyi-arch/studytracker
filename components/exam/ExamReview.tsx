@@ -2,7 +2,8 @@
 import { useMemo, useState } from "react";
 import { ExamQuestionShot, type QuestionCrop } from "./ExamQuestionShot";
 import { ExamSchemeShot, type SchemeCrop } from "./ExamSchemeShot";
-import { parseQuantity, roundingTolerance } from "@/lib/physics-marking-engine";
+import { parseQuantity, roundingTolerance, reviewReason } from "@/lib/physics-marking-engine";
+import { acceptedFromScheme } from "@/lib/accepted-answers";
 
 // The teacher's check of an extracted paper before students see it: each
 // question as printed beside what will be used to mark it. Replaces a raw
@@ -34,7 +35,8 @@ const isChoice = (s: Scheme | undefined) => !!s && s.kind === "exact" && s.accep
 const list = (value: string) => value.split(/[;\n]/).map((x) => x.trim()).filter(Boolean);
 const readable = (value: string) => { try { parseQuantity(value); return true; } catch { return false; } };
 // The final answers a teacher types for automatic marking, and what is wrong with them.
-function answerProblem(s: Scheme) {
+function answerProblem(s: Scheme, fromText: boolean) {
+  if (fromText && s.kind === "exact" && !s.accepted.length) return "Add at least one accepted answer, or choose \"I mark this\".";
   if (s.kind !== "numeric") return "";
   const values = s.numeric?.accepted ?? [];
   if (!values.length) return "Type the final answer, with its unit, or choose \"I mark this\".";
@@ -64,8 +66,10 @@ export function ExamReview({ paper, busy, error, onBack, onPublish }: {
   });
   const toCheck = useMemo(() => questions.filter((q) => q.issues.length && !checked.has(q.id)), [questions, checked]);
   const openIssues = toCheck.length;
-  const automatic = schemes.filter((s) => s.kind === "numeric").length;
-  const unreadable = schemes.filter((s) => answerProblem(s)).length;
+  const automatic = schemes.filter((s) => s.kind === "numeric" || (fromText && s.kind === "exact")).length;
+  const unreadable = schemes.filter((s) => answerProblem(s, fromText)).length;
+  // On a paper read without AI an "exact" part is a word answer, never an A–D key.
+  const choiceKey = (s: Scheme | undefined) => multipleChoice || (!fromText && isChoice(s));
   const totalMarks = questions.reduce((n, q) => n + q.marks, 0);
 
   const setScheme = (id: string, patch: Partial<Scheme>) =>
@@ -74,11 +78,13 @@ export function ExamReview({ paper, busy, error, onBack, onPublish }: {
     setQuestions((all) => all.map((q) => (q.id === id ? { ...q, marks } : q)));
     setScheme(id, { marks });
   };
-  // Automatic marking from the final answer, or the teacher marks the part.
-  // Switching off keeps the answer, so switching back restores it.
-  const setAutomatic = (s: Scheme, on: boolean) => setScheme(s.questionId, on
-    ? { kind: "numeric", finalAnswerAwardsAll: true, numeric: s.numeric ?? ruleFor([]) }
-    : { kind: "manual", finalAnswerAwardsAll: false, numeric: s.numeric?.accepted.length ? s.numeric : null });
+  // How a part is marked: automatically from a final value, automatically when
+  // the answer matches an accepted answer (words), or by the teacher.
+  // Switching keeps what was set, so switching back restores it.
+  const setMode = (s: Scheme, mode: "numeric" | "exact" | "manual") => setScheme(s.questionId,
+    mode === "numeric" ? { kind: "numeric", finalAnswerAwardsAll: true, numeric: s.numeric ?? ruleFor([]) }
+      : mode === "exact" ? { kind: "exact", finalAnswerAwardsAll: false, accepted: s.kind === "exact" ? s.accepted : acceptedFromScheme(s.expected) }
+      : { kind: "manual", finalAnswerAwardsAll: false, numeric: s.numeric?.accepted.length ? s.numeric : null });
   const toggleChecked = (id: string) => setChecked((all) => {
     const next = new Set(all);
     if (next.has(id)) next.delete(id); else next.add(id);
@@ -98,7 +104,7 @@ export function ExamReview({ paper, busy, error, onBack, onPublish }: {
           <p>Physics exam papers · {multipleChoice ? "multiple choice" : "structured"}</p>
           <h1>Check the extraction</h1>
           <h2>{paper.title} · {questions.length} questions · {totalMarks} marks. Compare each question with how it will be marked, then publish.</h2>
-          {fromText && <p>Read from the PDFs, without AI · {automatic} marked automatically from the final answer · {questions.length - automatic} you mark</p>}
+          {fromText && <p>Read from the PDFs, without AI · {automatic} marked automatically · {questions.length - automatic} you mark</p>}
         </div>
         <button onClick={onBack}>← Paper library</button>
       </div>
@@ -123,7 +129,7 @@ export function ExamReview({ paper, busy, error, onBack, onPublish }: {
                 </label>
               </header>
               <ExamQuestionShot paper={paper} question={q} />
-              {fromText && s && !isChoice(s) && (
+              {fromText && s && (
                 <>
                   <h4 className="exam-review-label">Mark scheme</h4>
                   <ExamSchemeShot paper={paper} questionId={q.id} pages={s.sourcePages ?? []} />
@@ -131,7 +137,7 @@ export function ExamReview({ paper, busy, error, onBack, onPublish }: {
               )}
               {!s ? (
                 <p className="error-text">No mark scheme was matched to this question.</p>
-              ) : multipleChoice || isChoice(s) ? (
+              ) : choiceKey(s) ? (
                 <div className="choice-key" role="radiogroup" aria-label={`Correct answer for question ${q.id}`}>
                   <span>Correct answer</span>
                   {LETTERS.map((letter) => (
@@ -144,24 +150,37 @@ export function ExamReview({ paper, busy, error, onBack, onPublish }: {
                 </div>
               ) : (
                 <div className="exam-review-scheme">
-                  {fromText && (s.kind === "numeric" || s.kind === "manual") && (
-                    <fieldset className="exam-review-mode">
-                      <legend>How this part is marked</legend>
-                      <label className="check">
-                        <input type="radio" name={`mode-${q.id}`} checked={s.kind === "numeric"} onChange={() => setAutomatic(s, true)} />
-                        Automatically: a correct final answer earns all {q.marks} mark{q.marks === 1 ? "" : "s"}{q.marks > 1 ? "; any other answer comes to you" : ""}
-                      </label>
-                      <label className="check">
-                        <input type="radio" name={`mode-${q.id}`} checked={s.kind === "manual"} onChange={() => setAutomatic(s, false)} />
-                        I mark this
-                      </label>
-                    </fieldset>
-                  )}
+                  {fromText && (s.kind === "numeric" || s.kind === "exact" || s.kind === "manual") && (() => {
+                    // Parts the marker always sends to the teacher (explain,
+                    // describe; ecf or significant-figure notes) cannot be automatic.
+                    const always = reviewReason(q as never, s as never);
+                    return (
+                      <fieldset className="exam-review-mode">
+                        <legend>How this part is marked</legend>
+                        {always ? <p className="reference">Always marked by you. {always}</p> : (
+                          <>
+                            <label className="check">
+                              <input type="radio" name={`mode-${q.id}`} checked={s.kind === "numeric"} onChange={() => setMode(s, "numeric")} />
+                              Automatically, a value with its unit: a correct final answer earns all {q.marks} mark{q.marks === 1 ? "" : "s"}{q.marks > 1 ? "; any other answer comes to you" : ""}
+                            </label>
+                            <label className="check">
+                              <input type="radio" name={`mode-${q.id}`} checked={s.kind === "exact"} onChange={() => setMode(s, "exact")} />
+                              Automatically, words: an answer that matches an accepted answer earns all {q.marks} mark{q.marks === 1 ? "" : "s"}; any other answer comes to you
+                            </label>
+                          </>
+                        )}
+                        <label className="check">
+                          <input type="radio" name={`mode-${q.id}`} checked={s.kind === "manual"} onChange={() => setMode(s, "manual")} />
+                          I mark this
+                        </label>
+                      </fieldset>
+                    );
+                  })()}
                   <label className="pe-field">Expected answer
                     <input value={s.expected} onChange={(e) => setScheme(q.id, { expected: e.target.value })} />
                   </label>
                   {s.kind === "exact" && (
-                    <label className="pe-field">Accepted answers <small>one per line</small>
+                    <label className="pe-field">Accepted answers <small>one per line{fromText ? "; capitals and spacing are ignored, other wording is not" : ""}</small>
                       <textarea value={s.accepted.join("\n")} onChange={(e) => setScheme(q.id, { accepted: list(e.target.value) })} />
                     </label>
                   )}
@@ -175,7 +194,7 @@ export function ExamReview({ paper, busy, error, onBack, onPublish }: {
                       {s.numeric.range && <small>Anything from {s.numeric.range[0]} to {s.numeric.range[1]} is accepted.</small>}
                     </label>
                   )}
-                  {answerProblem(s) && <p className="error-text">{answerProblem(s)}</p>}
+                  {answerProblem(s, fromText) && <p className="error-text">{answerProblem(s, fromText)}</p>}
                   {fromText && s.points.length > 0 && (
                     <details>
                       <summary>Marking points as read ({s.points.length})</summary>
