@@ -273,9 +273,6 @@ function Logo() {
     </div>
   );
 }
-function PreviewBadge() {
-  return <span className="preview-badge">SECURE TEST LOGIN ACTIVE</span>;
-}
 
 
 function Shell({
@@ -308,7 +305,6 @@ function Shell({
         </button>
         <Logo />
         <div>
-          <PreviewBadge />
           <ThemeToggle />
           <UserButton />
           <span className={`portal-avatar ${role.toLowerCase()}`}>
@@ -332,10 +328,6 @@ function Shell({
             </div>
           </div>
           {nav}
-          <div className="portal-help">
-            <b>Need help?</b>
-            <small>Portal setup guide</small>
-          </div>
         </aside>
         <div {...drawer.scrimProps} />
         <section className="portal-main" inert={drawer.inertBehind}>{children}</section>

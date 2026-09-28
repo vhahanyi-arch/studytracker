@@ -879,15 +879,6 @@ label {
   min-height: 100vh;
   min-height: 100svh;
 }
-.preview-badge {
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.8px;
-  color: var(--fg-amber-58);
-  background: var(--bg-amber-97-d);
-  padding: 6px 9px;
-  border-radius: 20px;
-}
 .portal-choice {
   min-height: 100vh;
   min-height: 100svh;
@@ -1125,22 +1116,6 @@ label {
   place-items: center;
   font-style: normal;
   font-size: 13px;
-}
-.portal-help {
-  margin-top: auto;
-  background: var(--bg-grey-97);
-  border-radius: 9px;
-  padding: 11px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-.portal-help b {
-  font-size: 13px;
-}
-.portal-help small {
-  font-size: 13px;
-  color: var(--muted);
 }
 .portal-main {
   padding: 32px 36px 60px;
@@ -2745,9 +2720,6 @@ label {
   }
 }
 @media (max-width: 620px) {
-  .preview-badge {
-    display: none;
-  }
   .portal-top {
     padding: 0 14px;
   }
