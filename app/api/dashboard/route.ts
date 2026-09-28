@@ -1,14 +1,14 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { currentViewer } from "@/lib/session";
+import { studentNames, type UserLister } from "@/lib/students";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
 
 export async function GET() {
-  const { userId } = await auth();
-  if (!userId)
+  const session = await currentViewer();
+  if (!session)
     return NextResponse.json({ error: "Please sign in." }, { status: 401 });
 
-  const clerk = await clerkClient();
-  const viewer = await clerk.users.getUser(userId);
+  const { userId, clerk, user: viewer } = session;
   if (viewer.publicMetadata.role !== "teacher")
     return NextResponse.json({ error: "Teacher access is required." }, { status: 403 });
 
@@ -82,21 +82,9 @@ export async function GET() {
       `,
     ]);
 
-  const recentSubmissions = await Promise.all(
-    recentRows.map(async (row) => {
-      let studentName = "Student";
-      try {
-        const student = await clerk.users.getUser(String(row.student_id));
-        studentName =
-          [student.firstName, student.lastName].filter(Boolean).join(" ") ||
-          student.username ||
-          "Student";
-      } catch {
-        // Keep historical work visible if a Clerk account was removed.
-      }
-      return { ...row, student_name: studentName };
-    }),
-  );
+  // A removed Clerk account keeps its historical work visible as "Student".
+  const nameOf = await studentNames(clerk.users as unknown as UserLister, recentRows.map((row) => row.student_id));
+  const recentSubmissions = recentRows.map((row) => ({ ...row, student_name: nameOf(row.student_id) }));
 
   return NextResponse.json({
     active_students: Number(studentRows[0]?.count || 0),

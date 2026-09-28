@@ -1,13 +1,12 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { currentViewer } from "@/lib/session";
 import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
 
 async function requireUser() {
-  const { userId } = await auth();
-  if (!userId) return null;
-  const clerk = await clerkClient();
-  const user = await clerk.users.getUser(userId);
+  const session = await currentViewer();
+  if (!session) return null;
+  const { userId, user } = session;
   const role = user.publicMetadata.role;
   return role === "teacher" || role === "student" ? { userId, role } : null;
 }

@@ -1,4 +1,4 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { currentViewer } from "@/lib/session";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
 
@@ -23,10 +23,9 @@ function allowedForStage(stage: number) {
 }
 
 export async function GET(request: Request) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
-  const clerk = await clerkClient();
-  const user = await clerk.users.getUser(userId);
+  const session = await currentViewer();
+  if (!session) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
+  const { userId, user } = session;
   const role = user.publicMetadata.role;
   if (role !== "teacher" && role !== "student")
     return NextResponse.json({ error: "Access denied." }, { status: 403 });
@@ -57,10 +56,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
-  const clerk = await clerkClient();
-  const teacher = await clerk.users.getUser(userId);
+  const session = await currentViewer();
+  if (!session) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
+  const { userId, user: teacher } = session;
   if (teacher.publicMetadata.role !== "teacher")
     return NextResponse.json({ error: "Teacher access is required." }, { status: 403 });
   const body = await request.json();
@@ -71,8 +69,15 @@ export async function POST(request: Request) {
   if (chapters.length > 6)
     return NextResponse.json({ error: "Choose no more than six focus units for one week." }, { status: 400 });
   await ensureSchema();
-  await sql`DELETE FROM lower_secondary_weekly_focus WHERE teacher_id = ${userId} AND stage = ${stage}`;
-  for (const chapter of chapters)
-    await sql`INSERT INTO lower_secondary_weekly_focus (teacher_id, stage, chapter_id) VALUES (${userId}, ${stage}, ${chapter})`;
+  // Replaced as a whole, in one transaction. Each unit is stamped a
+  // microsecond after the last, so the focus keeps the order it was chosen in.
+  await sql.transaction([
+    sql`DELETE FROM lower_secondary_weekly_focus WHERE teacher_id = ${userId} AND stage = ${stage}`,
+    sql`
+      INSERT INTO lower_secondary_weekly_focus (teacher_id, stage, chapter_id, updated_at)
+      SELECT ${userId}::text, ${stage}::int, c.chapter_id, NOW() + c.n * INTERVAL '1 microsecond'
+      FROM unnest(${chapters}::text[]) WITH ORDINALITY AS c(chapter_id, n)
+    `,
+  ]);
   return NextResponse.json({ saved: true, stage, chapters });
 }

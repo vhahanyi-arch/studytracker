@@ -146,6 +146,16 @@ export async function studentsOf(store: UserStore, teacherId: string) {
   return students;
 }
 
+// Every student account on the workspace, whoever created it: the Stage 8/9
+// class picker's list. Paged, so a workspace past 100 accounts loses no one.
+export async function allStudents(store: UserStore) {
+  const students: UserRecord[] = [];
+  await eachUser(store, (user) => {
+    if (user.publicMetadata.role === "student") students.push(user);
+  });
+  return students;
+}
+
 export type StudentSummary = {
   id: string;
   name: string | null | undefined;

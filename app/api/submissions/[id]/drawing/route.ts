@@ -1,4 +1,4 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { currentViewer } from "@/lib/session";
 import { get } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
@@ -7,10 +7,9 @@ export async function GET(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const { userId } = await auth();
-  if (!userId) return new NextResponse("Please sign in.", { status: 401 });
-  const clerk = await clerkClient();
-  const user = await clerk.users.getUser(userId);
+  const session = await currentViewer();
+  if (!session) return new NextResponse("Please sign in.", { status: 401 });
+  const { userId, user } = session;
   const { id } = await context.params;
   const index = Math.max(
     0,

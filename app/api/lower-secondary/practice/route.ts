@@ -1,4 +1,5 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { currentViewer } from "@/lib/session";
+import { studentNames, type UserLister } from "@/lib/students";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
 import {
@@ -9,6 +10,7 @@ import {
   type MasteryQuestion,
 } from "@/lib/lower-secondary-question-engine";
 import { PAST_PAPER, pastPaperSet, type PastPaperRow } from "@/lib/past-paper-practice";
+import { hintsUsed as countHints, isMastered, isSessionId, markPracticeSet, nextDifficulty } from "@/lib/practice-sessions";
 
 function stageFrom(value: unknown) {
   const stage = Number(value);
@@ -56,10 +58,9 @@ async function pastPaperRows(teacherId: string, chapter: string, homeStage: numb
 }
 
 export async function GET(request: Request) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
-  const clerk = await clerkClient();
-  const user = await clerk.users.getUser(userId);
+  const session = await currentViewer();
+  if (!session) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
+  const { userId, clerk, user } = session;
   await ensureSchema();
   const url = new URL(request.url);
   const stage = stageFrom(url.searchParams.get("stage"));
@@ -91,16 +92,10 @@ export async function GET(request: Request) {
             AND status='completed'
           GROUP BY 1,2,3,4 ORDER BY last_active DESC
         `;
-    const students = await Promise.all(rows.map(async (row) => {
-      let name = "Student";
-      try {
-        const student = await clerk.users.getUser(String(row.student_id));
-        name = [student.firstName, student.lastName].filter(Boolean).join(" ") || student.username || name;
-        // A deleted or unreachable account falls back to the default name
-        // rather than failing the whole listing.
-      } catch {}
-      return { ...row, student_name: name, mastered: !row.past_paper && Number(row.strong_sets) >= 2 };
-    }));
+    // A deleted account falls back to the default name rather than failing
+    // the whole listing.
+    const nameOf = await studentNames(clerk.users as unknown as UserLister, rows.map((row) => row.student_id));
+    const students = rows.map((row) => ({ ...row, student_name: nameOf(row.student_id), mastered: !row.past_paper && isMastered(row.strong_sets) }));
     return NextResponse.json({ stage, students });
   }
 
@@ -133,7 +128,7 @@ export async function GET(request: Request) {
       : [];
     return NextResponse.json({
       stage,
-      units: units.map((row) => ({ ...row, mastered: Number(row.strong_sets) >= 2 })),
+      units: units.map((row) => ({ ...row, mastered: isMastered(row.strong_sets) })),
       past_paper: Object.fromEntries(available.map((row) => [String(row.chapter_id), Number(row.questions)])),
     });
   }
@@ -145,14 +140,13 @@ export async function GET(request: Request) {
       AND difficulty<>${PAST_PAPER}
   `;
   const row = rows[0] || {};
-  return NextResponse.json({ ...row, stage, chapter, mastered: Number(row.strong_sets) >= 2 });
+  return NextResponse.json({ ...row, stage, chapter, mastered: isMastered(row.strong_sets) });
 }
 
 export async function POST(request: Request) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
-  const clerk = await clerkClient();
-  const user = await clerk.users.getUser(userId);
+  const session = await currentViewer();
+  if (!session) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
+  const { userId, user } = session;
   if (user.publicMetadata.role !== "student")
     return NextResponse.json({ error: "Student access is required." }, { status: 403 });
   await ensureSchema();
@@ -204,7 +198,7 @@ export async function POST(request: Request) {
           AND chapter_id=${chapter} AND status='completed' AND difficulty<>${PAST_PAPER}
       `;
       const strong = Number(history[0]?.strong || 0);
-      difficulty = strong === 0 ? "foundational" : strong === 1 ? "application" : "reasoning";
+      difficulty = nextDifficulty(strong);
       questions = sourceStage === 7
         ? makeUnitQuestions("s7-integers", difficulty)
         : makeUnitQuestions(chapter, difficulty);
@@ -231,7 +225,7 @@ export async function POST(request: Request) {
   }
 
   if (body.action === "submit") {
-    const rows = await sql`
+    const rows = !isSessionId(body.id) ? [] : await sql`
       SELECT questions_json,stage,home_stage,chapter_id,difficulty
       FROM lower_secondary_practice_sessions
       WHERE id=${String(body.id || "")} AND student_id=${userId} AND status='open'
@@ -242,32 +236,32 @@ export async function POST(request: Request) {
         { status: 404 },
       );
     const questions = JSON.parse(String(rows[0].questions_json)) as MasteryQuestion[];
-    const answers = Array.isArray(body.answers) ? body.answers.map(String) : [];
-    const hints = Array.isArray(body.hints) ? body.hints.map(Boolean) : [];
-    const results = questions.map((question, index) => {
-      const accepted = Array.isArray(question.answers)
+    const { answers, results, score } = markPracticeSet(
+      questions,
+      body.answers,
+      // Sets saved before questions carried a list of answers have one.
+      (question) => Array.isArray(question.answers)
         ? question.answers
-        : [String((question as MasteryQuestion & { answer?: unknown }).answer ?? "")];
-      return {
-        templateId: question.templateId,
-        objective: question.objective,
-        difficulty: question.difficulty,
-        prompt: question.prompt, answer: answers[index] || "",
-        correct: answerMatches(answers[index], accepted),
-        expected: accepted.join(" or "), solution: question.solution,
-      };
-    });
-    const score = Math.round(results.filter((result) => result.correct).length * 100 / questions.length);
-    const hintsUsed = hints.filter(Boolean).length;
+        : [String((question as MasteryQuestion & { answer?: unknown }).answer ?? "")],
+      answerMatches,
+    );
+    const hintsUsed = countHints(body.hints);
     const id = String(body.id);
     const savedStage = Number(rows[0].stage);
     const savedChapter = String(rows[0].chapter_id);
     const pastPaper = rows[0].difficulty === PAST_PAPER;
-    await sql`
+    // Completed once: a second submit racing this one finds nothing to update.
+    const completed = await sql`
       UPDATE lower_secondary_practice_sessions
       SET answers_json=${JSON.stringify(answers)},hints_used=${hintsUsed},score=${score},
-        status='completed',completed_at=NOW() WHERE id=${id}
+        status='completed',completed_at=NOW() WHERE id=${id} AND status='open'
+      RETURNING id
     `;
+    if (!completed.length)
+      return NextResponse.json(
+        { error: "Practice session not found or already submitted." },
+        { status: 404 },
+      );
     // Mastery comes from generated sets alone, whichever kind was just marked.
     const strongRows = await sql`
       SELECT COUNT(*) FILTER (WHERE score>=80)::int strong
@@ -278,7 +272,7 @@ export async function POST(request: Request) {
     const strong = Number(strongRows[0]?.strong || 0);
     return NextResponse.json({
       score, source_stage: savedStage, hints_used: hintsUsed, past_paper: pastPaper,
-      strong_sets: strong, mastered: strong >= 2, results,
+      strong_sets: strong, mastered: isMastered(strong), results,
     });
   }
   return NextResponse.json({ error: "Unknown practice action." }, { status: 400 });

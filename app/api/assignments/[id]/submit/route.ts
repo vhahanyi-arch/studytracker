@@ -1,23 +1,31 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
 import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
 import { gradeQuestion } from "@/lib/grade-question";
+import { questionPages, wholePaperLink } from "@/lib/handwritten-pages";
+import { questionKey } from "@/lib/paper-questions";
+import { currentViewer } from "@/lib/session";
+
+// A paper is submitted once, as the student screen already shows: after that
+// it is the teacher's, and a published result is final. Checked before any
+// file is uploaded, and again by the unique key when the row is written.
+const ALREADY_SUBMITTED = "You have already submitted this paper.";
+const isUniqueViolation = (error: unknown) =>
+  (error as { code?: unknown } | null)?.code === "23505";
 
 export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const { userId } = await auth();
-  if (!userId)
+  const viewer = await currentViewer();
+  if (!viewer)
     return NextResponse.json({ error: "Please sign in." }, { status: 401 });
-  const clerk = await clerkClient();
-  const user = await clerk.users.getUser(userId);
-  if (user.publicMetadata.role !== "student")
+  if (viewer.role !== "student")
     return NextResponse.json(
       { error: "Student access is required." },
       { status: 403 },
     );
+  const { userId } = viewer;
   const { id } = await context.params;
   await ensureSchema();
   const assigned = await sql`
@@ -32,13 +40,18 @@ export async function POST(
       { error: "This paper is not assigned to your account." },
       { status: 403 },
     );
-  const questions = await sql`
-    SELECT q.id, q.label, q.marks, q.page_number, q.response_type, q.expected_answer,
-      a.subject, a.syllabus, a.paper_mode
-    FROM assignment_questions q
-    JOIN assignments a ON a.id = q.assignment_id
-    WHERE q.assignment_id = ${id} ORDER BY q.position
-  `;
+  const [previous, questions] = await Promise.all([
+    sql`SELECT 1 FROM submissions WHERE assignment_id = ${id} AND student_id = ${userId} LIMIT 1`,
+    sql`
+      SELECT q.id, q.label, q.marks, q.page_number, q.response_type, q.expected_answer,
+        a.subject, a.syllabus, a.paper_mode
+      FROM assignment_questions q
+      JOIN assignments a ON a.id = q.assignment_id
+      WHERE q.assignment_id = ${id} ORDER BY q.position
+    `,
+  ]);
+  if (previous.length)
+    return NextResponse.json({ error: ALREADY_SUBMITTED }, { status: 409 });
   const form = await request.formData();
   const answerText = String(form.get("answers") ?? "").trim();
   const handwrittenFiles = form
@@ -119,54 +132,43 @@ export async function POST(
     );
     handwrittenUrl = JSON.stringify(uploadedPages);
   }
-  for (let index = 0; index < answerRows.length; index++) {
-    const drawing = answerRows[index].drawing;
-    if (drawing?.startsWith("data:image/png;base64,")) {
-      const image = Buffer.from(drawing.split(",")[1], "base64");
+  await Promise.all(
+    answerRows.map(async (row, index) => {
+      if (!row.drawing?.startsWith("data:image/png;base64,")) return;
+      const image = Buffer.from(row.drawing.split(",")[1], "base64");
       const blob = await put(
         `submissions/${id}/${userId}/drawing-${index + 1}-${Date.now()}.png`,
         image,
         { access: "private", addRandomSuffix: true, contentType: "image/png" },
       );
-      answerRows[index].drawingUrl = blob.url;
-      delete answerRows[index].drawing;
-    }
-  }
+      row.drawingUrl = blob.url;
+      delete row.drawing;
+    }),
+  );
+  const answerFor = (label: unknown) =>
+    answerRows.find((row) => questionKey(row.question) === questionKey(label));
   if (uploadedPages.length && questions.length) {
-    const labelKey = (value: unknown) => String(value || "").toLowerCase().replace(/\s+/g, "");
     if (handwrittenMode === "question_specific" && handwrittenAssignments.length) {
       for (const assignmentLink of handwrittenAssignments) {
-        const question = questions.find((item) => labelKey(item.label) === labelKey(assignmentLink.question));
+        const question = questions.find((item) => questionKey(item.label) === questionKey(assignmentLink.question));
         if (!question) continue;
         const fileIndex = Math.max(0, Math.min(uploadedPages.length - 1, Number(assignmentLink.fileIndex) || 0));
-        const existing = answerRows.find((row) => labelKey(row.question) === labelKey(question.label));
         const pageLink = {
           handwrittenFileIndex: fileIndex,
           handwrittenPdfPage: uploadedPages[fileIndex]?.type === "application/pdf" ? 1 : undefined,
           handwrittenPageAssigned: true,
           handwrittenUploadMode: "question_specific" as const,
         };
+        const existing = answerFor(question.label);
         if (existing) Object.assign(existing, pageLink);
         else answerRows.push({ question: String(question.label), answer: "", ...pageLink });
       }
     } else {
-      const detectedPages = [...new Set(questions.map((question) => Number(question.page_number || 1)))].sort((a, b) => a - b);
+      const pages = questionPages(questions);
       const singlePdf = uploadedPages.length === 1 && uploadedPages[0].type === "application/pdf";
       for (const question of questions) {
-        const paperPage = Math.max(1, Number(question.page_number || 1));
-        const compactPageIndex = detectedPages.indexOf(paperPage);
-        const fileIndex = singlePdf
-          ? 0
-          : uploadedPages.length === detectedPages.length && compactPageIndex >= 0
-            ? compactPageIndex
-            : Math.min(uploadedPages.length - 1, paperPage - 1);
-        const existing = answerRows.find((row) => labelKey(row.question) === labelKey(question.label));
-        const pageLink = {
-          handwrittenFileIndex: Math.max(0, fileIndex),
-          handwrittenPdfPage: singlePdf ? paperPage : undefined,
-          handwrittenPageAssigned: true,
-          handwrittenUploadMode: "whole_paper" as const,
-        };
+        const pageLink = wholePaperLink(question.page_number, pages, uploadedPages.length, singlePdf);
+        const existing = answerFor(question.label);
         if (existing) Object.assign(existing, pageLink);
         else answerRows.push({ question: String(question.label), answer: "", ...pageLink });
       }
@@ -175,58 +177,48 @@ export async function POST(
   const storedAnswers = answerRows.length
     ? JSON.stringify(answerRows)
     : answerText;
-  const submissionId = crypto.randomUUID();
-  const saved = await sql`
-    INSERT INTO submissions (id, assignment_id, student_id, answer_text, handwritten_url, status)
-    VALUES (${submissionId}, ${id}, ${userId}, ${storedAnswers || null}, ${handwrittenUrl}, 'awaiting_review')
-    ON CONFLICT (assignment_id, student_id) DO UPDATE SET
-      answer_text = EXCLUDED.answer_text,
-      handwritten_url = COALESCE(EXCLUDED.handwritten_url, submissions.handwritten_url),
-      status = 'awaiting_review',
-      total_final = NULL,
-      teacher_feedback = NULL,
-      published_at = NULL,
-      submitted_at = NOW()
-    RETURNING id
-  `;
-  const savedId = String(saved[0].id);
-  const normalize = (value: string) =>
-    value.toLowerCase().replace(/\s+/g, "").replace(/,/g, ".");
-  await sql`DELETE FROM submission_marks WHERE submission_id = ${savedId}`;
-  let proposedTotal = 0;
-  let maximumTotal = 0;
   const multipleChoice = String(questions[0]?.paper_mode) === "multiple_choice";
-  for (const question of questions) {
-    const answer = answerRows.find(
-      (row) =>
-        normalize(String(row.question || "")) ===
-        normalize(String(question.label)),
-    );
-    const graded = gradeQuestion(question, answer);
-    const { proposed, confidence, rationale, maximum } = graded;
-    if (proposed !== null) {
-      proposedTotal += proposed;
-    }
-    maximumTotal += maximum;
-    await sql`
-      INSERT INTO submission_marks
-      (submission_id, question_id, proposed_mark, final_mark, confidence, rationale)
-      VALUES (${savedId}, ${question.id}, ${proposed}, ${multipleChoice ? proposed : null}, ${multipleChoice ? "high" : confidence}, ${rationale})
-    `;
+  const graded = questions.map((question) => ({
+    questionId: String(question.id),
+    ...gradeQuestion(question, answerFor(question.label)),
+  }));
+  const proposedTotal = graded.reduce((total, mark) => total + (mark.proposed ?? 0), 0);
+  const maximumTotal = graded.reduce((total, mark) => total + mark.maximum, 0);
+  // Multiple-choice marks are final at once, and the result is published.
+  const submissionId = crypto.randomUUID();
+  try {
+    await sql.transaction([
+      sql`
+        INSERT INTO submissions (id, assignment_id, student_id, answer_text, handwritten_url, status, total_proposed, total_final, published_at)
+        VALUES (${submissionId}, ${id}, ${userId}, ${storedAnswers || null}, ${handwrittenUrl},
+          ${multipleChoice ? "published" : "awaiting_review"}, ${proposedTotal},
+          ${multipleChoice ? proposedTotal : null}, ${multipleChoice ? new Date().toISOString() : null})
+      `,
+      sql`
+        INSERT INTO submission_marks
+        (submission_id, question_id, proposed_mark, final_mark, confidence, rationale)
+        SELECT ${submissionId}::uuid, m.question_id, m.proposed, m.final, m.confidence, m.rationale
+        FROM unnest(
+          ${graded.map((mark) => mark.questionId)}::uuid[],
+          ${graded.map((mark) => mark.proposed)}::int[],
+          ${graded.map((mark) => (multipleChoice ? mark.proposed : null))}::int[],
+          ${graded.map((mark) => (multipleChoice ? "high" : mark.confidence))}::text[],
+          ${graded.map((mark) => mark.rationale)}::text[]
+        ) AS m(question_id, proposed, final, confidence, rationale)
+      `,
+    ]);
+  } catch (error) {
+    // A second tab submitted between the check above and this write.
+    if (isUniqueViolation(error))
+      return NextResponse.json({ error: ALREADY_SUBMITTED }, { status: 409 });
+    throw error;
   }
-  if (multipleChoice) {
-    await sql`
-      UPDATE submissions SET total_proposed = ${proposedTotal}, total_final = ${proposedTotal},
-        status = 'published', published_at = NOW()
-      WHERE id = ${savedId}
-    `;
+  if (multipleChoice)
     return NextResponse.json({
       submitted: true,
       status: "published",
       total: proposedTotal,
       maximum: maximumTotal,
     });
-  }
-  await sql`UPDATE submissions SET total_proposed = ${proposedTotal} WHERE id = ${savedId}`;
   return NextResponse.json({ submitted: true, status: "awaiting_review" });
 }

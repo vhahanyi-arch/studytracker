@@ -35,3 +35,10 @@ export function displayCrop(question: PaperQuestion) {
   };
 }
 
+
+// How a question label is matched to a student's answer: case, spaces and a
+// decimal comma do not matter ("2 (b)" is "2(b)", "1,5" is "1.5"). Saving,
+// re-marking and the marking queue all match with this one key.
+export function questionKey(label: unknown) {
+  return String(label || "").toLowerCase().replace(/\s+/g, "").replace(/,/g, ".");
+}

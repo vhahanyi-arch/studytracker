@@ -1,4 +1,7 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { currentViewer } from "@/lib/session";
+import { studentNames, type UserLister } from "@/lib/students";
+// The same link the Exam papers use, so the two can never disagree.
+import { teacherFor } from "@/lib/physics-exam-repository";
 import { NextResponse } from "next/server";
 import { studentsOf, type UserStore } from "@/lib/auth-rules";
 import { ensureSchema, sql } from "@/lib/db";
@@ -9,33 +12,17 @@ import {
   supportsPhysicsUnit,
   type PhysicsQuestion,
 } from "@/lib/physics-question-engine";
+import { hintsUsed as countHints, isMastered, isSessionId, markPracticeSet, nextDifficulty } from "@/lib/practice-sessions";
 
 function levelFrom(value: unknown) {
   const level = String(value || "");
   return level === "as" ? "as" : "igcse";
 }
 
-async function teacherFor(studentId: string) {
-  const enrollment = await sql`
-    SELECT teacher_id FROM lower_secondary_enrollments
-    WHERE student_id=${studentId}
-    ORDER BY enrolled_at DESC LIMIT 1
-  `;
-  if (enrollment.length) return String(enrollment[0].teacher_id);
-  const linked = await sql`
-    SELECT a.teacher_id FROM assignment_students ast
-    JOIN assignments a ON a.id=ast.assignment_id
-    WHERE ast.student_id=${studentId}
-    ORDER BY ast.assigned_at DESC LIMIT 1
-  `;
-  return linked.length ? String(linked[0].teacher_id) : null;
-}
-
 export async function GET(request: Request) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
-  const clerk = await clerkClient();
-  const user = await clerk.users.getUser(userId);
+  const session = await currentViewer();
+  if (!session) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
+  const { userId, clerk, user } = session;
   await ensureSchema();
   const url = new URL(request.url);
   const level = levelFrom(url.searchParams.get("level"));
@@ -56,19 +43,12 @@ export async function GET(request: Request) {
       GROUP BY student_id,chapter_id
       ORDER BY last_active DESC
     `;
-    const studentIds = Array.from(new Set(rows.map((row) => String(row.student_id))));
-    const names: Record<string,string> = {};
-    await Promise.all(studentIds.map(async (id) => {
-      try {
-        const student = await clerk.users.getUser(id);
-        names[id] = student.fullName || student.username || "Student";
-      } catch { names[id] = "Student"; }
-    }));
+    const nameOf = await studentNames(clerk.users as unknown as UserLister, rows.map((row) => row.student_id));
     return NextResponse.json({
       level,
       students: rows.map((row) => ({
-        ...row, student_name: names[String(row.student_id)] || "Student",
-        mastered: Number(row.strong_sets) >= 2,
+        ...row, student_name: nameOf(row.student_id),
+        mastered: isMastered(row.strong_sets),
       })),
     });
   }
@@ -88,7 +68,7 @@ export async function GET(request: Request) {
     `;
     return NextResponse.json({
       level,
-      units: units.map((row) => ({ ...row, mastered: Number(row.strong_sets) >= 2 })),
+      units: units.map((row) => ({ ...row, mastered: isMastered(row.strong_sets) })),
     });
   }
   const chapter = String(chapterParam);
@@ -99,14 +79,13 @@ export async function GET(request: Request) {
     WHERE student_id=${userId} AND level=${level} AND chapter_id=${chapter} AND status='completed'
   `;
   const row = rows[0] || {};
-  return NextResponse.json({ ...row, level, chapter, mastered: Number(row.strong_sets) >= 2 });
+  return NextResponse.json({ ...row, level, chapter, mastered: isMastered(row.strong_sets) });
 }
 
 export async function POST(request: Request) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
-  const clerk = await clerkClient();
-  const user = await clerk.users.getUser(userId);
+  const session = await currentViewer();
+  if (!session) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
+  const { userId, user } = session;
   if (user.publicMetadata.role !== "student")
     return NextResponse.json({ error: "Student access is required." }, { status: 403 });
   await ensureSchema();
@@ -127,7 +106,7 @@ export async function POST(request: Request) {
         AND chapter_id=${chapter} AND status='completed'
     `;
     const strong = Number(history[0]?.strong || 0);
-    const difficulty = strong === 0 ? "foundational" : strong === 1 ? "application" : "reasoning";
+    const difficulty = nextDifficulty(strong);
     const questions = makePhysicsQuestions(level, chapter, difficulty);
     const id = crypto.randomUUID();
     const teacherId = await teacherFor(userId);
@@ -150,7 +129,7 @@ export async function POST(request: Request) {
   }
 
   if (body.action === "submit") {
-    const rows = await sql`
+    const rows = !isSessionId(body.id) ? [] : await sql`
       SELECT questions_json,level,chapter_id
       FROM physics_practice_sessions
       WHERE id=${String(body.id || "")} AND student_id=${userId} AND status='open'
@@ -161,29 +140,23 @@ export async function POST(request: Request) {
         { status: 404 },
       );
     const questions = JSON.parse(String(rows[0].questions_json)) as PhysicsQuestion[];
-    const answers = Array.isArray(body.answers) ? body.answers.map(String) : [];
-    const hints = Array.isArray(body.hints) ? body.hints.map(Boolean) : [];
-    const results = questions.map((question, index) => {
-      const accepted = question.answers;
-      return {
-        templateId: question.templateId,
-        objective: question.objective,
-        difficulty: question.difficulty,
-        prompt: question.prompt, answer: answers[index] || "",
-        correct: answerMatches(answers[index], accepted),
-        expected: accepted.join(" or "), solution: question.solution,
-      };
-    });
-    const score = Math.round(results.filter((result) => result.correct).length * 100 / questions.length);
-    const hintsUsed = hints.filter(Boolean).length;
+    const { answers, results, score } = markPracticeSet(questions, body.answers, (question) => question.answers, answerMatches);
+    const hintsUsed = countHints(body.hints);
     const id = String(body.id);
     const savedLevel = String(rows[0].level);
     const savedChapter = String(rows[0].chapter_id);
-    await sql`
+    // Completed once: a second submit racing this one finds nothing to update.
+    const completed = await sql`
       UPDATE physics_practice_sessions
       SET answers_json=${JSON.stringify(answers)},hints_used=${hintsUsed},score=${score},
-        status='completed',completed_at=NOW() WHERE id=${id}
+        status='completed',completed_at=NOW() WHERE id=${id} AND status='open'
+      RETURNING id
     `;
+    if (!completed.length)
+      return NextResponse.json(
+        { error: "Practice session not found or already submitted." },
+        { status: 404 },
+      );
     const strongRows = await sql`
       SELECT COUNT(*) FILTER (WHERE score>=80)::int strong
       FROM physics_practice_sessions
@@ -193,7 +166,7 @@ export async function POST(request: Request) {
     const strong = Number(strongRows[0]?.strong || 0);
     return NextResponse.json({
       score, level: savedLevel, hints_used: hintsUsed,
-      strong_sets: strong, mastered: strong >= 2, results,
+      strong_sets: strong, mastered: isMastered(strong), results,
     });
   }
   return NextResponse.json({ error: "Unknown practice action." }, { status: 400 });

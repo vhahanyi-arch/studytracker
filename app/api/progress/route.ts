@@ -1,4 +1,4 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { currentViewer } from "@/lib/session";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
 import { PAST_PAPER } from "@/lib/past-paper-practice";
@@ -37,10 +37,9 @@ const toSession = (source: "maths" | "physics") => (row: Row): PracticeSession =
 });
 
 export async function GET() {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
-  const clerk = await clerkClient();
-  const user = await clerk.users.getUser(userId);
+  const session = await currentViewer();
+  if (!session) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
+  const { userId, user } = session;
   if (user.publicMetadata.role !== "student")
     return NextResponse.json({ error: "Access denied." }, { status: 403 });
   await ensureSchema();

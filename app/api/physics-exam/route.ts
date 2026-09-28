@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { auth, clerkClient } from '@clerk/nextjs/server';
+import { currentViewer } from '@/lib/session';
+import { displayName } from '@/lib/students';
 import { sql, ensureSchema } from '@/lib/db';
 import {
   papersForTeacher, papersForStudent, getPaperWithOwner, insertPaper, updatePaper,
@@ -46,10 +47,9 @@ const withScreenshots = (papers: Paper[]) =>
   addCurrentScreenshots(papers, CROPS_VERSION, (paper) => screenshotsFor(paper.files, paper.questions), setOutdatedPaperCrops);
 
 export async function GET() {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: 'Please sign in.' }, { status: 401 });
-  const clerk = await clerkClient();
-  const user = await clerk.users.getUser(userId);
+  const session = await currentViewer();
+  if (!session) return NextResponse.json({ error: 'Please sign in.' }, { status: 401 });
+  const { userId, user } = session;
   await ensureSchema();
   try {
     if (user.publicMetadata.role === 'teacher') {
@@ -72,10 +72,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const arrived = Date.now();
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: 'Please sign in.' }, { status: 401 });
-  const clerk = await clerkClient();
-  const user = await clerk.users.getUser(userId);
+  const session = await currentViewer();
+  if (!session) return NextResponse.json({ error: 'Please sign in.' }, { status: 401 });
+  const { userId, user } = session;
   const role = user.publicMetadata.role;
   await ensureSchema();
   try {
@@ -254,7 +253,7 @@ export async function POST(request: Request) {
       const wholePaperFiles = input.wholePaperFiles?.length
         ? await Promise.all(input.wholePaperFiles.map(async (id) => (await getFile(id)).meta))
         : undefined;
-      const submission = makeSubmission(owner.paper, user.fullName || user.username || 'Student', input.selfPractice || practised, answers, wholePaperFiles);
+      const submission = makeSubmission(owner.paper, displayName(user), input.selfPractice || practised, answers, wholePaperFiles);
       await insertSubmission(userId, submission);
       // Submitted, so the unfinished copy has served its purpose.
       await deleteExamDraft(userId, input.paperId).catch(() => undefined);

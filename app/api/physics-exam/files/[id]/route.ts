@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { currentViewer } from "@/lib/session";
 import { sql, ensureSchema } from "@/lib/db";
 import { getFile } from "@/lib/physics-exam-storage";
 import { teacherFor } from "@/lib/physics-exam-repository";
@@ -54,13 +54,12 @@ async function canAccessFile(userId: string, role: unknown, fileId: string): Pro
 }
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
+  const session = await currentViewer();
+  if (!session) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
   const { id } = await params;
   if (!/^[a-f0-9-]{36}$/.test(id)) return NextResponse.json({ error: "Invalid file ID." }, { status: 400 });
   await ensureSchema();
-  const clerk = await clerkClient();
-  const user = await clerk.users.getUser(userId);
+  const { userId, user } = session;
   try {
     const allowed = await canAccessFile(userId, user.publicMetadata.role, id);
     if (!allowed) return NextResponse.json({ error: "File not found." }, { status: 404 });

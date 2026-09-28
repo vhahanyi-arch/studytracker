@@ -39,6 +39,9 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
+      '@electric-sql/pglite':
+        specifier: 0.3.16
+        version: 0.3.16
       '@tailwindcss/postcss':
         specifier: 4.2.1
         version: 4.2.1
@@ -101,6 +104,9 @@ packages:
   '@clerk/types@4.101.27':
     resolution: {integrity: sha512-nTZ9XCvjY6X13itkakAw3RRB2hgATAGWR57Mjk6+Ov0cyhs5qFN7oYQcs6NLd40wP8Zuo7dI9QqaprlB+LHYUA==}
     engines: {node: '>=18.17.0'}
+
+  '@electric-sql/pglite@0.3.16':
+    resolution: {integrity: sha512-mZkZfOd9OqTMHsK+1cje8OSzfAQcpD7JmILXTl5ahdempjUDdmg4euf1biDex5/LfQIDJ3gvCu6qDgdnDxfJmA==}
 
   '@emnapi/runtime@1.11.3':
     resolution: {integrity: sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA==}
@@ -1128,6 +1134,8 @@ snapshots:
     transitivePeerDependencies:
       - react
       - react-dom
+
+  '@electric-sql/pglite@0.3.16': {}
 
   '@emnapi/runtime@1.11.3':
     dependencies:

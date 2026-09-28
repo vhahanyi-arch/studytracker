@@ -1,12 +1,11 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { currentViewer } from "@/lib/session";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
 
 async function requireAssignedStudent(assignmentId: string) {
-  const { userId } = await auth();
-  if (!userId) return null;
-  const clerk = await clerkClient();
-  const user = await clerk.users.getUser(userId);
+  const session = await currentViewer();
+  if (!session) return null;
+  const { userId, user } = session;
   if (user.publicMetadata.role !== "student") return null;
   await ensureSchema();
   const access = await sql`

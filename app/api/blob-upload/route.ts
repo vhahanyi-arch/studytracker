@@ -1,4 +1,4 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { currentViewer } from "@/lib/session";
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { NextResponse } from "next/server";
 
@@ -9,10 +9,9 @@ export async function POST(request: Request) {
       request,
       body,
       onBeforeGenerateToken: async () => {
-        const { userId } = await auth();
-        if (!userId) throw new Error("Please sign in.");
-        const clerk = await clerkClient();
-        const user = await clerk.users.getUser(userId);
+        const session = await currentViewer();
+        if (!session) throw new Error("Please sign in.");
+        const { userId, user } = session;
         if (user.publicMetadata.role !== "teacher")
           throw new Error("Teacher access is required.");
         return {

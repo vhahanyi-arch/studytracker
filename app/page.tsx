@@ -37,7 +37,7 @@ import { RevisionNotes } from '@/components/RevisionNotes';
 import { DrawingPad } from '@/components/DrawingPad';
 import { QuestionImage } from '@/components/QuestionImage';
 import { PdfAnnotator } from '@/components/PdfAnnotator';
-import { type PaperQuestion, displayCrop } from '@/lib/paper-questions';
+import { type PaperQuestion, displayCrop, questionKey } from '@/lib/paper-questions';
 import { ExamReview, type ReviewPaper, type Extraction } from '@/components/exam/ExamReview';
 import { ExamAttempt, type AttemptPaper } from '@/components/exam/ExamAttempt';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -4725,9 +4725,7 @@ function Submissions() {
   if (active) {
     const answerFor = (label: string) =>
       active.answers.find(
-        (answer: any) =>
-          String(answer.question).replace(/\s/g, "").toLowerCase() ===
-          String(label).replace(/\s/g, "").toLowerCase(),
+        (answer: any) => questionKey(answer.question) === questionKey(label),
       );
     const confirmedCount = active.marks.filter(
       (mark: any) => confirmedMarks[String(mark.question_id)],

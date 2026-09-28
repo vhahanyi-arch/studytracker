@@ -1,4 +1,6 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
+import { currentViewer } from "@/lib/session";
+import { accountsById, type UserLister } from "@/lib/students";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
 
@@ -35,11 +37,10 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const { userId } = await auth();
-  if (!userId)
+  const session = await currentViewer();
+  if (!session)
     return NextResponse.json({ error: "Please sign in." }, { status: 401 });
-  const clerk = await clerkClient();
-  const teacher = await clerk.users.getUser(userId);
+  const { userId, clerk, user: teacher } = session;
   if (teacher.publicMetadata.role !== "teacher")
     return NextResponse.json(
       { error: "Teacher access is required." },
@@ -60,16 +61,21 @@ export async function POST(
       { error: "Assignment not found." },
       { status: 404 },
     );
-  const selected = await Promise.all(studentIds.map(async (studentId) => {
-    try { return await clerk.users.getUser(studentId); } catch { return null; }
-  }));
-  if (selected.some((student) => student?.publicMetadata.role !== "student"))
+  const accounts = await accountsById(clerk.users as unknown as UserLister, studentIds);
+  if (studentIds.some((studentId) => accounts.get(studentId)?.publicMetadata?.role !== "student"))
     return NextResponse.json(
       { error: "Every selected account must be a student." },
       { status: 400 },
     );
-  await sql`DELETE FROM assignment_students WHERE assignment_id = ${id}`;
-  for (const studentId of studentIds)
-    await sql`INSERT INTO assignment_students (assignment_id, student_id) VALUES (${id}, ${studentId})`;
+  // Replaced as a whole, in one transaction. Each row is stamped a microsecond
+  // after the last, so the roster keeps the order the teacher chose.
+  await sql.transaction([
+    sql`DELETE FROM assignment_students WHERE assignment_id = ${id}`,
+    sql`
+      INSERT INTO assignment_students (assignment_id, student_id, assigned_at)
+      SELECT ${id}::uuid, s.student_id, NOW() + s.n * INTERVAL '1 microsecond'
+      FROM unnest(${studentIds}::text[]) WITH ORDINALITY AS s(student_id, n)
+    `,
+  ]);
   return NextResponse.json({ assigned: studentIds.length });
 }

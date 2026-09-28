@@ -313,6 +313,19 @@ async function applySchema() {
       PRIMARY KEY (student_id, paper_id)
     )
   `;
+  // Indexes for the columns the screens filter by (schema 4). The composite
+  // primary keys lead with the other column, so these lookups scanned the
+  // table. submission_marks.question_id also serves the cascade when a
+  // question is deleted.
+  await sql`CREATE INDEX IF NOT EXISTS assignments_teacher_idx ON assignments (teacher_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS assignment_students_student_idx ON assignment_students (student_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS submissions_student_idx ON submissions (student_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS submission_marks_question_idx ON submission_marks (question_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS lower_secondary_enrollments_student_idx ON lower_secondary_enrollments (student_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS lower_secondary_practice_student_idx ON lower_secondary_practice_sessions (student_id, stage, chapter_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS lower_secondary_practice_teacher_idx ON lower_secondary_practice_sessions (teacher_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS physics_practice_student_idx ON physics_practice_sessions (student_id, level, chapter_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS physics_practice_teacher_idx ON physics_practice_sessions (teacher_id)`;
 }
 
 export async function ensureSchema() {

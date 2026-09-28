@@ -1,4 +1,4 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { currentViewer } from "@/lib/session";
 import { get, put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
@@ -7,11 +7,10 @@ export async function GET(
   _request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const { userId } = await auth();
-  if (!userId)
+  const session = await currentViewer();
+  if (!session)
     return NextResponse.json({ error: "Please sign in." }, { status: 401 });
-  const clerk = await clerkClient();
-  const user = await clerk.users.getUser(userId);
+  const { userId, user } = session;
   if (user.publicMetadata.role !== "teacher")
     return NextResponse.json(
       { error: "Teacher access only." },
@@ -42,11 +41,10 @@ export async function PUT(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const { userId } = await auth();
-  if (!userId)
+  const session = await currentViewer();
+  if (!session)
     return NextResponse.json({ error: "Please sign in." }, { status: 401 });
-  const clerk = await clerkClient();
-  const user = await clerk.users.getUser(userId);
+  const { userId, user } = session;
   if (user.publicMetadata.role !== "teacher")
     return NextResponse.json(
       { error: "Teacher access only." },

@@ -1,14 +1,15 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
+import { currentViewer } from "@/lib/session";
+import { displayName } from "@/lib/students";
 import { buildProgressReportPdf } from "@/lib/report-pdf";
 
 export async function GET(
   _request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
+  const session = await currentViewer();
+  if (!session) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
   const { id } = await context.params;
   await ensureSchema();
   const rows = await sql`
@@ -20,8 +21,7 @@ export async function GET(
   `;
   if (!rows.length) return NextResponse.json({ error: "Report not found." }, { status: 404 });
   const submission = rows[0];
-  const clerk = await clerkClient();
-  const viewer = await clerk.users.getUser(userId);
+  const { userId, clerk, user: viewer } = session;
   const isTeacher = viewer.publicMetadata.role === "teacher" && String(submission.teacher_id) === userId;
   const isStudent = viewer.publicMetadata.role === "student" && String(submission.student_id) === userId;
   if (!isTeacher && !isStudent)
@@ -76,7 +76,7 @@ export async function GET(
     };
   });
   const maximum = questions.reduce((total, question) => total + Number(question.marks || 0), 0);
-  const studentName = [student.firstName, student.lastName].filter(Boolean).join(" ") || student.username || "Student";
+  const studentName = displayName(student);
   const pdf = buildProgressReportPdf({
     student: studentName,
     title: String(submission.title),
