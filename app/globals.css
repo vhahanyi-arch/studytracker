@@ -6189,6 +6189,7 @@ summary:focus-visible,
 .exam-review-scheme { display: grid; gap: 10px; }
 .exam-review-raw { white-space: pre-wrap; font-size: var(--t-small); color: var(--muted); }
 .exam-review-points { margin: 0; padding-left: 1.2em; }
+.exam-review-warning { margin: 0; padding: 8px 12px; border-radius: 8px; background: var(--bg-amber-97); color: var(--fg-amber-49-b); font-size: var(--t-small); }
 .exam-review-issues { margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: var(--bg-amber-97); color: var(--fg-amber-49-b); }
 .exam-review-issues.resolved { opacity: 0.6; }
 .exam-review-issues p { margin: 0 0 6px; }

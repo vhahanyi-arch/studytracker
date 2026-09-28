@@ -2,7 +2,7 @@ import {test} from 'node:test';import assert from 'node:assert/strict';
 import {extractPdfPages} from '@/lib/server-pdf';
 import {structuredPaper,finalAnswer,schemeMarks,schemeFor,schemeCrop,roundingTolerance} from '@/lib/structured-paper';
 import {studentView} from '@/lib/exam-paper-access';
-import {acceptedFromScheme} from '@/lib/accepted-answers';
+import {acceptedFromScheme,suggestedAccepted,wordAnswerWarning} from '@/lib/accepted-answers';
 import {checkPartsFound,paperIdentity} from '@/lib/exam-paper-layout';
 import {markAnswer,compareNumeric} from '@/lib/physics-marking-engine';
 import type {SchemeRow} from '@/lib/cambridge-analysis';
@@ -237,6 +237,25 @@ test('a word answer that matches an accepted answer scores; any other goes to th
  for(const answer of ['Rate of change of velocity.','change in velocity / time taken','  CHANGE IN VELOCITY / TIME '])
   assert.deepEqual([mark(answer).status,mark(answer).proposed],['proposed',1],answer);
  assert.equal(mark('it is how fast velocity changes').status,'needs_review');
+});
+
+// On the first published paper, scheme sentences, equations and working lines
+// were set as word answers; no student types those exactly (2026-09-28).
+test('a short term or phrase gets no warning',()=>{
+ for(const list of [['Hooke\'s law'],['light-dependent resistor','LDR'],['work / time','work done / time taken'],['area under the graph']])
+  assert.equal(wordAnswerWarning(list),null,list.join(' | '));
+});
+test('a sentence, an equation, a working line or a value is warned about, naming it',()=>{
+ const sentence=wordAnswerWarning(['speed and mass identified as scalars and force identified as a vector']);
+ assert.match(sentence!,/longer than 6 words/);assert.match(sentence!,/come to you/);
+ for(const list of [['P = V I and 1 / R = 1 / R1 + 1 / R2'],['= 3 × 2.5 × 10 4 = 7.5 × 10 4'],['speed = 3.1 × 10 5 m s – 1']])
+  assert.match(wordAnswerWarning(list)!,/calculation or equation.*a value with its unit/,list[0]);
+ assert.match(wordAnswerWarning(['torque','the resultant force on the body in every direction is zero'])!,/"the resultant force on the body in every/);
+});
+test('only short answers are pre-filled; a scheme sentence or equation is not',()=>{
+ assert.deepEqual(suggestedAccepted('light-dependent resistor OR LDR'),['light-dependent resistor','LDR']);
+ assert.deepEqual(suggestedAccepted('speed and mass identified as scalars and force identified as a vector'),[]);
+ assert.deepEqual(suggestedAccepted('I = I1 + I2 + I3 or current splits'),['current splits']);
 });
 
 // ── Units the schemes use ──────────────────────────────────────────────────

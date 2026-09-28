@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { ExamQuestionShot, type QuestionCrop } from "./ExamQuestionShot";
 import { ExamSchemeShot, type SchemeCrop } from "./ExamSchemeShot";
 import { parseQuantity, roundingTolerance, reviewReason } from "@/lib/physics-marking-engine";
-import { acceptedFromScheme } from "@/lib/accepted-answers";
+import { suggestedAccepted, wordAnswerWarning } from "@/lib/accepted-answers";
 
 // The teacher's check of an extracted paper before students see it: each
 // question as printed beside what will be used to mark it. Replaces a raw
@@ -86,7 +86,7 @@ export function ExamReview({ paper, busy, error, onBack, onPublish }: {
   // Switching keeps what was set, so switching back restores it.
   const setMode = (s: Scheme, mode: "numeric" | "exact" | "manual") => setScheme(s.questionId,
     mode === "numeric" ? { kind: "numeric", finalAnswerAwardsAll: true, numeric: s.numeric ?? ruleFor([]) }
-      : mode === "exact" ? { kind: "exact", finalAnswerAwardsAll: false, accepted: s.kind === "exact" ? s.accepted : acceptedFromScheme(s.expected), numeric: s.numeric?.accepted.length ? s.numeric : null }
+      : mode === "exact" ? { kind: "exact", finalAnswerAwardsAll: false, accepted: s.kind === "exact" ? s.accepted : suggestedAccepted(s.expected), numeric: s.numeric?.accepted.length ? s.numeric : null }
       : { kind: "manual", finalAnswerAwardsAll: false, numeric: s.numeric?.accepted.length ? s.numeric : null });
   const toggleChecked = (id: string) => setChecked((all) => {
     const next = new Set(all);
@@ -186,6 +186,9 @@ export function ExamReview({ paper, busy, error, onBack, onPublish }: {
                     <label className="pe-field">Accepted answers <small>one per line{fromText ? "; capitals and spacing are ignored, other wording is not" : ""}</small>
                       <textarea value={s.accepted.join("\n")} onChange={(e) => setScheme(q.id, { accepted: list(e.target.value) })} />
                     </label>
+                  )}
+                  {fromText && s.kind === "exact" && wordAnswerWarning(s.accepted) && (
+                    <p className="exam-review-warning" role="note">{wordAnswerWarning(s.accepted)}</p>
                   )}
                   {s.kind === "numeric" && s.numeric && (
                     <label className="pe-field">Accepted values, with units <small>one per line</small>
