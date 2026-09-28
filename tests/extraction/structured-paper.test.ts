@@ -75,6 +75,27 @@ test('a paper read without AI publishes, and a student\'s answers are marked or 
  assert.equal(grade('2(b)(i)').status,'needs_review','wrong on a two-mark part: the teacher decides the method mark');
  for(const id of ['1(a)','2(a)','3(a)','3(b)'])assert.equal(grade(id).status,'needs_review',id);
 });
+// Publishing refused with a raw schema error (2026-09-28): two parts switched
+// to "a value with its unit" and then to words kept an empty value list.
+test('a part switched to words after trying a value still publishes',async()=>{
+ const {extraction,crops}=await read();
+ const empty={accepted:[],unitRequired:false,relativeTolerance:0,absoluteTolerance:0,range:null};
+ const edited={...extraction,schemes:extraction.schemes.map(s=>s.questionId==='2(a)'?{...s,kind:'exact' as const,accepted:['work done per unit time'],numeric:empty}:s)};
+ const draft:Paper={...extraction,id:'p',title:'t',status:'draft',files:[],revision:0,createdAt:'',kind:'structured',reader:'text',crops};
+ const paper=approvePaper(draft,edited);
+ const s=paper.schemes.find(x=>x.questionId==='2(a)')!;
+ assert.deepEqual([paper.status,s.kind,s.numeric],['ready','exact',null]);
+});
+test('a paper that cannot be published says which part and why, in words',async()=>{
+ const {extraction}=await read();
+ const empty={accepted:[],unitRequired:false,relativeTolerance:0,absoluteTolerance:0,range:null};
+ const edited={...extraction,schemes:extraction.schemes.map(s=>s.questionId==='1(b)'?{...s,numeric:empty}:s)};
+ const draft:Paper={...extraction,id:'p',title:'t',status:'draft',files:[],revision:0,createdAt:'',kind:'structured',reader:'text'};
+ assert.throws(()=>approvePaper(draft,edited),(e:unknown)=>{
+  const message=(e as Error).message;
+  return /Part 1\(b\) has no accepted value/.test(message)&&!message.includes('"code"');
+ });
+});
 test('practising, a student can check an answer: right scores at once, anything else says the teacher marks it',async()=>{
  const {extraction,crops}=await read();
  const paper:Paper={...extraction,id:'p',title:'t',status:'ready',files:[],revision:1,createdAt:'',kind:'structured',reader:'text',crops};

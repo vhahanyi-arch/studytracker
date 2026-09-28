@@ -2,8 +2,30 @@ import { z } from 'zod';
 import { ExtractionSchema, type Paper, type Submission, type Answer, type StoredFile } from './physics-extraction-schema';
 import { validateExtraction } from './physics-exam-extraction-validation';
 import { markAnswer } from './physics-marking-engine';
-export function approvePaper(paper:Paper,raw:unknown):Paper {
- const extraction=validateExtraction(ExtractionSchema.parse(raw));
+// A part marked by the teacher or by words may carry an empty value list left
+// by trying "a value with its unit" first; it means nothing, so it is dropped.
+function withoutEmptyValueLists(raw:unknown):unknown {
+ const x=raw as {schemes?:unknown};
+ if(!x||typeof x!=='object'||!Array.isArray(x.schemes))return raw;
+ return {...x,schemes:x.schemes.map((s:{kind?:string;numeric?:{accepted?:unknown[]}|null})=>
+  s&&s.kind!=='numeric'&&s.numeric&&Array.isArray(s.numeric.accepted)&&!s.numeric.accepted.length?{...s,numeric:null}:s)};
+}
+// What cannot be published, in words, naming each part: not the raw schema error.
+function publishProblems(raw:unknown,error:z.ZodError):string {
+ const x=raw as {schemes?:Array<{questionId?:string}>;questions?:Array<{id?:string}>};
+ const part=(path:PropertyKey[])=>path[0]==='schemes'?x.schemes?.[Number(path[1])]?.questionId:path[0]==='questions'?x.questions?.[Number(path[1])]?.id:undefined;
+ const lines=error.issues.map(i=>{
+  const id=part(i.path),field=i.path.slice(2).join(' ');
+  const what=field==='numeric accepted'?'has no accepted value. Type the final answer with its unit, or choose another way to mark it':`${field||'this part'}: ${i.message}`;
+  return id?`Part ${id} ${what}.`:`${i.path.join(' ')}: ${i.message}.`;
+ });
+ return `This paper could not be published. ${[...new Set(lines)].join(' ')}`;
+}
+export function approvePaper(paper:Paper,input:unknown):Paper {
+ const raw=withoutEmptyValueLists(input);
+ const parsed=ExtractionSchema.safeParse(raw);
+ if(!parsed.success)throw Error(publishProblems(raw,parsed.error));
+ const extraction=validateExtraction(parsed.data);
  if(!extraction.questions.length||extraction.questions.some(q=>q.issues.length))throw Error('Resolve every question issue before publishing.');
  return {...paper,...extraction,status:'ready',revision:paper.revision+1};
 }

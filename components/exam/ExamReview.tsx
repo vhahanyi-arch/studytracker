@@ -62,7 +62,10 @@ export function ExamReview({ paper, busy, error, onBack, onPublish }: {
 
   const current = (): Extraction => ({
     questions: questions.map((q) => ({ ...q, issues: checked.has(q.id) ? [] : q.issues })),
-    schemes, warnings: paper.warnings, syllabus: paper.syllabus,
+    // An empty value list left by trying "a value with its unit" on a part
+    // now marked another way is dropped, not sent: the server refuses it.
+    schemes: schemes.map((s) => (s.kind !== "numeric" && s.numeric && !s.numeric.accepted.length ? { ...s, numeric: null } : s)),
+    warnings: paper.warnings, syllabus: paper.syllabus,
   });
   const toCheck = useMemo(() => questions.filter((q) => q.issues.length && !checked.has(q.id)), [questions, checked]);
   const openIssues = toCheck.length;
@@ -83,7 +86,7 @@ export function ExamReview({ paper, busy, error, onBack, onPublish }: {
   // Switching keeps what was set, so switching back restores it.
   const setMode = (s: Scheme, mode: "numeric" | "exact" | "manual") => setScheme(s.questionId,
     mode === "numeric" ? { kind: "numeric", finalAnswerAwardsAll: true, numeric: s.numeric ?? ruleFor([]) }
-      : mode === "exact" ? { kind: "exact", finalAnswerAwardsAll: false, accepted: s.kind === "exact" ? s.accepted : acceptedFromScheme(s.expected) }
+      : mode === "exact" ? { kind: "exact", finalAnswerAwardsAll: false, accepted: s.kind === "exact" ? s.accepted : acceptedFromScheme(s.expected), numeric: s.numeric?.accepted.length ? s.numeric : null }
       : { kind: "manual", finalAnswerAwardsAll: false, numeric: s.numeric?.accepted.length ? s.numeric : null });
   const toggleChecked = (id: string) => setChecked((all) => {
     const next = new Set(all);
