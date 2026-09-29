@@ -5909,25 +5909,43 @@ button.primary {
 }
 
 .signin-brand h1 {
-  font-size: clamp(32px, 3.5vw, 50px);
+  font-size: clamp(32px, 3vw, 46px);
   line-height: 1.1;
   letter-spacing: -0.02em;
-  margin: 44px 0 0;
-  max-width: 17ch;
+  margin: 0;
+  max-width: 24ch;
+  text-wrap: balance;
   color: #fff;
+}
+
+/* Head at the top, the statement centred against the form beside it. The
+   account note used to hold the bottom of this panel; it now sits under the
+   form, so the panel no longer needs space-between. */
+.signin-body {
+  margin-block: auto;
+  padding-block: 40px;
+}
+.signin-home {
+  color: inherit;
+  text-decoration: none;
+  border-radius: 12px;
 }
 
 /* The same boxed level tokens the sidebar and the social card use. Naming
    the five Cambridge levels answers the question a new visitor actually has
-   -- what is this for -- in the product's own vocabulary. */
+   -- what is this for -- in the product's own vocabulary. One row per
+   subject: at 1280px a single wrapping row broke four-and-one, stranding
+   AS Level on a line of its own. */
 .signin-levels {
   list-style: none;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, max-content);
   gap: 12px 26px;
   padding: 0;
   margin: 34px 0 0;
 }
+.signin-levels li.maths { grid-row: 1; }
+.signin-levels li.physics { grid-row: 2; }
 .signin-levels li {
   display: flex;
   align-items: center;
@@ -5942,12 +5960,16 @@ button.primary {
 .signin-levels li.maths svg { color: var(--maths-lit); }
 .signin-levels li.physics svg { color: var(--physics-lit); }
 
+/* Under the form, on the page background, so it takes the page's muted ink
+   in either theme. (On the dark panel it used --fg-blue-75, which the dark
+   theme remaps for light surfaces: 2.2:1 against the panel.) */
 .signin-foot {
   font-size: var(--t-small);
-  color: var(--fg-blue-75);
-  margin: 0;
-  max-width: 46ch;
+  color: var(--muted);
+  margin: 18px auto 0;
+  max-width: 40ch;
   line-height: 1.55;
+  text-align: center;
 }
 
 .signin-form {
@@ -5956,12 +5978,16 @@ button.primary {
   padding: 52px 30px;
 }
 
+/* On a phone the panel is a header, not a poster: the levels go (the
+   heading already names both subjects) so that the form, and its Continue
+   button, starts inside the first screen. */
 @media (max-width: 900px) {
-  .signin { grid-template-columns: minmax(0, 1fr); }
-  .signin-brand { padding: 36px 24px; gap: 26px; }
-  .signin-brand h1 { margin-top: 24px; font-size: 30px; max-width: none; }
-  .signin-levels { margin-top: 24px; gap: 10px 18px; }
-  .signin-form { padding: 34px 20px 56px; }
+  .signin { grid-template-columns: minmax(0, 1fr); align-content: start; }
+  .signin-brand { padding: 20px 20px 26px; gap: 0; }
+  .signin-body { padding: 0; margin: 20px 0 0; }
+  .signin-brand h1 { font-size: 26px; max-width: 22ch; }
+  .signin-levels { display: none; }
+  .signin-form { padding: 20px 16px 48px; place-items: start center; }
 }
 
 /* =======================================================================
@@ -7118,4 +7144,412 @@ h1, h2, h3 { text-wrap: balance; }
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 180ms;
+}
+
+/* =================================================================
+   The front page (components/landing)
+   -----------------------------------------------------------------
+   What a signed-out visitor sees at /: a student, or a parent they have
+   shown it to. Same type, same ink, same subject colours as the portal, so
+   signing in feels like walking further into the same place. No entrance
+   or scroll animation: the only movement is the press feedback every
+   button in the app has, and the accordion marker turning.
+   ================================================================= */
+
+.landing {
+  --l-maths: #145f5b;
+  --l-maths-fill: #145f5b;
+  --l-maths-tint: #e6f2f0;
+  --l-physics: #1f4a86;
+  --l-physics-fill: #1f4a86;
+  --l-physics-tint: #e8eff9;
+  --l-width: 1200px;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100svh;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .landing {
+    --l-maths: #7cb8b3;
+    --l-maths-tint: #1f2a28;
+    --l-physics: #93bffc;
+    --l-physics-tint: #1f2631;
+  }
+}
+:root[data-theme="dark"] .landing {
+  --l-maths: #7cb8b3;
+  --l-maths-tint: #1f2a28;
+  --l-physics: #93bffc;
+  --l-physics-tint: #1f2631;
+}
+.landing .maths { --l-subject: var(--l-maths); --l-fill: var(--l-maths-fill); --l-tint: var(--l-maths-tint); }
+.landing .physics { --l-subject: var(--l-physics); --l-fill: var(--l-physics-fill); --l-tint: var(--l-physics-tint); }
+
+.landing a { color: inherit; }
+.landing a.landing-cta,
+.landing a.landing-signin {
+  transition: transform 140ms var(--ease-press), filter 140ms var(--ease-press);
+}
+.landing a.landing-cta:active,
+.landing a.landing-signin:active { transform: scale(0.97); }
+
+/* --- bar ---------------------------------------------------------- */
+.landing-bar {
+  max-width: var(--l-width);
+  margin: 0 auto;
+  height: 68px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.landing-home { text-decoration: none; border-radius: 12px; }
+.landing-bar nav { display: flex; align-items: center; gap: 14px; }
+.landing-signin {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--sheet);
+  font-size: var(--t-small);
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.landing-main {
+  max-width: var(--l-width);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.landing h2 {
+  font-size: var(--t-h2);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin: 0;
+  max-width: 28ch;
+  text-wrap: balance;
+}
+
+/* --- hero --------------------------------------------------------- */
+.landing-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 64px;
+  /* Top, not centre: the card grows when it shows a verdict, and centring
+     would move the headline beside it every time. */
+  align-items: start;
+  padding: 56px 0 88px;
+}
+.landing-hero-copy { padding-top: 48px; }
+.landing-hero h1 {
+  font-size: clamp(38px, 3.9vw, 52px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  margin: 0;
+  max-width: 24ch;
+  text-wrap: balance;
+}
+.landing-hero-copy > p {
+  font-size: var(--t-lead);
+  line-height: 1.5;
+  color: var(--muted);
+  max-width: 40ch;
+  margin: 22px 0 0;
+}
+.landing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 26px;
+  margin-top: 34px;
+}
+.landing-cta {
+  display: inline-flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 26px;
+  border-radius: 10px;
+  background: var(--maroon-fill);
+  color: #fff !important;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.landing-link {
+  font-weight: 600;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .landing-cta:hover { filter: brightness(1.1); }
+  .landing-signin:hover { border-color: var(--muted); }
+  .landing-link:hover { text-decoration-thickness: 2px; }
+}
+
+/* --- the live question -------------------------------------------- */
+.try-question {
+  background: var(--sheet);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--l-subject);
+  border-radius: 16px;
+  padding: 22px 24px 24px;
+  box-shadow: 0 1px 2px rgb(23 33 46 / 0.05), 0 18px 40px -20px rgb(23 33 46 / 0.22);
+}
+:root[data-theme="dark"] .try-question { box-shadow: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .try-question { box-shadow: none; }
+}
+.try-question > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.try-question h2 {
+  font-size: 19px;
+  max-width: none;
+}
+.try-subjects {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+.try-subjects button {
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  padding: 6px 14px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.try-subjects button[aria-pressed="true"] { background: var(--l-fill); color: #fff; }
+.try-question form { margin-top: 18px; }
+.try-unit {
+  margin: 0;
+  font-size: var(--t-fine);
+  font-weight: 700;
+  color: var(--l-subject);
+}
+.try-prompt {
+  font-family: var(--font-source-serif), Georgia, serif;
+  font-size: 22px;
+  line-height: 1.35;
+  margin: 8px 0 20px;
+  min-height: 2.7em;
+}
+.try-answer {
+  display: grid;
+  gap: 8px;
+  font-size: var(--t-small);
+  font-weight: 600;
+}
+.try-answer input {
+  font-size: 18px;
+  padding: 11px 14px;
+  border: 1.5px solid var(--rule, var(--line));
+  border-radius: 10px;
+  background: var(--sheet);
+  color: var(--ink);
+  width: 100%;
+}
+.try-answer input:focus-visible {
+  outline: 2px solid var(--l-subject);
+  outline-offset: 1px;
+  border-color: var(--l-subject);
+}
+.try-format {
+  display: block;
+  margin-top: 8px;
+  font-size: var(--t-fine);
+  color: var(--muted);
+}
+.try-feedback p {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border-left: 3px solid var(--l-subject);
+  border-radius: 0 10px 10px 0;
+  background: var(--l-tint);
+  font-size: var(--t-small);
+  line-height: 1.5;
+}
+.try-feedback p.wrong { border-left-color: var(--accent); background: var(--paper); }
+.try-question footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+.try-primary,
+.try-quiet {
+  border-radius: 10px;
+  padding: 11px 18px;
+  font-size: var(--t-small);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.try-primary { border: 0; background: var(--l-fill); color: #fff; }
+.try-quiet { border: 1px solid var(--line); background: transparent; color: var(--ink); }
+.try-primary:disabled,
+.try-quiet:disabled { opacity: 0.55; cursor: default; }
+.try-status { color: var(--muted); margin: 18px 0 0; }
+.try-skeleton { display: grid; gap: 12px; margin-top: 18px; }
+.try-skeleton i { display: block; border-radius: 8px; background: var(--paper); }
+.try-skeleton i:nth-child(1) { height: 14px; width: 45%; }
+.try-skeleton i:nth-child(2) { height: 58px; }
+.try-skeleton i:nth-child(3) { height: 48px; margin-top: 8px; }
+.try-skeleton i:nth-child(4) { height: 44px; width: 40%; margin-top: 8px; }
+
+/* --- how marking works -------------------------------------------- */
+.landing-marking,
+.landing-levels,
+.landing-parents,
+.landing-faq {
+  border-top: 1px solid var(--line);
+  padding: 76px 0;
+}
+.landing-marking ol {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 32px;
+  margin: 40px 0 0;
+  padding: 0;
+}
+.landing-marking li { border-top: 2px solid var(--ink); padding-top: 16px; }
+.landing-marking h3 { font-size: var(--t-h3); margin: 0 0 8px; }
+.landing-marking li p { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.55; }
+.landing-note {
+  margin: 36px 0 0;
+  max-width: 62ch;
+  font-size: var(--t-small);
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+/* --- levels ------------------------------------------------------- */
+.landing-levels > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 20px;
+  margin-top: 40px;
+  align-items: start;
+}
+.landing-levels article {
+  background: var(--l-tint);
+  border-radius: 16px;
+  padding: 26px 28px 12px;
+}
+.landing-levels h3 { font-size: var(--t-h3); color: var(--l-subject); margin: 0 0 6px; }
+.landing-levels ul { list-style: none; margin: 0; padding: 0; }
+.landing-levels li {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 14px;
+  padding: 16px 0;
+}
+.landing-levels li + li { border-top: 1px solid color-mix(in srgb, var(--l-subject) 18%, transparent); }
+.landing-levels li svg { width: 24px; height: 24px; color: var(--l-subject); margin-top: 1px; }
+.landing-levels li svg text { font-size: 10px; font-weight: 700; font-family: inherit; }
+.landing-levels li svg text.pair { font-size: 8px; letter-spacing: -0.2px; }
+.landing-levels b { display: block; font-size: 17px; }
+.landing-levels span { display: block; margin-top: 3px; color: var(--muted); font-size: var(--t-small); line-height: 1.5; }
+
+/* --- parents ------------------------------------------------------ */
+.landing-parents { padding-left: min(12vw, 150px); }
+.landing-parents h2 { font-size: clamp(30px, 3.2vw, 42px); max-width: 20ch; }
+.landing-parents p {
+  font-size: var(--t-lead);
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 52ch;
+  margin: 20px 0 0;
+}
+
+/* --- accounts ----------------------------------------------------- */
+.landing-faq {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 32px;
+}
+.landing-faq details { border-bottom: 1px solid var(--line); }
+.landing-faq summary {
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 0;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.landing-faq summary::-webkit-details-marker { display: none; }
+.landing-faq summary::after {
+  content: "+";
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--muted);
+  transition: transform 180ms var(--ease-press);
+}
+.landing-faq details[open] summary::after { transform: rotate(45deg); }
+.landing-faq summary:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; border-radius: 4px; }
+.landing-faq details p { margin: 0 0 20px; max-width: 60ch; color: var(--muted); line-height: 1.6; }
+
+/* --- foot --------------------------------------------------------- */
+.landing-foot {
+  max-width: var(--l-width);
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.landing-foot a { font-weight: 700; text-underline-offset: 4px; white-space: nowrap; }
+.landing-foot .brand small,
+.landing-foot .theme-toggle { display: none; }
+
+/* --- phones and narrow tablets ------------------------------------ */
+@media (max-width: 900px) {
+  .landing-hero { grid-template-columns: minmax(0, 1fr); gap: 36px; padding: 28px 0 56px; }
+  .landing-hero-copy { padding-top: 0; }
+  .landing-marking ol { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 24px; }
+  .landing-levels > div,
+  .landing-faq { grid-template-columns: minmax(0, 1fr); }
+  .landing-faq { gap: 12px; }
+  .landing-parents { padding-left: 0; }
+  .landing-marking,
+  .landing-levels,
+  .landing-parents,
+  .landing-faq { padding: 56px 0; }
+}
+@media (max-width: 600px) {
+  .landing-bar,
+  .landing-main { padding: 0 16px; }
+  .landing-foot { padding: 24px 16px 40px; }
+  .landing-bar .brand small,
+  .landing-bar .theme-toggle { display: none; }
+  .landing-foot .theme-toggle { display: inline-flex; }
+  .landing-hero h1 { font-size: 34px; }
+  .landing-hero-copy > p { font-size: 18px; }
+  .landing-marking ol { grid-template-columns: minmax(0, 1fr); }
+  .try-question { padding: 18px 16px 20px; }
+  .try-prompt { font-size: 20px; }
+  .landing-levels article { padding: 20px 18px 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing a.landing-cta:active,
+  .landing a.landing-signin:active { transform: none; }
+  .landing-faq summary::after { transition: none; }
 }

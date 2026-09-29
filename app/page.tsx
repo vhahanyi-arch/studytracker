@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import { upload as uploadBlob } from "@vercel/blob/client";
 import {
-  SignIn,
   SignedIn,
   SignedOut,
   UserButton,
@@ -41,6 +40,8 @@ import { type PaperQuestion, displayCrop, questionKey } from '@/lib/paper-questi
 import { ExamReview, type ReviewPaper, type Extraction } from '@/components/exam/ExamReview';
 import { ExamAttempt, type AttemptPaper } from '@/components/exam/ExamAttempt';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { Logo, NavIcon } from '@/components/Brand';
+import { Landing } from '@/components/landing/Landing';
 import { useNavDrawer } from '@/components/NavDrawer';
 import { ModalScrim } from '@/components/ModalScrim';
 import { generateHomeworkDraftFromText, type HomeworkDraft } from '@/lib/homework-draft';
@@ -49,39 +50,7 @@ export default function Home() {
   return (
     <main className="portal-app">
       <SignedOut>
-        <div className="signin">
-          <aside className="signin-brand">
-            <div>
-              <div className="signin-head">
-                <Logo />
-                <ThemeToggle />
-              </div>
-              <h1>Plan, practise and mark Cambridge Mathematics and Physics.</h1>
-              <ul className="signin-levels">
-                {(
-                  [
-                    ["stage7", "Stage 7", "maths"],
-                    ["stage8", "Stage 8", "maths"],
-                    ["stage9", "Stage 9", "maths"],
-                    ["igcse", "IGCSE 0625", "physics"],
-                    ["as", "AS Level 9702", "physics"],
-                  ] as const
-                ).map(([icon, label, subject]) => (
-                  <li key={icon} className={subject}>
-                    <NavIcon name={icon} />
-                    {label}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <p className="signin-foot">
-              Your teacher creates your account. If you do not have one yet, ask them to add you to a class.
-            </p>
-          </aside>
-          <div className="signin-form">
-            <SignIn routing="hash" />
-          </div>
-        </div>
+        <Landing />
       </SignedOut>
       <SignedIn>
         <RolePortal />
@@ -262,19 +231,6 @@ function RoleSetup() {
   );
 }
 
-function Logo() {
-  return (
-    <div className="brand">
-      <span className="brand-mark">S</span>
-      <div>
-        <b>StudyTrack</b>
-        <small>Cambridge learner planner</small>
-      </div>
-    </div>
-  );
-}
-
-
 function Shell({
   role,
   nav,
@@ -333,37 +289,6 @@ function Shell({
         <section className="portal-main" inert={drawer.inertBehind}>{children}</section>
       </div>
     </>
-  );
-}
-
-// One icon set for the whole portal: a single 24x24 grid, one stroke weight,
-// drawn in currentColor. This replaces a run of glyphs pulled from four
-// different typefaces -- a house, two bare digits, an atom, a full-colour
-// emoji, a geometric block, a tick and a chess pawn -- which sat on different
-// baselines and rendered differently on every OS.
-const navIcons: Record<string, React.ReactNode> = {
-  home: <path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4v-5H9v5H5a1 1 0 0 1-1-1z" />,
-  stage7: <><rect x="4" y="4" width="16" height="16" rx="3.5" /><text x="12" y="15.8" textAnchor="middle" fill="currentColor" stroke="none">7</text></>,
-  stage8: <><rect x="4" y="4" width="16" height="16" rx="3.5" /><text x="12" y="15.8" textAnchor="middle" fill="currentColor" stroke="none">8</text></>,
-  stage9: <><rect x="4" y="4" width="16" height="16" rx="3.5" /><text x="12" y="15.8" textAnchor="middle" fill="currentColor" stroke="none">9</text></>,
-  // The same boxed-token mark as the stages above: all five Cambridge levels
-  // read as one family, with the group heading and accent carrying the
-  // subject. An atom was tried first and collapsed into an unreadable blob at
-  // the 18px the sidebar actually renders at.
-  igcse: <><rect x="4" y="4" width="16" height="16" rx="3.5" /><text x="12" y="15.6" textAnchor="middle" fill="currentColor" stroke="none" className="pair">IG</text></>,
-  as: <><rect x="4" y="4" width="16" height="16" rx="3.5" /><text x="12" y="15.6" textAnchor="middle" fill="currentColor" stroke="none" className="pair">AS</text></>,
-  exam: <><rect x="5" y="3" width="14" height="18" rx="2.5" /><path d="M9 8h6M9 12h6M9 16h3" /></>,
-  progress: <><path d="M4 4v16h16" /><path d="m7.5 14.5 3.5-4 3 2.4 4.5-6" /></>,
-  papers: <><rect x="3.5" y="6.5" width="12" height="14" rx="2.5" /><path d="M8 6.5v-2a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-2.5" /></>,
-  marking: <><circle cx="12" cy="12" r="8.5" /><path d="m8.5 12 2.4 2.4 4.6-5" /></>,
-  students: <><circle cx="9.5" cy="8" r="3.2" /><path d="M3.8 19.2a5.7 5.7 0 0 1 11.4 0" /><path d="M16.4 5.6a3.2 3.2 0 0 1 0 4.8" /><path d="M17.6 13.6a5 5 0 0 1 2.9 4.2" /></>,
-};
-
-function NavIcon({ name }: { name: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      {navIcons[name]}
-    </svg>
   );
 }
 
@@ -641,12 +566,14 @@ function TeacherDashboard({
         <div className={dashboard && !dashboard.needs_review ? "dash-headline clear" : "dash-headline"}>
           <b>{dashboard?.needs_review ?? "—"}</b>
           <div>
-            <h1>papers waiting to be marked</h1>
+            <h1>{dashboard?.needs_review === 1 ? "paper" : "papers"} waiting to be marked</h1>
             <p>
-              {!dashboard
+              {dashboardError
+                ? "Your marking queue could not be loaded. Reload the page to try again."
+                : !dashboard
                 ? "Checking your marking queue…"
                 : dashboard.needs_review
-                  ? "Open the marking queue to review them."
+                  ? `Open the marking queue to review ${dashboard.needs_review === 1 ? "it" : "them"}.`
                   : "Everything handed in has been marked and published."}
             </p>
           </div>
@@ -4920,7 +4847,7 @@ function Submissions() {
                 <header>
                   <div>
                     <small>QUESTION {mark.label}</small>
-                    <h3>{mark.maximum || 0} marks available</h3>
+                    <h3>{mark.maximum || 0} {mark.maximum === 1 ? "mark" : "marks"} available</h3>
                   </div>
                   <span className={`confidence ${mark.confidence}`}>
                     {mark.confidence === "high"
@@ -5524,7 +5451,7 @@ function AnswerWorkspace({
               </h3>
               <p>
                 {paperQuestions.length && !showFullPaper
-                  ? `${paperQuestions[activeIndex]?.marks || "—"} marks · Question ${activeIndex + 1} of ${paperQuestions.length}`
+                  ? `${paperQuestions[activeIndex]?.marks || "—"} ${paperQuestions[activeIndex]?.marks === 1 ? "mark" : "marks"} · Question ${activeIndex + 1} of ${paperQuestions.length}`
                   : "The mark scheme is not available to students."}
               </p>
             </div>
