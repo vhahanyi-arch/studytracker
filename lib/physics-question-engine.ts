@@ -7,14 +7,164 @@ export type PhysicsQuestion = {
   answers: string[];
   hint: string;
   solution: string;
+  /** Unit of a numeric answer ("m/s²"); "" when it has none. Missing on sessions saved before units were checked. */
+  unit?: string;
 };
 
-const r = (min:number,max:number) => Math.floor(Math.random()*(max-min+1))+min;
+const r =(min:number,max:number) => Math.floor(Math.random()*(max-min+1))+min;
 const q = (prompt:string,answer:string|string[],hint:string,solution:string,meta?:Partial<Pick<PhysicsQuestion,"templateId"|"objective"|"difficulty">>):PhysicsQuestion => ({prompt,answers:Array.isArray(answer)?answer:[answer],hint,solution,...meta});
 const sq = (templateId:string,objective:string,difficulty:"foundational"|"application"|"reasoning",prompt:string,answer:string|string[],hint:string,solution:string) => q(prompt,answer,hint,solution,{templateId,objective,difficulty});
 const tidy = (value:unknown) => String(value??"").trim().toLowerCase().replace(/\s+/g,"").replace(/[−–—]/g,"-").replace(/[×·]/g,"*").replace(/÷/g,"/").replace(/[°]/g,"").replace(/,/g,"");
 
-export function answerMatches(input:unknown,accepted:string[]) {
+// ---------- Units typed after a numeric answer ----------
+// The answer box lets students add the unit, so "7 m/s²" must be read as 7 in
+// m/s². Units are compared by what they measure and by size: "m/s^2", "m s⁻²"
+// and "ms-2" are one unit, and so are N·s and kg·m/s, but cm is not m, °C is
+// not K, and 160 cm is not 1.6 m. The unit a question expects is its `unit`.
+// Everything here is self-contained: the content harnesses compile this file alone.
+type UnitValue = { dim: number[]; scale: number };
+// kg, m, s, A, K, mol, count, °C, angle degree, %, rand
+const DIMENSIONS = 11;
+const unitOf = (scale:number, powers:Record<number,number>): UnitValue =>
+  ({ scale, dim: Array.from({length:DIMENSIONS}, (_,i)=>powers[i]??0) });
+const [KG,M,S,AMP,KELVIN,MOL,COUNT,CELSIUS,DEGREE,PERCENT,RAND] = [0,1,2,3,4,5,6,7,8,9,10];
+const newton = {[KG]:1,[M]:1,[S]:-2}, joule = {[KG]:1,[M]:2,[S]:-2}, watt = {[KG]:1,[M]:2,[S]:-3};
+// [symbol, unit, takes an SI prefix]
+const UNIT_SYMBOLS: [string, UnitValue, boolean][] = [
+  ["m", unitOf(1,{[M]:1}), true], ["g", unitOf(1e-3,{[KG]:1}), true], ["s", unitOf(1,{[S]:1}), true],
+  ["A", unitOf(1,{[AMP]:1}), true], ["K", unitOf(1,{[KELVIN]:1}), false], ["mol", unitOf(1,{[MOL]:1}), true],
+  ["N", unitOf(1,newton), true], ["J", unitOf(1,joule), true], ["W", unitOf(1,watt), true],
+  ["Pa", unitOf(1,{[KG]:1,[M]:-1,[S]:-2}), true], ["V", unitOf(1,{...watt,[AMP]:-1}), true],
+  ["Ω", unitOf(1,{...watt,[AMP]:-2}), true], ["Hz", unitOf(1,{[S]:-1}), true], ["C", unitOf(1,{[AMP]:1,[S]:1}), true],
+  ["T", unitOf(1,{[KG]:1,[S]:-2,[AMP]:-1}), true], ["Wb", unitOf(1,{...joule,[AMP]:-1}), true],
+  ["F", unitOf(1,{[KG]:-1,[M]:-2,[S]:4,[AMP]:2}), true], ["eV", unitOf(1.602176634e-19,joule), true],
+  ["L", unitOf(1e-3,{[M]:3}), true], ["l", unitOf(1e-3,{[M]:3}), true], ["Bq", unitOf(1,{[COUNT]:1,[S]:-1}), true],
+  ["min", unitOf(60,{[S]:1}), false], ["h", unitOf(3600,{[S]:1}), false],
+  ["°C", unitOf(1,{[CELSIUS]:1}), false], ["℃", unitOf(1,{[CELSIUS]:1}), false], ["°", unitOf(1,{[DEGREE]:1}), false],
+  ["%", unitOf(1,{[PERCENT]:1}), false], ["R", unitOf(1,{[RAND]:1}), false],
+];
+const UNIT_PREFIXES: [string, number][] = [["p",1e-12],["n",1e-9],["µ",1e-6],["μ",1e-6],["u",1e-6],["m",1e-3],["c",1e-2],["d",1e-1],["k",1e3],["M",1e6],["G",1e9]];
+const PREFIX_WORDS: [string, number][] = [["pico",1e-12],["nano",1e-9],["micro",1e-6],["milli",1e-3],["centi",1e-2],["deci",1e-1],["kilo",1e3],["mega",1e6],["giga",1e9]];
+// Spelled-out units, matched whole and ignoring case; a trailing plural "s" is allowed.
+const UNIT_WORDS: Record<string, UnitValue[]> = {
+  metre: [unitOf(1,{[M]:1})], meter: [unitOf(1,{[M]:1})], gram: [unitOf(1e-3,{[KG]:1})], gramme: [unitOf(1e-3,{[KG]:1})],
+  second: [unitOf(1,{[S]:1})], sec: [unitOf(1,{[S]:1})], newton: [unitOf(1,newton)], joule: [unitOf(1,joule)],
+  watt: [unitOf(1,watt)], pascal: [unitOf(1,{[KG]:1,[M]:-1,[S]:-2})], volt: [unitOf(1,{...watt,[AMP]:-1})],
+  amp: [unitOf(1,{[AMP]:1})], ampere: [unitOf(1,{[AMP]:1})], ohm: [unitOf(1,{...watt,[AMP]:-2})], hertz: [unitOf(1,{[S]:-1})],
+  coulomb: [unitOf(1,{[AMP]:1,[S]:1})], kelvin: [unitOf(1,{[KELVIN]:1})], litre: [unitOf(1e-3,{[M]:3})], liter: [unitOf(1e-3,{[M]:3})],
+  electronvolt: [unitOf(1.602176634e-19,joule)], minute: [unitOf(60,{[S]:1})], mins: [unitOf(60,{[S]:1})],
+  hour: [unitOf(3600,{[S]:1})], hr: [unitOf(3600,{[S]:1})], day: [unitOf(86400,{[S]:1})],
+  year: [unitOf(31557600,{[S]:1})], yr: [unitOf(31557600,{[S]:1})], million: [unitOf(1e6,{})], micron: [unitOf(1e-6,{[M]:1})],
+  count: [unitOf(1,{[COUNT]:1})], cps: [unitOf(1,{[COUNT]:1,[S]:-1})], rand: [unitOf(1,{[RAND]:1})],
+  // "degrees" alone may be an angle or a temperature in °C.
+  degree: [unitOf(1,{[DEGREE]:1}), unitOf(1,{[CELSIUS]:1})], deg: [unitOf(1,{[DEGREE]:1}), unitOf(1,{[CELSIUS]:1})],
+};
+const SUPERSCRIPTS: Record<string,string> = {"⁻":"-","⁰":"0","¹":"1","²":"2","³":"3","⁴":"4","⁵":"5","⁶":"6","⁷":"7","⁸":"8","⁹":"9"};
+const MAX_READINGS = 64;
+
+const scaleUnit = (unit:UnitValue, by:number, power=1): UnitValue => ({scale:(unit.scale*by)**power, dim:unit.dim.map(d=>d*power)});
+const timesUnit = (a:UnitValue, b:UnitValue): UnitValue => ({scale:a.scale*b.scale, dim:a.dim.map((d,i)=>d+b.dim[i])});
+const sameUnit = (a:UnitValue, b:UnitValue) =>
+  a.dim.every((d,i)=>d===b.dim[i]) && Math.abs(a.scale/b.scale-1) < 1e-9;
+
+function unitWord(word:string): UnitValue[] {
+  const lower = word.toLowerCase();
+  for (const form of [lower, lower.replace(/e?s$/,""), lower.replace(/s$/,"")]) {
+    if (UNIT_WORDS[form]) return UNIT_WORDS[form];
+    for (const [prefix, size] of PREFIX_WORDS)
+      if (form.startsWith(prefix) && UNIT_WORDS[form.slice(prefix.length)] && !["degree","deg","count","cps","rand","minute","mins","hour","hr","day","year","yr","million","micron"].includes(form.slice(prefix.length)))
+        return UNIT_WORDS[form.slice(prefix.length)].map(unit=>scaleUnit(unit,size));
+  }
+  return [];
+}
+
+// Every way to read run-together symbols such as "kgm" or "ms" as a product of
+// units. The power written after them belongs to the last symbol only. A symbol
+// is never read twice in a row ("mm" is not m·m, so not m²), and nothing runs
+// on after "°" ("°C" is not °·C).
+function symbolReadings(text:string, anyCase:boolean, previous=""): UnitValue[][] {
+  if (!text) return [[]];
+  if (previous === "°") return [];
+  const readings: UnitValue[][] = [];
+  const starts = (token:string) => anyCase ? text.toLowerCase().startsWith(token.toLowerCase()) : text.startsWith(token);
+  for (const [symbol, unit, prefixed] of UNIT_SYMBOLS)
+    for (const [prefix, size] of prefixed ? [["",1] as [string,number], ...UNIT_PREFIXES] : [["",1] as [string,number]]) {
+      if (!starts(prefix+symbol) || (!prefix && symbol === previous)) continue;
+      for (const rest of symbolReadings(text.slice(prefix.length+symbol.length), anyCase, prefix ? "" : symbol)) {
+        if (readings.length >= MAX_READINGS) return readings;
+        readings.push([scaleUnit(unit,size), ...rest]);
+      }
+    }
+  return readings;
+}
+
+function unitReadings(text:string, anyCase:boolean): UnitValue[] {
+  let t = text.trim()
+    .replace(/\bdeg(?:ree)?s?\.?\s*(?:c|celsius|centigrade)\b/gi, "°C")
+    .replace(/\bper\s*cent\b/gi, "%")
+    .replace(/\s+per\s+/gi, "/")
+    .replace(/\s*\bsquared\b/gi, "^2").replace(/\s*\bcubed\b/gi, "^3")
+    .replace(/[⁻⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, run=>"^"+[...run].map(c=>SUPERSCRIPTS[c]).join(""))
+    .replace(/[·⋅*×]/g, " ").replace(/([A-Za-zΩ])\.(?=[A-Za-zΩ])/g, "$1 ")
+    .replace(/\bohms?\b/gi, " Ω ").replace(/\s+/g, " ").trim();
+  if (!t) return [];
+  let readings: UnitValue[] = [unitOf(1,{})];
+  const segments = t.split("/");
+  for (let index=0; index<segments.length; index++) {
+    const segment = index ? segments[index].trim().replace(/^\((.*)\)$/,"$1") : segments[index].trim();
+    if (!segment || /[()]/.test(segment)) return [];
+    for (const factor of segment.split(" ")) {
+      const parts = /^(.*?)(?:\^\(?(-?\d+)\)?|(-?\d+))?$/.exec(factor);
+      const body = parts?.[1] ?? "", power = Number(parts?.[2] ?? parts?.[3] ?? 1) * (index ? -1 : 1);
+      if (!body || !Number.isFinite(power) || power===0) return [];
+      const words = unitWord(body).map(unit=>[unit]);
+      // Ignoring case, only a single symbol is read ("j", "hz", "kpa"), so words like "at" are not A·T.
+      const options = (words.length ? words : symbolReadings(body, anyCase).filter(units=>!anyCase || units.length===1))
+        .map(units=>units.reduce((product, unit, i)=>timesUnit(product, i===units.length-1 ? scaleUnit(unit,1,power) : scaleUnit(unit,1,index?-1:1)), unitOf(1,{})));
+      if (!options.length) return [];
+      readings = readings.flatMap(reading=>options.map(option=>timesUnit(reading, option))).slice(0, MAX_READINGS);
+    }
+  }
+  return readings;
+}
+
+/** Every unit the text could mean. Case is only relaxed when nothing matches as written ("7 j", "7 hz"). */
+const unitCache = new Map<string, UnitValue[]>();
+function readUnit(text:string) {
+  let readings = unitCache.get(text);
+  if (!readings) {
+    const exact = unitReadings(text,false);
+    readings = exact.length ? exact : unitReadings(text,true);
+    // Kept small: typed answers are unbounded, but a set's units repeat.
+    if (unitCache.size >= 500) unitCache.clear();
+    unitCache.set(text, readings);
+  }
+  return readings;
+}
+
+/** "7 m/s²" → 7 and "m/s²"; "R60" → 60 and "R". */
+function numberWithUnit(input:unknown): { value:number; unit:string } | null {
+  const raw = String(input??"").trim().replace(/[−–—]/g,"-");
+  const money = /^R\s*([+-]?\d[\d,]*(?:\.\d+)?)$/.exec(raw);
+  if (money) return { value:Number(money[1].replace(/,/g,"")), unit:"R" };
+  const parts = /^([+-]?(?:\d[\d,]*(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?)\s*(\S.*)$/i.exec(raw);
+  if (!parts) return null;
+  const value = Number(parts[1].replace(/,/g,""));
+  return Number.isFinite(value) ? { value, unit:parts[2] } : null;
+}
+
+// Missing unit: a session saved before units were checked, so any real unit is allowed.
+// "": the answer has no unit, so any unit is wrong.
+function unitAccepted(typed:string, expected:string|undefined) {
+  const readings = readUnit(typed);
+  if (!readings.length) return false;
+  if (expected === undefined) return true;
+  if (!expected) return false;
+  const [wanted] = readUnit(expected);
+  return !!wanted && readings.some(reading=>sameUnit(reading, wanted));
+}
+
+export function answerMatches(input:unknown,accepted:string[],unit?:string) {
   const actual=tidy(input);
   if(!actual)return false;
   return accepted.some(expected=>{
@@ -32,11 +182,18 @@ export function answerMatches(input:unknown,accepted:string[]) {
       return actualSequence !== null && actualSequence.length === expectedSequence.length &&
         actualSequence.every((value,index)=>Number.isFinite(value) && Math.abs(value-expectedSequence[index])<0.0001);
     }
-    if(actual===clean)return true;
-    const a=Number(actual),b=Number(clean);
+    const b=Number(clean);
+    // tidy() drops "°", so "1.8°" would pass as 1.8: a numeric answer with a
+    // degree sign is read with its unit below instead.
+    const degrees=Number.isFinite(b)&&/°|℃/.test(String(input));
+    if(actual===clean&&!degrees)return true;
     // Keep the promised 0.1% relative tolerance even for small values such as strain.
     // An absolute floor of 0.0001 incorrectly accepts zero for a strain of 0.0001.
-    return Number.isFinite(a)&&Number.isFinite(b)&&Math.abs(a-b)<=Math.abs(b)*(0.001+Number.EPSILON);
+    const close=(a:number)=>Number.isFinite(a)&&Number.isFinite(b)&&Math.abs(a-b)<=Math.abs(b)*(0.001+Number.EPSILON);
+    if(!degrees&&close(Number(actual)))return true;
+    // A unit may follow the number, but it must be the question's unit.
+    const typed=numberWithUnit(input);
+    return !!typed&&close(typed.value)&&unitAccepted(typed.unit,unit);
   });
 }
 
@@ -47,7 +204,16 @@ export function answerFormatFor(question: PhysicsQuestion) {
     return "Enter the single word requested.";
   if (/si unit|which instrument/.test(prompt))
     return "Enter the name of the unit or instrument requested.";
+  if (question.unit === "")
+    return "Enter the number only, without a unit.";
+  if (question.unit)
+    return "Enter the final numeric answer. A unit is optional, but if you give one it must be the right unit.";
   return "Enter the final numeric answer only, including units where shown.";
+}
+
+/** The accepted answer as students should read it after marking: "7 m/s²". */
+export function expectedAnswerText(question: PhysicsQuestion) {
+  return question.answers.map(answer=>question.unit&&Number.isFinite(Number(answer))?`${answer} ${question.unit}`:answer).join(" or ");
 }
 
 function validateUnitSet(questions: PhysicsQuestion[], difficulty: string) {
@@ -2291,9 +2457,84 @@ export function supportsPhysicsUnit(level: string, chapter: string) {
     : false;
 }
 
+// The unit of every numeric answer, by template, in the notation its solution
+// uses. Checked against each generated solution by
+// scripts/test-physics-answer-units.mjs. "" means the answer has no unit:
+// counts, charges in units of e, coefficients of a power of ten, ratios.
+const unitsByTemplate = (groups:Record<string,string>) =>
+  Object.fromEntries(Object.entries(groups).flatMap(([unit,ids])=>ids.split(" ").map(id=>[id,unit])));
+const ANSWER_UNITS: Record<string, string | ((question:PhysicsQuestion)=>string)> = {
+  ...unitsByTemplate({
+    "%": "as-u5-f3 igcse-u6-a5 igcse-u6-r4",
+    "°": "as-u7-r6 igcse-u12-a1 igcse-u12-r1",
+    "°C": "igcse-u8-a1 igcse-u9-f3 igcse-u9-f5 igcse-u9-r3",
+    "A": "as-u9-a1 as-u10-f5 as-u10-r1 igcse-u15-r3 igcse-u15-r5 igcse-u16-a1 igcse-u16-a5 igcse-u16-r2" +
+      " igcse-u16-r6 igcse-u17-a1 igcse-u17-r1 igcse-u17-r5 igcse-u18-a3 igcse-u18-r5",
+    "C": "as-u9-f3 igcse-u15-a6 igcse-u15-f2",
+    "cm": "as-u4-f1 as-u6-f2 as-u6-r5 as-u7-a4 as-u8-f3",
+    "counts/s": "igcse-u20-a1 igcse-u20-a4 igcse-u20-f4 igcse-u20-r1 igcse-u20-r5",
+    "g": "as-u1-a2 igcse-u3-a2 igcse-u3-r3",
+    "g/cm^3": "as-u4-f5",
+    "g/cm³": "igcse-u3-a4 igcse-u3-r4",
+    "GPa": "as-u6-a2",
+    "Hz": "as-u7-a5 igcse-u11-f2",
+    "J": "as-u1-r4 as-u3-r3 as-u5-a2 as-u5-f1 as-u5-f5 as-u5-f6 as-u5-r1 as-u5-r2 as-u6-a4 as-u6-a5" +
+      " as-u6-a6 as-u6-r4 as-u6-r6 as-u9-f4 igcse-u6-a1 igcse-u6-a2 igcse-u6-f2 igcse-u6-f3 igcse-u6-f4" +
+      " igcse-u6-r1 igcse-u6-r3 igcse-u9-a1 igcse-u9-f2 igcse-u9-r1 igcse-u15-a1 igcse-u15-a4",
+    "K": "igcse-u8-f3 igcse-u8-r1",
+    "kg": "igcse-u1-a3 igcse-u1-r5 igcse-u9-a4",
+    "kg m/s": "as-u3-f3",
+    "kg·m/s": "igcse-u5-a1 igcse-u5-a4 igcse-u5-a6 igcse-u5-f1 igcse-u5-r1 igcse-u5-r2 igcse-u5-r5",
+    "kg/m^2": "as-u1-r2",
+    "kg/m³": "igcse-u3-f4 igcse-u3-r6",
+    "m": "as-u1-a4 as-u2-a2 as-u2-a5 as-u2-f3 as-u2-r1 as-u2-r3 as-u2-r4 igcse-u1-f5 igcse-u1-r1" +
+      " igcse-u2-a1 igcse-u2-a2 igcse-u2-a5 igcse-u2-r3 igcse-u11-a2 igcse-u11-r2 igcse-u13-r1" +
+      " igcse-u13-r4 igcse-u21-a2",
+    "m/s": "as-u2-a1 as-u2-a6 as-u2-f4 as-u2-f6 as-u2-r6 as-u3-a4 as-u3-a6 as-u5-a6 as-u5-r5 as-u7-a3" +
+      " as-u8-r6 igcse-u2-f1 igcse-u2-f2 igcse-u2-f4 igcse-u2-r1 igcse-u2-r2 igcse-u2-r6 igcse-u5-a3" +
+      " igcse-u5-f5 igcse-u5-r3 igcse-u11-a1 igcse-u11-f1 igcse-u11-r1 igcse-u11-r6 igcse-u13-a3" +
+      " igcse-u13-f5",
+    "m/s^2": "as-u2-a4 as-u2-f5 as-u3-f2",
+    "m/s²": "igcse-u2-f6 igcse-u4-r3",
+    "m²": "igcse-u7-a4 igcse-u7-f3 igcse-u7-r4",
+    "m³": "igcse-u8-r4",
+    "million km/year": "igcse-u21-a1 igcse-u21-r1",
+    "mm": "as-u1-a3 as-u6-r1 as-u8-f1",
+    "MPa": "as-u6-f5",
+    "N": "as-u1-a5 as-u1-r6 as-u3-a1 as-u3-f4 as-u4-a1 as-u4-a6 as-u4-r5 as-u4-r6 as-u5-r6 as-u6-f4" +
+      " igcse-u1-a2 igcse-u1-r2 igcse-u3-a1 igcse-u3-f2 igcse-u3-r1 igcse-u4-a1 igcse-u4-a2 igcse-u4-a4" +
+      " igcse-u4-f1 igcse-u4-r1 igcse-u4-r2 igcse-u5-f4 igcse-u7-f2",
+    "N m": "as-u4-f2 as-u4-f4 as-u4-r2 as-u4-r3",
+    "N·m": "igcse-u4-f3",
+    "N·s": "igcse-u5-a2 igcse-u5-f2",
+    "N/kg": "igcse-u3-f3",
+    "N/m": "as-u6-f3",
+    "nm": "as-u8-a4 as-u8-a5 as-u8-r3",
+    "Pa": "as-u4-a5 as-u4-f6 igcse-u7-a1 igcse-u7-a3 igcse-u7-f1 igcse-u7-f6 igcse-u7-r1 igcse-u7-r2" +
+      " igcse-u8-a6",
+    "R": "igcse-u15-a2 igcse-u15-r6",
+    "s": "as-u5-r3 igcse-u1-a1 igcse-u1-r3 igcse-u21-r2",
+    "V": "as-u9-a2 as-u9-a4 as-u10-a1 as-u10-a6 as-u10-f3 as-u10-f6 as-u10-r3 as-u10-r6 igcse-u16-a6" +
+      " igcse-u16-f2 igcse-u16-r4 igcse-u16-r5 igcse-u18-a1 igcse-u18-f2 igcse-u18-r1",
+    "W": "as-u5-a1 as-u5-r4 as-u7-r5 as-u9-a3 igcse-u6-a3 igcse-u6-f5 igcse-u6-r2 igcse-u6-r6 igcse-u15-f4",
+    "W/m^2": "as-u7-f3 as-u7-r4",
+    "µm": "as-u8-f6",
+    "Ω": "as-u9-a6 as-u9-f5 as-u9-r6 as-u10-a3 as-u10-a5 as-u10-r2 igcse-u15-f3 igcse-u15-r1 igcse-u16-a2" +
+      " igcse-u16-f1 igcse-u16-r1",
+    "": "as-u1-f5 as-u6-a1 as-u8-r4 as-u9-f2 as-u9-r4 as-u9-r5 as-u11-a6 as-u11-f3 as-u11-f6 as-u11-r2" +
+      " igcse-u12-r5 igcse-u19-a1 igcse-u19-a3 igcse-u19-f3 igcse-u19-f4 igcse-u19-f5 igcse-u19-r1" +
+      " igcse-u19-r4 igcse-u20-r2",
+  }),
+  // Asks for a frequency or an amplitude, and says which at the end of the prompt.
+  "as-u7-a1": question => /\bin Hz\.$/.test(question.prompt) ? "Hz" : "V",
+};
+
 export function makePhysicsQuestions(level: string, chapter: string, difficulty: "foundational"|"application"|"reasoning"): PhysicsQuestion[] {
   const table = level === "igcse" ? igcseTopics : level === "as" ? asTopics : null;
   const generator = table?.[chapter];
   if (!generator) throw new Error(`No question engine for ${level}/${chapter}.`);
-  return generator(difficulty);
+  return generator(difficulty).map(question => {
+    const unit = ANSWER_UNITS[question.templateId ?? ""];
+    return unit === undefined ? question : { ...question, unit: typeof unit === "function" ? unit(question) : unit };
+  });
 }

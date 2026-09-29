@@ -28,7 +28,8 @@ export function markPracticeSet<Q extends PracticeQuestion>(
   questions: Q[],
   rawAnswers: unknown,
   acceptedFor: (question: Q) => string[],
-  answerMatches: (answer: string | undefined, accepted: string[]) => boolean,
+  answerMatches: (answer: string | undefined, accepted: string[], question: Q) => boolean,
+  expectedFor: (question: Q, accepted: string[]) => string = (_question, accepted) => accepted.join(" or "),
 ) {
   const answers = Array.isArray(rawAnswers) ? rawAnswers.map(String) : [];
   const results = questions.map((question, index) => {
@@ -38,8 +39,8 @@ export function markPracticeSet<Q extends PracticeQuestion>(
       objective: question.objective,
       difficulty: question.difficulty,
       prompt: question.prompt, answer: answers[index] || "",
-      correct: answerMatches(answers[index], accepted),
-      expected: accepted.join(" or "), solution: question.solution,
+      correct: answerMatches(answers[index], accepted, question),
+      expected: expectedFor(question, accepted), solution: question.solution,
     };
   });
   const score = Math.round(results.filter((result) => result.correct).length * 100 / questions.length);

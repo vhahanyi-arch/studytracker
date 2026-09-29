@@ -20,6 +20,8 @@ type Sample = {
   hint: string;
   solution: string;
   format?: string;
+  /** The unit of a physics answer ("m/s²"); a typed unit must be this one. */
+  answerUnit?: string;
 };
 type Engines = {
   maths: typeof import("@/lib/lower-secondary-question-engine");
@@ -57,6 +59,7 @@ function draw(engines: Engines, subject: Subject): Sample {
     hint: q.hint,
     solution: q.solution,
     format: engines.physics.answerFormatFor(q) || undefined,
+    answerUnit: q.unit,
   };
 }
 
@@ -98,8 +101,10 @@ export function TryQuestion() {
   function check(event: React.FormEvent) {
     event.preventDefault();
     if (!sample || !engines.current || !answer.trim()) return;
-    const engine = subject === "maths" ? engines.current.maths : engines.current.physics;
-    setVerdict(engine.answerMatches(answer, sample.answers) ? "right" : "wrong");
+    const right = subject === "maths"
+      ? engines.current.maths.answerMatches(answer, sample.answers)
+      : engines.current.physics.answerMatches(answer, sample.answers, sample.answerUnit);
+    setVerdict(right ? "right" : "wrong");
   }
 
   return (

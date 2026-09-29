@@ -8,6 +8,7 @@ import { ensureSchema, sql } from "@/lib/db";
 import {
   answerMatches,
   answerFormatFor,
+  expectedAnswerText,
   makePhysicsQuestions,
   supportsPhysicsUnit,
   type PhysicsQuestion,
@@ -140,7 +141,9 @@ export async function POST(request: Request) {
         { status: 404 },
       );
     const questions = JSON.parse(String(rows[0].questions_json)) as PhysicsQuestion[];
-    const { answers, results, score } = markPracticeSet(questions, body.answers, (question) => question.answers, answerMatches);
+    // Sessions saved before units were checked have no unit, and accept any real one.
+    const { answers, results, score } = markPracticeSet(questions, body.answers, (question) => question.answers,
+      (answer, accepted, question) => answerMatches(answer, accepted, question.unit), expectedAnswerText);
     const hintsUsed = countHints(body.hints);
     const id = String(body.id);
     const savedLevel = String(rows[0].level);
