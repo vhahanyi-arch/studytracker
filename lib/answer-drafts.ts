@@ -19,7 +19,15 @@ export type AnswerDraft = {
   mode: "typed" | "handwritten" | "both" | "paper";
   paperPages?: Record<number, string>;
   paperPageNumber?: number;
+  // A Stage 8/9 full past paper: how the student chose to sit it.
+  sitting?: PaperSitting;
   savedAt: string;
+};
+
+export type PaperSitting = {
+  practice: boolean;
+  timerMinutes: number | null;
+  startedAt: string;
 };
 
 export const openDraftStore = () =>

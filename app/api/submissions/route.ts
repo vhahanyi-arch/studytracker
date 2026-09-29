@@ -25,12 +25,12 @@ export async function GET() {
   if (viewer.role === "student") {
     await ensureSchema();
     const results = await sql`
-      SELECT s.id, s.assignment_id, s.status, s.total_final, s.teacher_feedback, s.published_at,
+      SELECT s.id, s.assignment_id, s.status, s.total_final, s.teacher_feedback, s.published_at, s.attempt,
         a.title, a.paper_mode, COALESCE(SUM(q.marks), 0)::int AS maximum
       FROM submissions s JOIN assignments a ON a.id = s.assignment_id
       LEFT JOIN assignment_questions q ON q.assignment_id = a.id
-      WHERE s.student_id = ${userId} AND s.status = 'published'
-      GROUP BY s.id, s.assignment_id, a.title, a.paper_mode ORDER BY s.published_at DESC
+      WHERE s.student_id = ${userId} AND s.status = 'published' AND NOT s.self_practice
+      GROUP BY s.id, s.assignment_id, s.attempt, a.title, a.paper_mode ORDER BY s.published_at DESC
     `;
     const marksOf = bySubmission(await sql`
       SELECT m.submission_id, q.label, q.marks AS maximum, m.final_mark,
@@ -48,9 +48,9 @@ export async function GET() {
   const submissions = await sql`
     SELECT s.id, s.assignment_id, s.student_id, s.answer_text, s.status,
       s.submitted_at, s.total_proposed, s.total_final, s.teacher_feedback,
-      s.published_at, s.handwritten_url, a.title, a.paper_mode
+      s.published_at, s.handwritten_url, s.attempt, a.title, a.paper_mode
     FROM submissions s JOIN assignments a ON a.id = s.assignment_id
-    WHERE a.teacher_id = ${userId} ORDER BY s.submitted_at DESC
+    WHERE a.teacher_id = ${userId} AND NOT s.self_practice ORDER BY s.submitted_at DESC
   `;
   // Every question of every listed paper, with this submission's mark if any:
   // one query and one batched name lookup, rather than two calls per row.

@@ -10,7 +10,8 @@
 // 2: physics_exam_jobs, for extractions running in the background.
 // 3: physics_exam_drafts, for exam answers saved as the student works.
 // 4: indexes on the columns every teacher and student screen filters by.
-export const SCHEMA_VERSION = 4;
+// 5: Stage 8/9 full past papers: numbered attempts, practice sittings.
+export const SCHEMA_VERSION = 5;
 
 /**
  * Whether the DDL still needs applying, given the newest stamp in the table.

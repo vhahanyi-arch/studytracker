@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
 import { gradeQuestion } from "@/lib/grade-question";
 import { questionPages, wholePaperLink } from "@/lib/handwritten-pages";
+import { sittingTimer, studentPaper } from "@/lib/paper-access";
 import { questionKey } from "@/lib/paper-questions";
 import { currentViewer } from "@/lib/session";
 
@@ -10,6 +11,7 @@ import { currentViewer } from "@/lib/session";
 // it is the teacher's, and a published result is final. Checked before any
 // file is uploaded, and again by the unique key when the row is written.
 const ALREADY_SUBMITTED = "You have already submitted this paper.";
+const STILL_WITH_TEACHER = "Your last attempt at this paper is still with your teacher. You can sit it again once it has been marked.";
 const isUniqueViolation = (error: unknown) =>
   (error as { code?: unknown } | null)?.code === "23505";
 
@@ -28,20 +30,14 @@ export async function POST(
   const { userId } = viewer;
   const { id } = await context.params;
   await ensureSchema();
-  const assigned = await sql`
-    SELECT 1 FROM assignment_students s
-    JOIN assignments a ON a.id = s.assignment_id
-    WHERE s.assignment_id = ${id} AND s.student_id = ${userId}
-      AND a.status = 'assigned'
-    LIMIT 1
-  `;
-  if (!assigned.length)
+  const access = await studentPaper(id, userId);
+  if (!access)
     return NextResponse.json(
       { error: "This paper is not assigned to your account." },
       { status: 403 },
     );
   const [previous, questions] = await Promise.all([
-    sql`SELECT 1 FROM submissions WHERE assignment_id = ${id} AND student_id = ${userId} LIMIT 1`,
+    sql`SELECT attempt, status FROM submissions WHERE assignment_id = ${id} AND student_id = ${userId} ORDER BY attempt DESC`,
     sql`
       SELECT q.id, q.label, q.marks, q.page_number, q.response_type, q.expected_answer,
         a.subject, a.syllabus, a.paper_mode
@@ -50,9 +46,16 @@ export async function POST(
       WHERE q.assignment_id = ${id} ORDER BY q.position
     `,
   ]);
-  if (previous.length)
+  // A full past paper can be sat again once the last attempt has a result;
+  // any other paper only once.
+  if (previous.length && !access.fullPaper)
     return NextResponse.json({ error: ALREADY_SUBMITTED }, { status: 409 });
+  if (previous.length && previous[0].status !== "published")
+    return NextResponse.json({ error: STILL_WITH_TEACHER }, { status: 409 });
+  const attempt = previous.length ? Number(previous[0].attempt) + 1 : 1;
   const form = await request.formData();
+  const practice = access.fullPaper && form.get("sitting") === "practice";
+  const timerMinutes = access.fullPaper ? sittingTimer(form.get("timerMinutes")) : null;
   const answerText = String(form.get("answers") ?? "").trim();
   const handwrittenFiles = form
     .getAll("handwritten")
@@ -184,15 +187,22 @@ export async function POST(
   }));
   const proposedTotal = graded.reduce((total, mark) => total + (mark.proposed ?? 0), 0);
   const maximumTotal = graded.reduce((total, mark) => total + mark.maximum, 0);
-  // Multiple-choice marks are final at once, and the result is published.
+  // Multiple-choice marks are final at once, and the result is published. So
+  // is a practice sitting of a full past paper: it never reaches the marking
+  // queue, and a question the marker cannot decide (a drawing, handwriting, no
+  // accepted answer) scores nothing, which the student is told.
+  const final = multipleChoice || practice;
+  const finalMark = (mark: (typeof graded)[number]) => (final ? mark.proposed ?? 0 : null);
+  const finalTotal = graded.reduce((total, mark) => total + (finalMark(mark) ?? 0), 0);
   const submissionId = crypto.randomUUID();
   try {
     await sql.transaction([
       sql`
-        INSERT INTO submissions (id, assignment_id, student_id, answer_text, handwritten_url, status, total_proposed, total_final, published_at)
+        INSERT INTO submissions (id, assignment_id, student_id, answer_text, handwritten_url, status, total_proposed, total_final, published_at, attempt, self_practice, timer_minutes)
         VALUES (${submissionId}, ${id}, ${userId}, ${storedAnswers || null}, ${handwrittenUrl},
-          ${multipleChoice ? "published" : "awaiting_review"}, ${proposedTotal},
-          ${multipleChoice ? proposedTotal : null}, ${multipleChoice ? new Date().toISOString() : null})
+          ${final ? "published" : "awaiting_review"}, ${proposedTotal},
+          ${final ? finalTotal : null}, ${final ? new Date().toISOString() : null},
+          ${attempt}, ${practice}, ${timerMinutes})
       `,
       sql`
         INSERT INTO submission_marks
@@ -201,24 +211,27 @@ export async function POST(
         FROM unnest(
           ${graded.map((mark) => mark.questionId)}::uuid[],
           ${graded.map((mark) => mark.proposed)}::int[],
-          ${graded.map((mark) => (multipleChoice ? mark.proposed : null))}::int[],
+          ${graded.map(finalMark)}::int[],
           ${graded.map((mark) => (multipleChoice ? "high" : mark.confidence))}::text[],
           ${graded.map((mark) => mark.rationale)}::text[]
         ) AS m(question_id, proposed, final, confidence, rationale)
       `,
     ]);
   } catch (error) {
-    // A second tab submitted between the check above and this write.
+    // A second tab submitted between the check above and this write, and took
+    // this attempt's number.
     if (isUniqueViolation(error))
-      return NextResponse.json({ error: ALREADY_SUBMITTED }, { status: 409 });
+      return NextResponse.json({ error: access.fullPaper ? "This attempt was already submitted from another tab." : ALREADY_SUBMITTED }, { status: 409 });
     throw error;
   }
-  if (multipleChoice)
+  const sitting = access.fullPaper ? { attempt, practice, submissionId } : {};
+  if (final)
     return NextResponse.json({
       submitted: true,
       status: "published",
-      total: proposedTotal,
+      total: finalTotal,
       maximum: maximumTotal,
+      ...sitting,
     });
-  return NextResponse.json({ submitted: true, status: "awaiting_review" });
+  return NextResponse.json({ submitted: true, status: "awaiting_review", ...sitting });
 }

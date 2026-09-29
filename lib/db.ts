@@ -326,6 +326,23 @@ async function applySchema() {
   await sql`CREATE INDEX IF NOT EXISTS lower_secondary_practice_teacher_idx ON lower_secondary_practice_sessions (teacher_id)`;
   await sql`CREATE INDEX IF NOT EXISTS physics_practice_student_idx ON physics_practice_sessions (student_id, level, chapter_id)`;
   await sql`CREATE INDEX IF NOT EXISTS physics_practice_teacher_idx ON physics_practice_sessions (teacher_id)`;
+  // Stage 8/9 full past papers (schema 5). A library paper the teacher has set
+  // as a full paper can be sat by that stage's class, again and again: each
+  // sitting is a numbered attempt, either practice (marked at once, never in
+  // the marking queue) or for the teacher. Every other paper stays at one
+  // submission, attempt 1, which the new unique key still enforces. The key
+  // replaces the one CREATE TABLE above gives (Postgres names it
+  // submissions_assignment_id_student_id_key); the CREATE TABLE is left as it
+  // was so that a new database goes through the same change as production.
+  await sql`ALTER TABLE assignments ADD COLUMN IF NOT EXISTS full_paper_set_at TIMESTAMPTZ`;
+  await sql`
+    ALTER TABLE submissions
+    ADD COLUMN IF NOT EXISTS attempt INTEGER NOT NULL DEFAULT 1,
+    ADD COLUMN IF NOT EXISTS self_practice BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS timer_minutes INTEGER
+  `;
+  await sql`CREATE UNIQUE INDEX IF NOT EXISTS submissions_attempt_key ON submissions (assignment_id, student_id, attempt)`;
+  await sql`ALTER TABLE submissions DROP CONSTRAINT IF EXISTS submissions_assignment_id_student_id_key`;
 }
 
 export async function ensureSchema() {

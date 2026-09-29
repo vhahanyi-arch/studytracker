@@ -10,13 +10,16 @@ export function PdfAnnotator({
   pageNumber,
   setPageNumber,
   onSubmitted,
+  extraFields = {},
 }: {
   assignment: { id: string; title: string };
   pages: Record<number, string>;
   setPages: React.Dispatch<React.SetStateAction<Record<number, string>>>;
   pageNumber: number;
   setPageNumber: React.Dispatch<React.SetStateAction<number>>;
-  onSubmitted: (status: string) => Promise<void>;
+  onSubmitted: (status: string, result?: Record<string, unknown>) => Promise<void>;
+  // Sent with the submission as they are: how a full past paper is being sat.
+  extraFields?: Record<string, string>;
 }) {
   const paperCanvas = useRef<HTMLCanvasElement>(null);
   const inkCanvas = useRef<HTMLCanvasElement>(null);
@@ -105,12 +108,13 @@ export function PdfAnnotator({
         })),
       ),
     );
+    for (const [key, value] of Object.entries(extraFields)) form.set(key, value);
     const response = await fetch(`/api/assignments/${assignment.id}/submit`, {
       method: "POST",
       body: form,
     });
     const result = await response.json();
-    if (response.ok) await onSubmitted(String(result.status || "awaiting_review"));
+    if (response.ok) await onSubmitted(String(result.status || "awaiting_review"), result);
     setMessage(
       response.ok
         ? "Your annotated paper was submitted to your teacher."

@@ -38,7 +38,7 @@ export async function GET() {
           FROM submissions s
           JOIN assignments a ON a.id = s.assignment_id
           LEFT JOIN assignment_questions q ON q.assignment_id = a.id
-          WHERE a.teacher_id = ${userId} AND s.status = 'published'
+          WHERE a.teacher_id = ${userId} AND s.status = 'published' AND NOT s.self_practice
           GROUP BY s.id
         )
         SELECT COALESCE(
@@ -74,7 +74,7 @@ export async function GET() {
         JOIN submissions s ON s.id = m.submission_id
         JOIN assignment_questions q ON q.id = m.question_id
         JOIN assignments a ON a.id = s.assignment_id
-        WHERE a.teacher_id = ${userId} AND s.status = 'published'
+        WHERE a.teacher_id = ${userId} AND s.status = 'published' AND NOT s.self_practice
           AND m.final_mark IS NOT NULL AND q.marks > 0
         GROUP BY COALESCE(NULLIF(TRIM(q.topic), ''), 'General skills')
         ORDER BY responses DESC, topic

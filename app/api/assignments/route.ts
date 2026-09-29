@@ -21,7 +21,7 @@ export async function GET() {
   await ensureSchema();
   const rows =
     viewer.role === "teacher"
-      ? await sql`SELECT id, title, subject, syllabus, paper_mode, class_name, due_date, status, created_at, lower_secondary_stage, is_practice_library, source_year, resource_kind, content_start_page, content_end_page FROM assignments WHERE teacher_id = ${viewer.userId} ORDER BY created_at DESC`
+      ? await sql`SELECT id, title, subject, syllabus, paper_mode, class_name, due_date, status, created_at, lower_secondary_stage, is_practice_library, source_year, resource_kind, content_start_page, content_end_page, full_paper_set_at FROM assignments WHERE teacher_id = ${viewer.userId} ORDER BY created_at DESC`
       : await sql`
           SELECT a.id, a.title, a.subject, a.syllabus, a.paper_mode,
             a.class_name, a.due_date, a.status, a.created_at,

@@ -24,6 +24,7 @@ import { overall, trend, series, perUnit, type PracticeSession } from '@/lib/pro
 import {
   type AnswerRow,
   type AnswerDraft,
+  type PaperSitting,
   readAnswerDraft,
   writeAnswerDraft,
   removeAnswerDraft,
@@ -36,6 +37,8 @@ import { RevisionNotes } from '@/components/RevisionNotes';
 import { DrawingPad } from '@/components/DrawingPad';
 import { QuestionImage } from '@/components/QuestionImage';
 import { PdfAnnotator } from '@/components/PdfAnnotator';
+import { FullPaperControls, type FullPaperInfo } from '@/components/full-papers/FullPaperTeacher';
+import { FullPaperList, FullPaperResult, SittingClock, type FullPaperSummary } from '@/components/full-papers/FullPaperStudent';
 import { type PaperQuestion, displayCrop, questionKey } from '@/lib/paper-questions';
 import { ExamReview, type ReviewPaper, type Extraction } from '@/components/exam/ExamReview';
 import { ExamAttempt, type AttemptPaper } from '@/components/exam/ExamAttempt';
@@ -689,11 +692,11 @@ function DashboardEmpty({ text }: { text: string }) {
 type LowerSecondaryStudent = { id:string; name:string; username:string; enrolled:boolean };
 
 function PastPaperLibrary({stage}:{stage:8|9}){
-  const [papers,setPapers]=useState<AssignmentSummary[]>([]),[uploading,setUploading]=useState(false),[showUpload,setShowUpload]=useState(false),[message,setMessage]=useState(""),[setup,setSetup]=useState<AssignmentSummary|null>(null),[reviewing,setReviewing]=useState<AssignmentSummary|null>(null);
-  const load=()=>fetch("/api/assignments").then(response=>response.json()).then(rows=>setPapers((Array.isArray(rows)?rows:[]).filter((paper:AssignmentSummary)=>paper.is_practice_library&&paper.lower_secondary_stage===stage)));
+  const [papers,setPapers]=useState<AssignmentSummary[]>([]),[uploading,setUploading]=useState(false),[showUpload,setShowUpload]=useState(false),[message,setMessage]=useState(""),[setup,setSetup]=useState<AssignmentSummary|null>(null),[reviewing,setReviewing]=useState<AssignmentSummary|null>(null),[fullPapers,setFullPapers]=useState<Record<string,FullPaperInfo>>({});
+  const load=()=>{fetch("/api/assignments").then(response=>response.json()).then(rows=>setPapers((Array.isArray(rows)?rows:[]).filter((paper:AssignmentSummary)=>paper.is_practice_library&&paper.lower_secondary_stage===stage)));fetch(`/api/lower-secondary/full-papers?stage=${stage}`).then(response=>response.json()).then(result=>setFullPapers(Object.fromEntries((Array.isArray(result?.papers)?result.papers:[]).map((paper:FullPaperInfo)=>[paper.id,paper])))).catch(()=>setFullPapers({}));};
   useEffect(()=>{load();setMessage("");setShowUpload(false);setSetup(null);setReviewing(null);},[stage]);
   const upload=async(event:React.FormEvent<HTMLFormElement>)=>{event.preventDefault();setUploading(true);setMessage("Uploading both PDFs securely…");const data=new FormData(event.currentTarget);data.set("profile",`lower-secondary-stage${stage}`);data.set("paperMode","structured");data.set("className",`Stage ${stage} past-paper library`);data.set("library","true");data.set("stage",String(stage));const response=await fetch("/api/assignments",{method:"POST",body:data});const result=await response.json();setUploading(false);if(!response.ok){setMessage(result.error||"The paper could not be uploaded.");return;}setPapers(current=>[result,...current]);setShowUpload(false);setMessage("Paper saved. Open question setup to detect, match and approve its questions.");};
-  return <section className="panel past-paper-library"><header><div><small>TEACHER-CONTROLLED SOURCE LIBRARY</small><h3>Stage {stage} past papers</h3><p>Upload a question paper with its mark scheme, then approve every detected question before it joins practice.</p></div><button className="primary" onClick={()=>setShowUpload(value=>!value)}>{showUpload?"Cancel":"＋ Upload paper"}</button></header>{message&&<p className="queue-message">{message}</p>}{showUpload&&<form className="past-paper-upload" onSubmit={upload}><label>Paper title<input name="title" placeholder={`Stage ${stage} End-of-year paper`} required/></label><label>Year or session<input name="year" placeholder="2025" required/></label><label>Question paper PDF<input name="paper" type="file" accept="application/pdf,.pdf" required/></label><label>Mark scheme PDF<input name="scheme" type="file" accept="application/pdf,.pdf" required/></label><button className="primary" disabled={uploading}>{uploading?"Uploading…":"Save to library →"}</button></form>}<div className="past-paper-grid">{papers.map(paper=><article key={paper.id}><span>PDF</span><div><b>{paper.title}</b><small>Stage {stage} · {paper.source_year||"Year not set"}</small><em className={paper.status==="assigned"?"paper-ready":"paper-paused"}>{paper.status==="assigned"?"Approved for practice":"Teacher setup required"}</em></div><div className="past-paper-actions"><button onClick={()=>setReviewing(paper)}>Review uploaded files</button><button onClick={()=>setSetup(paper)}>{paper.status==="assigned"?"Review questions":"Set up questions"} →</button></div></article>)}{!papers.length&&!showUpload&&<p className="dashboard-empty">No Stage {stage} past papers have been uploaded yet.</p>}</div>{reviewing&&<FileReview assignment={reviewing} close={()=>setReviewing(null)} openSetup={()=>{setSetup(reviewing);setReviewing(null);}} replaced={(status,notice)=>{setPapers(current=>current.map(paper=>paper.id===reviewing.id?{...paper,status}:paper));setReviewing(current=>current?{...current,status}:current);setMessage(notice);}}/>}{setup&&<QuestionSetup assignment={setup} close={()=>setSetup(null)} saved={()=>{setPapers(current=>current.map(paper=>paper.id===setup.id?{...paper,status:"assigned"}:paper));setMessage(`Questions approved. Typed questions with an accepted answer now appear as past-paper practice on their Stage ${stage} unit.`);setSetup(null);}}/>}</section>;
+  return <section className="panel past-paper-library"><header><div><small>TEACHER-CONTROLLED SOURCE LIBRARY</small><h3>Stage {stage} past papers</h3><p>Upload a question paper with its mark scheme, then approve every detected question before it joins practice.</p></div><button className="primary" onClick={()=>setShowUpload(value=>!value)}>{showUpload?"Cancel":"＋ Upload paper"}</button></header>{message&&<p className="queue-message">{message}</p>}{showUpload&&<form className="past-paper-upload" onSubmit={upload}><label>Paper title<input name="title" placeholder={`Stage ${stage} End-of-year paper`} required/></label><label>Year or session<input name="year" placeholder="2025" required/></label><label>Question paper PDF<input name="paper" type="file" accept="application/pdf,.pdf" required/></label><label>Mark scheme PDF<input name="scheme" type="file" accept="application/pdf,.pdf" required/></label><button className="primary" disabled={uploading}>{uploading?"Uploading…":"Save to library →"}</button></form>}<div className="past-paper-grid">{papers.map(paper=><article key={paper.id}><span>PDF</span><div><b>{paper.title}</b><small>Stage {stage} · {paper.source_year||"Year not set"}</small><em className={paper.status==="assigned"?"paper-ready":"paper-paused"}>{paper.status==="assigned"?"Approved for practice":"Teacher setup required"}</em></div><div className="past-paper-actions"><button onClick={()=>setReviewing(paper)}>Review uploaded files</button><button onClick={()=>setSetup(paper)}>{paper.status==="assigned"?"Review questions":"Set up questions"} →</button></div><FullPaperControls stage={stage} approved={paper.status==="assigned"} info={fullPapers[paper.id]??{id:paper.id,full_paper_set_at:null,due_date:null,maximum:0,attempts:[]}} changed={next=>setFullPapers(current=>({...current,[paper.id]:{...(current[paper.id]??{id:paper.id,maximum:0,attempts:[]}),...next}}))}/></article>)}{!papers.length&&!showUpload&&<p className="dashboard-empty">No Stage {stage} past papers have been uploaded yet.</p>}</div>{reviewing&&<FileReview assignment={reviewing} close={()=>setReviewing(null)} openSetup={()=>{setSetup(reviewing);setReviewing(null);}} replaced={(status,notice)=>{setPapers(current=>current.map(paper=>paper.id===reviewing.id?{...paper,status}:paper));setReviewing(current=>current?{...current,status}:current);setMessage(notice);}}/>}{setup&&<QuestionSetup assignment={setup} close={()=>setSetup(null)} saved={()=>{setPapers(current=>current.map(paper=>paper.id===setup.id?{...paper,status:"assigned"}:paper));setMessage(`Questions approved. Typed questions with an accepted answer now appear as past-paper practice on their Stage ${stage} unit.`);setSetup(null);}}/>}</section>;
 }
 
 function PhysicsSyllabusChecklist({ level }:{ level:"igcse"|"as" }) {
@@ -1540,6 +1543,9 @@ function Stage89Student({ back }:{ back:()=>void }) {
   // Approved past-paper questions per unit. A unit offers a past-paper set
   // only when its count is above zero; those sets never count toward mastery.
   const [pastPaperCounts,setPastPaperCounts]=useState<Record<string,number>>({});
+  // A whole past paper being sat, or a finished attempt being looked at. The
+  // list reloads (a new key) whenever a sitting closes.
+  const [fullSitting,setFullSitting]=useState<{paper:FullPaperSummary;sitting?:PaperSitting}|null>(null),[fullResult,setFullResult]=useState<string|null>(null),[fullListKey,setFullListKey]=useState(0);
   const stage7Available = stage7Chapters.filter(unit=>unit.id==="integers");
   const unitsForStage=(value:7|8|9):LowerSecondaryUnit[]=>value===9?stage9Units:value===8?stage8Units:stage7Available;
   const sourceForUnit=(id:string):7|8|9=>id.startsWith("s9-")?9:id.startsWith("s8-")?8:7;
@@ -1563,6 +1569,10 @@ function Stage89Student({ back }:{ back:()=>void }) {
   const closePractice=()=>{setPractice(null);setSession(null);setResult(null);setMessage("");};
   const enrolledStages=([8,9] as const).filter(value=>records[value]?.enrolled);
 
+  const closeSitting=()=>{setFullSitting(null);setFullListKey(key=>key+1);};
+  if(fullSitting)return <AnswerWorkspace assignment={fullSitting.paper} sitting={fullSitting.sitting} backLabel="← Past papers" back={closeSitting} submitted={(status,result)=>{closeSitting();if(status==="published"&&result?.submissionId)setFullResult(String(result.submissionId));else setMessage("Your paper was sent to your teacher. Your result will appear under Past papers once it is marked.");}}/>;
+  if(fullResult)return <FullPaperResult attemptId={fullResult} back={()=>setFullResult(null)}/>;
+
   if(loaded&&!enrolledStages.length)return <><div className="portal-heading"><div><p>CAMBRIDGE LOWER SECONDARY MATHEMATICS</p><h1>Stages 8 and 9 mastery</h1><h2>Your teacher has not added you to a Stage 8 or Stage 9 class yet.</h2></div><button onClick={back}>← Assigned papers</button></div><section className="panel dashboard-empty">Ask your teacher to add your account under Stages 8 &amp; 9.</section></>;
   if(practice&&session){const question=session.questions[cursor];const past=!!session.past_paper;if(result)return <section className="stage7-practice panel practice-summary"><header><button onClick={closePractice}>← Curriculum</button><div><small>STAGE {practice.sourceStage} · {past?"PAST-PAPER PRACTICE COMPLETE":"PRACTICE COMPLETE"}</small><h2>{practice.title}</h2></div><span>{past?"Past-paper practice":result.mastered?"Mastered":"Keep practising"}</span></header><main><div className="mastery-score"><b>{result.score}%</b><span>{past?`${result.results.filter((item:any)=>item.correct).length} of ${result.results.length} correct`:result.score>=80?"Strong set achieved":"Target: 80%"}</span></div><h2>{!past&&result.mastered?`Stage ${practice.sourceStage} unit mastery achieved`:"Your worked review"}</h2><p>{past?`Past-paper practice does not count toward mastery · ${result.hints_used} hints used`:`${result.strong_sets} of 2 strong sets completed · ${result.hints_used} hints used`}</p><div className="worked-review">{result.results.map((item:any,index:number)=><article className={item.correct?"correct":"retry"} key={index}><span>{item.correct?"✓":"!"}</span><div><b>Question {index+1}: {item.prompt}</b><p>Your answer: {item.answer||"No answer"}</p><strong>{item.solution}</strong></div></article>)}</div></main><footer><button onClick={closePractice}>Return to curriculum</button><button className="primary" onClick={()=>startPractice(practice,practice.sourceStage,past)}>{past?"More past-paper questions":"Start a fresh set"}</button></footer></section>;
     return <section className="stage7-practice panel"><header><button onClick={closePractice}>← Curriculum</button><div><small>STAGE {practice.sourceStage} {past?"PAST-PAPER PRACTICE":`${practice.sourceStage<homeStage?"REVISION":"PRACTICE"} · ${session.difficulty.toUpperCase()}`}</small><h2>{practice.title}</h2></div><span>Question {cursor+1} of {session.questions.length}</span></header><div className="practice-progress"><i style={{width:`${((cursor+1)/session.questions.length)*100}%`}}/></div><main><small>QUESTION {cursor+1}</small>{question.objective&&<p className="practice-objective">{question.objective}</p>}<h1>{question.prompt}</h1>{question.source&&<PastPaperPracticeCrop source={question.source}/>} {hints[cursor]&&<p className="practice-hint">Hint: {question.hint}</p>}<label>Your answer{question.answerFormat&&<small className="answer-format">Answer format: {question.answerFormat}</small>}<input value={answers[cursor]} placeholder={question.answerFormat||"Enter your answer"} onChange={event=>setAnswers(answers.map((value,index)=>index===cursor?event.target.value:value))} onKeyDown={event=>{if(event.key==="Enter"){event.preventDefault();cursor<session.questions.length-1?setCursor(cursor+1):submitPractice();}}} autoFocus/></label></main><footer><button onClick={()=>setHints(hints.map((value,index)=>index===cursor?true:value))}>{hints[cursor]?"Hint shown":"Show hint"}</button><div><button disabled={cursor===0} onClick={()=>setCursor(cursor-1)}>← Previous</button>{cursor<session.questions.length-1?<button className="primary" onClick={()=>setCursor(cursor+1)}>Next →</button>:<button className="primary" onClick={submitPractice}>Finish &amp; mark set</button>}</div></footer>{message&&<p className="queue-message">{message}</p>}</section>;
@@ -1573,6 +1583,7 @@ function Stage89Student({ back }:{ back:()=>void }) {
     <section className="weekly-focus"><header><div><small>YOUR FOCUS THIS WEEK</small><h2>Stage {homeStage} class priorities</h2><p>Your teacher can include current units and prerequisite revision.</p></div><b>{focusUnits.length} units</b></header><div>{focusUnits.length?focusUnits.map(unit=>{const item=progress[unit.id];return <article key={`${unit.sourceStage}-${unit.id}`}><span>{unit.icon}</span><div><b>Stage {unit.sourceStage} · {unit.title}</b><p>{item?.mastered?"Mastered":`${item?.strong_sets||0} of 2 strong sets`}</p><i><em style={{width:`${Math.min(100,((item?.strong_sets||0)/2)*100)}%`}}/></i></div><button onClick={()=>startPractice(unit,unit.sourceStage)}>{item?.attempts?"Continue practice →":"Start practice →"}</button></article>}):<p className="dashboard-empty">Your teacher has not selected a weekly focus yet.</p>}</div></section>
     {recommendations.length>0&&<section className="panel foundation-recommendations"><header><div><small>RECOMMENDED FOR YOU</small><h3>Strengthen the foundation first</h3><p>Your recent results suggest that these earlier-stage units will help with your current work.</p></div><span>Adaptive revision</span></header><div>{recommendations.map(unit=><article key={`${unit.sourceStage}-${unit.id}`}><span>{unit.icon}</span><div><small>STAGE {unit.sourceStage} FOUNDATION</small><b>{unit.title}</b><p>{unit.summary}</p></div><button onClick={()=>startPractice(unit,unit.sourceStage)}>Practise foundation</button></article>)}</div></section>}
     {message&&<p className="queue-message panel">{message}</p>}
+    <FullPaperList key={`${homeStage}-${fullListKey}`} stage={homeStage} open={(paper,sitting)=>{setMessage("");setFullSitting({paper,sitting});}} showAttempt={setFullResult}/>
     <div className="stage7-library-head"><div><small>{sourceStage===homeStage?`STAGE ${sourceStage} CURRICULUM`:`STAGE ${sourceStage} PREREQUISITE REVISION`}</small><h2>{sourceStage===homeStage?"Current curriculum library":"Earlier-stage foundations"}</h2><p>{sourceStage===7?"Stage 7 question coverage will grow as its library is completed.":`All ${sourceUnits.length} Stage ${sourceStage} units are open for revision.`}</p></div><span>{sourceUnits.filter(unit=>progress[unit.id]?.mastered).length} of {sourceUnits.length} mastered</span></div>
     <div className="stage7-chapter-grid student">{sourceUnits.map(unit=>{const item=progress[unit.id];const focused=focus.includes(unit.id);return <article key={`${sourceStage}-${unit.id}`} className={focused?"focus":""}><span>{unit.icon}</span><small>Stage {sourceStage} · {unit.strand}</small><h3>{unit.title}</h3><p>{unit.summary}</p><div><em>{item?.mastered?"Mastered":item?.attempts?"In progress":focused?"This week":"Not started"}</em><b>{item?.attempts?`${item.average}%`:"—"}</b></div><button onClick={()=>startPractice(unit,sourceStage)}>{focused?"Start weekly focus":"Practise unit"} →</button>{!!pastPaperCounts[unit.id]&&<button className="notes-link" onClick={()=>startPractice(unit,sourceStage,true)}>Past-paper questions ({pastPaperCounts[unit.id]}) →</button>}</article>})}</div>
   </>;
@@ -4738,7 +4749,7 @@ function Submissions() {
           <div>
             <p>TEACHER REVIEW · NOT VISIBLE TO STUDENT</p>
             <h1>{active.student_name}</h1>
-            <h2>{active.title}</h2>
+            <h2>{active.title}{active.attempt > 1 ? ` · Attempt ${active.attempt}` : ""}</h2>
           </div>
           <button onClick={() => setActive(null)}>← Marking queue</button>
           <button
@@ -5098,7 +5109,7 @@ function Submissions() {
             </span>
             <div>
               <b>{submission.student_name}</b>
-              <small>{submission.title}</small>
+              <small>{submission.title}{submission.attempt > 1 ? ` · Attempt ${submission.attempt}` : ""}</small>
             </div>
             <em className={submission.status === "published" ? "" : "warn"}>
               {submission.status === "published"
@@ -5143,6 +5154,8 @@ function AnswerWorkspace({
   assignment,
   back,
   submitted,
+  sitting,
+  backLabel = "← Assigned papers",
 }: {
   assignment: {
     id: string;
@@ -5152,8 +5165,17 @@ function AnswerWorkspace({
     paper_mode?: "structured" | "multiple_choice";
   };
   back: () => void;
-  submitted: (status: string) => void;
+  submitted: (status: string, result?: Record<string, unknown>) => void;
+  // A Stage 8/9 full past paper: how the student chose to sit it. A sitting
+  // saved with the draft wins, so a resumed paper keeps its first clock.
+  sitting?: PaperSitting;
+  backLabel?: string;
 }) {
+  const [activeSitting, setActiveSitting] = useState<PaperSitting | undefined>(sitting);
+  const sittingFields = (): Record<string, string> =>
+    activeSitting
+      ? { sitting: activeSitting.practice ? "practice" : "teacher", timerMinutes: String(activeSitting.timerMinutes ?? "") }
+      : {};
   const { user } = useUser();
   const formRef = useRef<HTMLFormElement>(null);
   const [rows, setRows] = useState<AnswerRow[]>([
@@ -5245,6 +5267,7 @@ function AnswerWorkspace({
           setMode(
             assignment.paper_mode === "multiple_choice" ? "typed" : restored!.mode,
           );
+        if (validDraft && restored!.sitting && sitting) setActiveSitting(restored!.sitting);
         if (validDraft) {
           setPaperPages(restored!.paperPages || {});
           setPaperPageNumber(restored!.paperPageNumber || 1);
@@ -5281,6 +5304,7 @@ function AnswerWorkspace({
         mode,
         paperPages,
         paperPageNumber,
+        sitting: activeSitting,
         savedAt: new Date().toISOString(),
       };
       const write = (async () => {
@@ -5308,6 +5332,7 @@ function AnswerWorkspace({
     mode,
     paperPages,
     paperPageNumber,
+    activeSitting,
     draftReady,
     draftKey,
     assignment.id,
@@ -5384,6 +5409,7 @@ function AnswerWorkspace({
         ),
       ),
     );
+    for (const [key, value] of Object.entries(sittingFields())) form.set(key, value);
     const response = await fetch(`/api/assignments/${assignment.id}/submit`, {
       method: "POST",
       body: form,
@@ -5391,7 +5417,7 @@ function AnswerWorkspace({
     const result = await response.json();
     if (response.ok) {
       await clearSavedDraft();
-      submitted(String(result.status || "awaiting_review"));
+      submitted(String(result.status || "awaiting_review"), result);
       setReviewingSubmission(false);
     }
     setMessage(
@@ -5413,8 +5439,9 @@ function AnswerWorkspace({
             <h2>Write and shade directly on the question paper.</h2>
           </div>
           <div>
+            {activeSitting && <SittingClock sitting={activeSitting} />}
             <button onClick={() => setMode("typed")}>Use answer sheet</button>
-            <button onClick={back}>← Assigned papers</button>
+            <button onClick={back}>{backLabel}</button>
           </div>
         </div>
         <PdfAnnotator
@@ -5423,9 +5450,10 @@ function AnswerWorkspace({
           setPages={setPaperPages}
           pageNumber={paperPageNumber}
           setPageNumber={setPaperPageNumber}
-          onSubmitted={async (status) => {
+          extraFields={sittingFields()}
+          onSubmitted={async (status, result) => {
             await clearSavedDraft();
-            submitted(status);
+            submitted(status, result);
           }}
         />
       </>
@@ -5434,11 +5462,14 @@ function AnswerWorkspace({
     <>
       <div className="portal-heading answer-workspace-head">
         <div>
-          <p>ANSWER WORKSPACE</p>
+          <p>{activeSitting ? (activeSitting.practice ? "PRACTICE SITTING" : "SITTING FOR YOUR TEACHER") : "ANSWER WORKSPACE"}</p>
           <h1>{assignment.title}</h1>
           <h2>Read the paper, then type answers or upload handwritten work.</h2>
         </div>
-        <button onClick={back}>← Assigned papers</button>
+        <div className="answer-workspace-actions">
+          {activeSitting && <SittingClock sitting={activeSitting} />}
+          <button onClick={back}>{backLabel}</button>
+        </div>
       </div>
       <div className="answer-layout">
         <section className="panel paper-viewer">
@@ -5524,6 +5555,9 @@ function AnswerWorkspace({
                 </button>
               ))}
             </div>
+            )}
+            {activeSitting?.practice && mode !== "typed" && (
+              <p className="sitting-note">Practice marks typed answers only. Handwritten work and work on the paper score nothing here; compare it with the answers afterwards.</p>
             )}
             {mode !== "handwritten" && (
               <>
@@ -6141,6 +6175,8 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
       maximum: number;
       teacher_feedback: string | null;
       published_at: string;
+      // Above 1 only for a Stage 8/9 full past paper sat again.
+      attempt?: number;
       paper_mode: "structured" | "multiple_choice";
       marks: Array<{
         label: string;
@@ -6392,7 +6428,7 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
                   : "—"}
               </span>
               <div>
-                <b>{result.title}</b>
+                <b>{result.title}{(result.attempt ?? 1) > 1 ? ` · Attempt ${result.attempt}` : ""}</b>
                 <small>
                   {result.total_final} of {result.maximum} marks
                 </small>

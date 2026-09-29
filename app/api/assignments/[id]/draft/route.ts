@@ -1,6 +1,7 @@
 import { currentViewer } from "@/lib/session";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
+import { sittingTimer, studentPaper } from "@/lib/paper-access";
 
 async function requireAssignedStudent(assignmentId: string) {
   const session = await currentViewer();
@@ -8,15 +9,7 @@ async function requireAssignedStudent(assignmentId: string) {
   const { userId, user } = session;
   if (user.publicMetadata.role !== "student") return null;
   await ensureSchema();
-  const access = await sql`
-    SELECT 1 FROM assignment_students s
-    JOIN assignments a ON a.id = s.assignment_id
-    WHERE s.assignment_id = ${assignmentId}
-      AND s.student_id = ${userId}
-      AND a.status = 'assigned'
-    LIMIT 1
-  `;
-  return access.length ? userId : null;
+  return (await studentPaper(assignmentId, userId)) ? userId : null;
 }
 
 function cleanText(value: unknown, maximum: number) {
@@ -78,7 +71,21 @@ function cleanDraft(value: unknown) {
       1,
       Math.min(100, Math.round(Number(source.paperPageNumber) || 1)),
     ),
+    // How a full past paper is being sat, chosen on its start screen. Kept with
+    // the answers so a refresh or another device resumes the same clock.
+    sitting: cleanSitting(source.sitting),
     savedAt: new Date().toISOString(),
+  };
+}
+
+function cleanSitting(value: unknown) {
+  if (!value || typeof value !== "object") return undefined;
+  const source = value as Record<string, unknown>;
+  const startedAt = Date.parse(String(source.startedAt ?? ""));
+  return {
+    practice: Boolean(source.practice),
+    timerMinutes: sittingTimer(source.timerMinutes),
+    startedAt: Number.isFinite(startedAt) ? new Date(startedAt).toISOString() : new Date().toISOString(),
   };
 }
 

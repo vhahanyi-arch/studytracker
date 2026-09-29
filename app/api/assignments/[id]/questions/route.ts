@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
+import { studentPaper } from "@/lib/paper-access";
 import { cleanQuestion, planQuestionSave, type SavedQuestion } from "@/lib/question-save";
 import { currentViewer } from "@/lib/session";
 
@@ -12,7 +13,7 @@ async function viewerFor(assignmentId: string) {
     role === "teacher"
       ? await sql`SELECT id FROM assignments WHERE id = ${assignmentId} AND teacher_id = ${userId}`
       : role === "student"
-        ? await sql`SELECT a.id FROM assignments a JOIN assignment_students s ON s.assignment_id = a.id WHERE a.id = ${assignmentId} AND s.student_id = ${userId}`
+        ? (await studentPaper(assignmentId, userId)) ? [{ id: assignmentId }] : []
         : [];
   return access.length ? { userId, role } : null;
 }

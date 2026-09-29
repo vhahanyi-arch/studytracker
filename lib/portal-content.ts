@@ -20,6 +20,8 @@ export type AssignmentSummary = {
   resource_kind?: "exam" | "homework";
   content_start_page?: number | null;
   content_end_page?: number | null;
+  // Stage 8/9 library only: when the teacher set it as a full paper to sit.
+  full_paper_set_at?: string | null;
 };
 export type StudentPaperStatus =
   | "not_started"
