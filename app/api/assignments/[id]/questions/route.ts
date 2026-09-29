@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
 import { studentPaper } from "@/lib/paper-access";
+import { cleanAnswerLabels } from "@/lib/answer-lines";
 import { cleanQuestion, planQuestionSave, type SavedQuestion } from "@/lib/question-save";
 import { currentViewer } from "@/lib/session";
 
@@ -36,14 +37,14 @@ export async function GET(
     viewer.role === "teacher"
       ? await sql`
           SELECT id, position, label, marks, page_number, crop_x, crop_y, crop_width, crop_height, response_type, answer_slots, response_layout, expected_answer, mark_scheme_notes, topic,
-            draft_answer, draft_accepted_answer, draft_confidence, extracted_question_text
+            draft_answer, draft_accepted_answer, draft_confidence, extracted_question_text, answer_labels
           FROM assignment_questions WHERE assignment_id = ${id} ORDER BY position
         `
       : await sql`
-          SELECT id, position, label, marks, page_number, crop_x, crop_y, crop_width, crop_height, response_type, answer_slots, response_layout, topic, extracted_question_text
+          SELECT id, position, label, marks, page_number, crop_x, crop_y, crop_width, crop_height, response_type, answer_slots, response_layout, topic, extracted_question_text, answer_labels
           FROM assignment_questions WHERE assignment_id = ${id} ORDER BY position
         `;
-  return NextResponse.json(questions);
+  return NextResponse.json(questions.map((question) => ({ ...question, answer_labels: cleanAnswerLabels(question.answer_labels) })));
 }
 
 export async function POST(
@@ -80,22 +81,24 @@ export async function POST(
     sql`DELETE FROM assignment_questions WHERE assignment_id = ${id} AND id = ANY(${plan.removed}::uuid[])`,
     sql`
       INSERT INTO assignment_questions
-      (id, assignment_id, position, label, marks, page_number, crop_x, crop_y, crop_width, crop_height, response_type, answer_slots, response_layout, expected_answer, mark_scheme_notes, topic, draft_answer, draft_accepted_answer, draft_confidence, extracted_question_text)
-      SELECT q.id, ${id}::uuid, q.position, q.label, q.marks, q.page, q.x, q.y, q.width, q.height, q.response_type, q.answer_slots, q.response_layout, q.expected_answer, q.mark_scheme_notes, q.topic, q.draft_answer, q.draft_accepted_answer, q.draft_confidence, q.extracted_question_text
+      (id, assignment_id, position, label, marks, page_number, crop_x, crop_y, crop_width, crop_height, response_type, answer_slots, response_layout, expected_answer, mark_scheme_notes, topic, draft_answer, draft_accepted_answer, draft_confidence, extracted_question_text, answer_labels)
+      SELECT q.id, ${id}::uuid, q.position, q.label, q.marks, q.page, q.x, q.y, q.width, q.height, q.response_type, q.answer_slots, q.response_layout, q.expected_answer, q.mark_scheme_notes, q.topic, q.draft_answer, q.draft_accepted_answer, q.draft_confidence, q.extracted_question_text, q.answer_labels
       FROM unnest(
         ${column("id")}::uuid[], ${column("position")}::int[], ${column("label")}::text[], ${column("marks")}::int[], ${column("page")}::int[],
         ${column("x")}::float8[], ${column("y")}::float8[], ${column("width")}::float8[], ${column("height")}::float8[],
         ${column("responseType")}::text[], ${column("answerSlots")}::int[], ${column("responseLayout")}::text[],
         ${column("expectedAnswer")}::text[], ${column("markSchemeNotes")}::text[], ${column("topic")}::text[],
-        ${column("draftAnswer")}::text[], ${column("draftAcceptedAnswer")}::text[], ${column("draftConfidence")}::text[], ${column("extractedQuestionText")}::text[]
-      ) AS q(id, position, label, marks, page, x, y, width, height, response_type, answer_slots, response_layout, expected_answer, mark_scheme_notes, topic, draft_answer, draft_accepted_answer, draft_confidence, extracted_question_text)
+        ${column("draftAnswer")}::text[], ${column("draftAcceptedAnswer")}::text[], ${column("draftConfidence")}::text[], ${column("extractedQuestionText")}::text[],
+        ${column("answerLabels")}::text[]
+      ) AS q(id, position, label, marks, page, x, y, width, height, response_type, answer_slots, response_layout, expected_answer, mark_scheme_notes, topic, draft_answer, draft_accepted_answer, draft_confidence, extracted_question_text, answer_labels)
       ON CONFLICT (id) DO UPDATE SET
         position = EXCLUDED.position, label = EXCLUDED.label, marks = EXCLUDED.marks, page_number = EXCLUDED.page_number,
         crop_x = EXCLUDED.crop_x, crop_y = EXCLUDED.crop_y, crop_width = EXCLUDED.crop_width, crop_height = EXCLUDED.crop_height,
         response_type = EXCLUDED.response_type, answer_slots = EXCLUDED.answer_slots, response_layout = EXCLUDED.response_layout,
         expected_answer = EXCLUDED.expected_answer, mark_scheme_notes = EXCLUDED.mark_scheme_notes, topic = EXCLUDED.topic,
         draft_answer = EXCLUDED.draft_answer, draft_accepted_answer = EXCLUDED.draft_accepted_answer,
-        draft_confidence = EXCLUDED.draft_confidence, extracted_question_text = EXCLUDED.extracted_question_text
+        draft_confidence = EXCLUDED.draft_confidence, extracted_question_text = EXCLUDED.extracted_question_text,
+        answer_labels = EXCLUDED.answer_labels
     `,
     sql`UPDATE assignments SET status = 'assigned' WHERE id = ${id}`,
   ]);

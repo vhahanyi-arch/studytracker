@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
+import { cleanAnswerLabels, withAnswerLabel } from "@/lib/answer-lines";
 import { questionKey } from "@/lib/paper-questions";
 import { currentViewer } from "@/lib/session";
 import { studentNames, type UserLister } from "@/lib/students";
@@ -119,7 +120,7 @@ async function attemptDetail(submissionId: string, studentId: string) {
   if (!submission) return NextResponse.json({ error: "Attempt not found." }, { status: 404 });
   const practice = Boolean(submission.self_practice);
   const questions = await sql`
-    SELECT q.label, q.marks, q.expected_answer, m.proposed_mark, m.final_mark, m.teacher_feedback
+    SELECT q.label, q.marks, q.expected_answer, q.answer_labels, m.proposed_mark, m.final_mark, m.teacher_feedback
     FROM assignment_questions q
     LEFT JOIN submission_marks m ON m.question_id = q.id AND m.submission_id = ${submissionId}
     WHERE q.assignment_id = ${submission.assignment_id}
@@ -133,11 +134,15 @@ async function attemptDetail(submissionId: string, studentId: string) {
       return [];
     }
   })();
-  const answerTo = (label: unknown) => {
-    const row = rows.find((item) => questionKey(item.question) === questionKey(label));
+  // Each box as it reads on the printed line: "x = 3", "12 cm".
+  const answerTo = (question: Record<string, unknown>) => {
+    const row = rows.find((item) => questionKey(item.question) === questionKey(question.label));
     if (!row) return "";
-    const answers = Array.isArray(row.answers) ? row.answers.map(String).filter((answer) => answer.trim()) : [];
-    return answers.length ? answers.join(" | ") : String(row.answer ?? "");
+    const labels = cleanAnswerLabels(question.answer_labels);
+    const answers = (Array.isArray(row.answers) ? row.answers.map(String) : [String(row.answer ?? "")])
+      .map((answer, index) => withAnswerLabel(answer, labels[index]))
+      .filter(Boolean);
+    return answers.join(" | ");
   };
   return NextResponse.json({
     id: submission.id,
@@ -156,7 +161,7 @@ async function attemptDetail(submissionId: string, studentId: string) {
       // Practice only: a question the marker could not decide scored nothing.
       automatic: question.proposed_mark !== null,
       feedback: question.teacher_feedback,
-      answer: answerTo(question.label),
+      answer: answerTo(question),
       accepted: practice ? question.expected_answer : undefined,
     })),
   });

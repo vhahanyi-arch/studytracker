@@ -40,6 +40,8 @@ import { PdfAnnotator } from '@/components/PdfAnnotator';
 import { FullPaperControls, type FullPaperInfo } from '@/components/full-papers/FullPaperTeacher';
 import { FullPaperList, FullPaperResult, SittingClock, type FullPaperSummary } from '@/components/full-papers/FullPaperStudent';
 import { type PaperQuestion, displayCrop, questionKey } from '@/lib/paper-questions';
+import { answerLineLabels } from '@/lib/cambridge-analysis';
+import { cleanAnswerLabels, withAnswerLabel } from '@/lib/answer-lines';
 import { ExamReview, type ReviewPaper, type Extraction } from '@/components/exam/ExamReview';
 import { ExamAttempt, type AttemptPaper } from '@/components/exam/ExamAttempt';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -2229,6 +2231,7 @@ function QuestionSetup({
   const [items, setItems] = useState<PaperQuestion[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [detecting, setDetecting] = useState(false);
+  const [readingLines, setReadingLines] = useState(false);
   const [extractingScheme, setExtractingScheme] = useState(false);
   const [replacingScheme, setReplacingScheme] = useState(false);
   const [generatingDraft, setGeneratingDraft] = useState<number | null>(null);
@@ -2471,7 +2474,39 @@ function QuestionSetup({
       setDetecting(false);
     }
   };
-  const autoDetectLegacy = async () => {
+  // Fills each question's answer-line labels ("x =", "cm") from the paper,
+  // for papers set up before labels were read. Only the labels change, and
+  // only where the paper prints some; the teacher checks them and saves.
+  const readAnswerLines = async () => {
+    setReadingLines(true);
+    setMessage("Reading the answer lines on the question paper…");
+    const hasLabels = (question: PaperQuestion) => Boolean(question.answer_labels?.some((label) => label.before || label.after));
+    try {
+      let found: PaperQuestion[] = [];
+      const response = await fetch(`/api/assignments/${assignment.id}/analyze`, { method: "POST" }).catch(() => null);
+      const result = response?.ok ? await response.json().catch(() => null) : null;
+      if (Array.isArray(result?.questions) && result.questions.length > 1) found = result.questions;
+      if (!found.some(hasLabels)) found = (await autoDetectLegacy(true)) || found;
+      const byKey = new Map(found.filter(hasLabels).map((question) => [questionKey(question.label), question.answer_labels!]));
+      let filled = 0;
+      const next = items.map((item) => {
+        const labels = byKey.get(questionKey(item.label));
+        if (!labels) return item;
+        filled++;
+        return { ...item, answer_labels: labels.slice(0, Math.max(1, item.answer_slots || 1)) };
+      });
+      setItems(next);
+      setMessage(
+        filled
+          ? `${filled} question${filled === 1 ? "" : "s"} got the words printed around their answer lines. Check them under each question, then save.`
+          : "No words were found printed around the answer lines, so nothing was changed. You can type them under each question.",
+      );
+    } finally {
+      setReadingLines(false);
+      setDetecting(false);
+    }
+  };
+  const autoDetectLegacy = async (labelsOnly = false): Promise<PaperQuestion[] | undefined> => {
     if (!pdf) return;
     const detectorVersion = detectorLabel;
     setDetecting(true);
@@ -2816,10 +2851,10 @@ function QuestionSetup({
           if (row) row.text.push(word.text);
           else responseRows.push({ top: word.top, text: [word.text] });
         });
-      const inlineAnswerSpaces = responseRows.filter((row) => {
-        const text = row.text.join(" ");
-        return /[a-z]/i.test(text) && /\.{5,}/.test(text);
-      }).length;
+      const labelledLines = responseRows
+        .map((row) => row.text.join(" "))
+        .filter((text) => /[a-z]/i.test(text) && /\.{5,}/.test(text));
+      const inlineAnswerSpaces = labelledLines.length;
       const drawingInstruction =
         /\b(draw|shade|sketch|plot|construct|complete (?:the )?(?:[a-z-]+ )*(?:graph|diagram|table)|mark (?:on|the)|show on the (?:grid|diagram)|join)\b/i.test(
           instruction,
@@ -2846,6 +2881,7 @@ function QuestionSetup({
               ? "drawing"
               : "typed",
         answer_slots: Math.max(1, Math.min(4, inlineAnswerSpaces)),
+        answer_labels: answerLineLabels(labelledLines).slice(0, 4),
         response_layout:
           assignment.subject === "Physics" && /\bcalculate\b/i.test(instruction)
             ? "formula"
@@ -2861,6 +2897,7 @@ function QuestionSetup({
       );
       return;
     }
+    if (labelsOnly) return detected;
     setItems(detected);
     setReviewedQuestions({});
     reviewQuestion(detected[0], 0);
@@ -3918,6 +3955,11 @@ function QuestionSetup({
               >
                 ✓ Approve all ready
               </button>
+              {assignment.resource_kind !== "homework" && (
+                <button className="read-answer-lines" disabled={readingLines || detecting} onClick={readAnswerLines} title="Fill in the words printed around each answer line (such as x = or cm) from the question paper. Nothing else changes.">
+                  {readingLines ? "Reading…" : "Read answer lines"}
+                </button>
+              )}
               {assignment.resource_kind !== "homework" && <label className="replace-scheme-button">
                 <input
                   type="file"
@@ -4071,6 +4113,26 @@ function QuestionSetup({
                           ))}
                         </select>
                       </label>
+                      {item.response_type !== "multiple_choice" && item.response_type !== "drawing" && (
+                        <fieldset className="answer-label-fields">
+                          <legend>Printed around the answer line</legend>
+                          {Array.from({ length: Math.max(1, item.answer_slots || 1) }, (_, slot) => {
+                            const label = item.answer_labels?.[slot] ?? { before: "", after: "" };
+                            const setLabel = (patch: Partial<typeof label>) => {
+                              const labels = Array.from({ length: Math.max(1, item.answer_slots || 1) }, (_, other) => item.answer_labels?.[other] ?? { before: "", after: "" });
+                              labels[slot] = { ...label, ...patch };
+                              updateReviewItem(index, { answer_labels: labels });
+                            };
+                            return (
+                              <div key={slot}>
+                                <input aria-label={`Before answer ${slot + 1}`} placeholder="e.g. x =" value={label.before} maxLength={40} onChange={(event) => setLabel({ before: event.target.value })} />
+                                <span aria-hidden="true">answer</span>
+                                <input aria-label={`After answer ${slot + 1}`} placeholder="e.g. cm" value={label.after} maxLength={40} onChange={(event) => setLabel({ after: event.target.value })} />
+                              </div>
+                            );
+                          })}
+                        </fieldset>
+                      )}
                       <label>
                         {assignment.resource_kind === "homework" ? "Accepted answer(s) · optional" : "Accepted answer(s)"}
                         <textarea
@@ -4885,13 +4947,13 @@ function Submissions() {
                       <div className="student-final-answer">
                         <b>Submitted answers</b>
                         {answer.answers.map((value: string, index: number) => (
-                          <strong key={index}>Answer {index + 1}: {value || "No answer"}</strong>
+                          <strong key={index}>Answer {index + 1}: {withAnswerLabel(value || "", cleanAnswerLabels(mark.answer_labels)[index]) || "No answer"}</strong>
                         ))}
                       </div>
                     ) : answer.answer ? (
                       <div className="student-final-answer">
                         <b>Final answer</b>
-                        <strong>{answer.answer}</strong>
+                        <strong>{withAnswerLabel(answer.answer, cleanAnswerLabels(mark.answer_labels)[0])}</strong>
                       </div>
                     ) : null}
                     {answer.handwrittenPageAssigned && (
@@ -5670,6 +5732,7 @@ function AnswerWorkspace({
                       const answerValues = rows[activeIndex].answers || [
                         rows[activeIndex].answer,
                       ];
+                      const lineLabel = paperQuestions[activeIndex]?.answer_labels?.[answerIndex];
                       return (
                         <label className="final-answer-field" key={answerIndex}>
                           {answerValues.length > 1
@@ -5706,26 +5769,32 @@ function AnswerWorkspace({
                               <option value="D">D</option>
                             </select>
                           ) : (
-                            <input
-                              value={answerValues[answerIndex] || ""}
-                              onChange={(e) =>
-                                setRows(
-                                  rows.map((item, i) => {
-                                    if (i !== activeIndex) return item;
-                                    const answers = [
-                                      ...(item.answers || [item.answer]),
-                                    ];
-                                    answers[answerIndex] = e.target.value;
-                                    return {
-                                      ...item,
-                                      answers,
-                                      answer: answers[0] || "",
-                                    };
-                                  }),
-                                )
-                              }
-                              placeholder={`Enter answer ${answerIndex + 1}`}
-                            />
+                            // The words printed around this answer line on the
+                            // paper ("x =", "cm") sit either side of the box.
+                            <span className={"answer-line" + (lineLabel?.before || lineLabel?.after ? " labelled" : "")}>
+                              {lineLabel?.before && <span className="answer-line-text">{lineLabel.before}</span>}
+                              <input
+                                value={answerValues[answerIndex] || ""}
+                                onChange={(e) =>
+                                  setRows(
+                                    rows.map((item, i) => {
+                                      if (i !== activeIndex) return item;
+                                      const answers = [
+                                        ...(item.answers || [item.answer]),
+                                      ];
+                                      answers[answerIndex] = e.target.value;
+                                      return {
+                                        ...item,
+                                        answers,
+                                        answer: answers[0] || "",
+                                      };
+                                    }),
+                                  )
+                                }
+                                placeholder={lineLabel?.before || lineLabel?.after ? "" : `Enter answer ${answerIndex + 1}`}
+                              />
+                              {lineLabel?.after && <span className="answer-line-text">{lineLabel.after}</span>}
+                            </span>
                           )}
                         </label>
                       );

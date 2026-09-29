@@ -8,6 +8,7 @@
 // questions they answered must stay the same questions: the teacher may change
 // marks, accepted answers and guidance, but not add, remove or relabel them.
 import { questionKey } from "./paper-questions";
+import { cleanAnswerLabels } from "./answer-lines";
 
 // The request body is unvalidated JSON, so each field is narrowed on the way
 // in. oneOf keeps a value only when it is one of the accepted literals.
@@ -42,6 +43,11 @@ export function cleanQuestion(question: Record<string, unknown>, index: number) 
     draftAcceptedAnswer: String(question.draft_accepted_answer || "").trim().slice(0, 500) || null,
     draftConfidence: oneOf(question.draft_confidence, ["high", "medium", "review"] as const, null),
     extractedQuestionText: String(question.extracted_question_text || "").trim().slice(0, 6000) || null,
+    // One entry per answer box, kept as JSON text; null when nothing is printed.
+    answerLabels: (() => {
+      const labels = cleanAnswerLabels(question.answer_labels).slice(0, Math.max(1, Math.min(6, Number(question.answer_slots) || 1)));
+      return labels.some((label) => label.before || label.after) ? JSON.stringify(labels) : null;
+    })(),
   };
 }
 

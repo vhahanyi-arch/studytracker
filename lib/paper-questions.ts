@@ -13,6 +13,8 @@ export type PaperQuestion = {
   crop_height: number;
   response_type?: "typed" | "drawing" | "multiple_choice";
   answer_slots?: number;
+  // The words printed around each answer line ("x =", "cm"), one per box.
+  answer_labels?: Array<{ before: string; after: string }>;
   response_layout?: "answer" | "working" | "formula";
   expected_answer?: string | null;
   mark_scheme_notes?: string | null;

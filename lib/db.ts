@@ -343,6 +343,9 @@ async function applySchema() {
   `;
   await sql`CREATE UNIQUE INDEX IF NOT EXISTS submissions_attempt_key ON submissions (assignment_id, student_id, attempt)`;
   await sql`ALTER TABLE submissions DROP CONSTRAINT IF EXISTS submissions_assignment_id_student_id_key`;
+  // The words printed around each answer line ("x =", "cm"), as a JSON list
+  // with one entry per answer box (schema 6; lib/answer-lines.ts).
+  await sql`ALTER TABLE assignment_questions ADD COLUMN IF NOT EXISTS answer_labels TEXT`;
 }
 
 export async function ensureSchema() {

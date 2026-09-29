@@ -1,4 +1,46 @@
+// No imports: scripts/test-cambridge-analysis.mjs runs this file under plain
+// Node, which cannot resolve an extensionless import.
 export type CambridgeSubject = "Mathematics" | "Physics" | "Cambridge";
+
+// The words printed around an answer line, such as "x = ............" or
+// "............ cm", so the answer box can show them (see lib/answer-lines.ts
+// for storing and showing them).
+export type AnswerLabel = { before: string; after: string };
+
+// A run of dots, underscores or ellipses long enough to be a line to write on.
+const ANSWER_LINE = /(?:\.\s?){5,}|_{5,}|…{2,}/g;
+// The marks printed at the right of an answer line: "[2]", "[1 mark]".
+const PRINTED_MARKS = /\[\s*\d+\s*(?:marks?)?\s*\]/gi;
+// A part label at the start of the row: "(a)", "(ii)", "(b)(i)". A bare number
+// is left alone: it may be the sum ("12 + ...... = 20"), not the question.
+const LEADING_PART = /^(?:\(\s*[a-z]{1,4}\s*\)\s*){1,2}/i;
+// Long enough for "Area =", "Number of sweets =", "cm²"; longer text beside
+// the line is the question itself, not a label.
+export const ANSWER_LABEL_MAX = 40;
+
+const tidyLabel = (text: string) => text.replace(/\s+/g, " ").trim();
+
+// The label of one printed row, or null when the row has no answer line. Text
+// between two lines on one row (a coordinate pair) is dropped: the student
+// types all of it in one box.
+export function answerLineLabel(rowText: string): AnswerLabel | null {
+  const text = rowText.replace(PRINTED_MARKS, " ");
+  const runs = [...text.matchAll(ANSWER_LINE)];
+  if (!runs.length) return null;
+  const first = runs[0];
+  const last = runs[runs.length - 1];
+  let before = tidyLabel(tidyLabel(text.slice(0, first.index)).replace(LEADING_PART, ""));
+  let after = tidyLabel(text.slice((last.index ?? 0) + last[0].length));
+  // Keep only the words next to the line when the row carries more.
+  if (before.length > ANSWER_LABEL_MAX) before = tidyLabel(before.slice(-ANSWER_LABEL_MAX).replace(/^\S*\s/, ""));
+  if (after.length > ANSWER_LABEL_MAX) after = tidyLabel(after.slice(0, ANSWER_LABEL_MAX).replace(/\s\S*$/, ""));
+  return { before, after };
+}
+
+// One label per answer line, in printed order, for the rows of a question.
+export function answerLineLabels(rowTexts: string[]): AnswerLabel[] {
+  return rowTexts.map(answerLineLabel).filter((label): label is AnswerLabel => label !== null);
+}
 export type CambridgePaperMode = "structured" | "multiple_choice";
 
 export type PdfWord = {
@@ -50,6 +92,8 @@ export type DetectedQuestion = {
   crop_height: number;
   response_type: "typed" | "drawing" | "multiple_choice";
   answer_slots: number;
+  // The words printed around each answer line, in order (lib/answer-lines.ts).
+  answer_labels?: AnswerLabel[];
   response_layout: "answer" | "working" | "formula";
   expected_answer: string | null;
   mark_scheme_notes: string | null;
@@ -684,8 +728,11 @@ export function analysePaperWithMarkScheme(
       return top >= marker.cropTop && top <= bottom;
     });
     const instruction = words.map((word) => word.text).join(" ");
-    const answerLineRows = groupRows({ ...page, words }, 4);
-    const dottedLines = answerLineRows.filter((row) => /\.{5,}|_{5,}/.test(rowText(row))).length;
+    const answerLineRows = groupRows({ ...page, words }, 4).filter((row) => /\.{5,}|_{5,}/.test(rowText(row)));
+    const dottedLines = answerLineRows.length;
+    const answerSlots = Math.max(1, Math.min(4, dottedLines || 1));
+    // The words printed around each line ("x =", "cm"), one per answer box.
+    const answerLabels = answerLineLabels(answerLineRows.map(rowText)).slice(0, answerSlots);
     const drawing = /\b(draw|shade|sketch|plot|construct|complete (?:the )?(?:[a-z-]+ )*(?:graph|diagram|table|circuit|figure)|mark (?:on|the)|show on the (?:grid|diagram)|join|add (?:to|on)|label (?:the|on))\b/i.test(
       instruction,
     );
@@ -700,7 +747,8 @@ export function analysePaperWithMarkScheme(
       crop_height: Math.max(0.075, Math.min(0.95 - marker.cropTop, bottom - marker.cropTop)),
       response_type:
         paperMode === "multiple_choice" ? "multiple_choice" : drawing ? "drawing" : "typed",
-      answer_slots: Math.max(1, Math.min(4, dottedLines || 1)),
+      answer_slots: answerSlots,
+      answer_labels: answerLabels,
       response_layout:
         subject === "Physics" && calculate ? "formula" : "answer",
       expected_answer: drawing

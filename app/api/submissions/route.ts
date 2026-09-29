@@ -57,7 +57,7 @@ export async function GET() {
   const [allMarks, nameOf] = await Promise.all([
     sql`
       SELECT s.id AS submission_id, q.id AS question_id, q.position, q.label, q.page_number, q.marks AS maximum,
-        q.response_type, q.expected_answer, q.mark_scheme_notes, q.topic,
+        q.response_type, q.expected_answer, q.mark_scheme_notes, q.topic, q.answer_labels,
         q.draft_answer, q.draft_confidence,
         m.proposed_mark, m.final_mark, m.confidence,
         m.rationale, m.teacher_feedback

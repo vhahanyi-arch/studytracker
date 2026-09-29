@@ -22,7 +22,7 @@ async function libraryPaper(stage: 8 | 9 = 8, approve = true) {
   if (approve) {
     const set = [
       { label: "1", marks: 1, page_number: 1, expected_answer: "12", topic: "s8-u1" },
-      { label: "2", marks: 2, page_number: 1, expected_answer: "x=3", topic: "s8-u2" },
+      { label: "2", marks: 2, page_number: 1, expected_answer: "x=3", topic: "s8-u2", answer_labels: [{ before: "x =", after: "" }] },
       { label: "3", marks: 1, page_number: 2, response_type: "drawing", topic: "s8-u3" },
     ];
     assert.equal((await call(questions.POST, { as: "t1", params: { id }, json: { questions: set } })).status, 200);
@@ -57,7 +57,9 @@ test("a paper reaches the stage's class only once it is set, and leaves when uns
   assert.equal((await sit(id, "s3", "practice", good)).status, 403, "not enrolled");
   const [paper] = (await call(fullPapers.GET, { as: "s1", query: "stage=8" })).body.papers;
   assert.deepEqual([paper.questions, paper.maximum, String(paper.due_date).slice(0, 10)], [3, 4, "2026-10-10"]);
-  assert.equal((await call(questions.GET, { as: "s1", params: { id } })).body[0].expected_answer, undefined, "no answers before sitting");
+  const studentQuestions = (await call(questions.GET, { as: "s1", params: { id } })).body;
+  assert.equal(studentQuestions[0].expected_answer, undefined, "no answers before sitting");
+  assert.deepEqual(studentQuestions.map((q: Record<string, unknown>) => q.answer_labels), [[], [{ before: "x =", after: "" }], []], "the printed words around each answer line");
 
   assert.equal((await setPaper(id, false)).status, 200);
   assert.deepEqual(await listed("s1", 8), []);
@@ -88,7 +90,7 @@ test("a practice sitting is marked at once, shows the answers, and stays out of 
   const detail = await call(fullPapers.GET, { as: "s1", query: `attempt=${result.body.submissionId}` });
   assert.deepEqual(detail.body.questions.map((q: Record<string, unknown>) => [q.label, q.mark, q.automatic, q.answer, q.accepted]), [
     ["1", 1, true, "12", "12"],
-    ["2", 2, true, "3", "x=3"],
+    ["2", 2, true, "x = 3", "x=3"],
     ["3", 0, false, "", null],
   ]);
   assert.equal((await call(fullPapers.GET, { as: "s2", query: `attempt=${result.body.submissionId}` })).status, 404, "only the student who sat it");

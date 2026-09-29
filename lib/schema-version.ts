@@ -11,7 +11,8 @@
 // 3: physics_exam_drafts, for exam answers saved as the student works.
 // 4: indexes on the columns every teacher and student screen filters by.
 // 5: Stage 8/9 full past papers: numbered attempts, practice sittings.
-export const SCHEMA_VERSION = 5;
+// 6: the words printed around each answer line, per question.
+export const SCHEMA_VERSION = 6;
 
 /**
  * Whether the DDL still needs applying, given the newest stamp in the table.
