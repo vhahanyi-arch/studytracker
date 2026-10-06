@@ -48,6 +48,76 @@ For the equations below, m₁ and m₂ are masses (kg), u₁ and u₂ initial ve
 | ½m₁u₁² + ½m₂u₂² = ½m₁v₁² + ½m₂v₂² | Each energy term: J; velocity magnitudes used for kinetic energy | Elastic collision only; kinetic-energy expression is developed in Topic 5. |
 | u₁ − u₂ = v₂ − v₁ | All velocities: m s⁻¹ | One-dimensional elastic collision with objects labelled so u₁ − u₂ is the positive approach speed. Do not use the full-speed relation indiscriminately in two dimensions. |
 
+## Using the formulas in different situations
+
+Method for any force problem: choose the object, draw every force acting on it, choose a positive direction, resolve, find the resultant, then apply F = ma or F = Δp/Δt. Take g = 9.81 m s⁻².
+
+### Situation: driving force against resistance
+
+**Example — car.** A 1200 kg car has a driving force of 3000 N and total resistive force 600 N. a = (3000 − 600) ÷ 1200 = 2.0 m s⁻². At terminal (top) speed, resistance would have risen to 3000 N and a = 0.
+
+### Situation: a person in a lift
+
+**Example — accelerating up.** A 60 kg person stands in a lift accelerating upwards at 1.5 m s⁻². Upwards positive: R − mg = ma, so R = m(g + a) = 60 × 11.31 = 679 N. The scale reads more than the weight (589 N).
+
+**Example — accelerating down.** At 1.5 m s⁻² downwards: R = m(g − a) = 60 × 8.31 = 499 N. In free fall (a = g), R = 0.
+
+### Situation: a slope (resolve along and perpendicular)
+
+**Example — block on a 25° slope.** Mass 5.0 kg.
+
+- Component of weight down the slope = mg sin 25° = 5.0 × 9.81 × 0.423 = 20.7 N.
+- Normal contact force = mg cos 25° = 44.5 N (no acceleration perpendicular to the slope).
+- Without friction: a = g sin 25° = 4.15 m s⁻².
+- With 8.0 N of friction up the slope: a = (20.7 − 8.0) ÷ 5.0 = 2.5 m s⁻².
+
+### Situation: connected objects
+
+**Example — trolley and hanging mass.** A 2.0 kg trolley on a frictionless table is pulled by a string over a pulley to a hanging 0.50 kg mass.
+
+- Whole system: resultant force = weight of the hanging mass = 0.50 × 9.81 = 4.91 N; total mass = 2.5 kg; a = 4.91 ÷ 2.5 = 1.96 m s⁻².
+- Trolley alone: T = 2.0 × 1.96 = 3.92 N.
+- Check on the hanging mass: 4.91 − 3.92 = 0.98 N = 0.50 × 1.96. The tension is less than the hanging weight because that mass accelerates downwards.
+
+### Situation: force from a momentum change
+
+**Example — ball and bat.** A 0.15 kg ball arrives at 20 m s⁻¹ and leaves in the opposite direction at 30 m s⁻¹. Contact time 2.5 ms. Taking the arrival direction as positive: Δp = 0.15 × (−30 − 20) = −7.5 N s. Average force = 7.5 ÷ 0.0025 = 3000 N, opposite to the arrival direction.
+
+**Example — rocket thrust.** A rocket ejects 50 kg of gas each second at 2000 m s⁻¹ relative to it. Momentum given to the gas per second = 50 × 2000 = 1.0 × 10⁵ kg m s⁻², so the thrust is 1.0 × 10⁵ N (third law).
+
+### Situation: objects stick together (inelastic)
+
+**Example — car collision.** A 1500 kg car at 20 m s⁻¹ hits a stationary 1000 kg car and they lock together.
+
+- v = (1500 × 20 + 0) ÷ 2500 = 12 m s⁻¹.
+- Eₖ before = ½ × 1500 × 20² = 300 kJ; after = ½ × 2500 × 12² = 180 kJ.
+- 120 kJ became internal energy and sound: momentum conserved, kinetic energy not.
+
+### Situation: elastic collision in one dimension
+
+**Example — find both final velocities.** A 2.0 kg ball at 3.0 m s⁻¹ hits a stationary 1.0 kg ball elastically.
+
+- Momentum: 2.0 × 3.0 = 2.0v₁ + 1.0v₂, so 6.0 = 2.0v₁ + v₂.
+- Relative speeds: u₁ − u₂ = v₂ − v₁, so 3.0 = v₂ − v₁.
+- Solving: v₁ = 1.0 m s⁻¹, v₂ = 4.0 m s⁻¹.
+- Check kinetic energy: before ½ × 2.0 × 9.0 = 9.0 J; after 1.0 + 8.0 = 9.0 J.
+
+### Situation: explosion from rest
+
+**Example — energy released.** A 3.0 kg object at rest splits into 1.0 kg at 12 m s⁻¹ and 2.0 kg moving the other way. Momentum: 1.0 × 12 = 2.0v, so v = 6.0 m s⁻¹. Kinetic energy produced = ½ × 1.0 × 12² + ½ × 2.0 × 6.0² = 72 + 36 = 108 J, from internal (chemical or elastic) energy.
+
+### Situation: a collision in two dimensions
+
+**Example — pucks.** A 0.20 kg puck A at 5.0 m s⁻¹ along x hits a stationary 0.20 kg puck B. Afterwards A has velocity components 3.2 m s⁻¹ along x and 2.4 m s⁻¹ along y.
+
+- x: 0.20 × 5.0 = 0.20 × 3.2 + 0.20vₓ, so vₓ = 1.8 m s⁻¹.
+- y: 0 = 0.20 × 2.4 + 0.20vᵧ, so vᵧ = −2.4 m s⁻¹.
+- B moves at √(1.8² + 2.4²) = 3.0 m s⁻¹ at tan⁻¹(2.4 ÷ 1.8) = 53° below the x direction. (Here the kinetic energy, 2.5 J, is unchanged, so this collision is elastic.)
+
+### Situation: terminal velocity
+
+**Example — skydiver.** An 80 kg skydiver at terminal velocity has drag = weight = 80 × 9.81 = 785 N and zero acceleration. Opening the parachute increases the area, so drag exceeds weight, the resultant force is upwards, and the skydiver decelerates to a lower terminal velocity.
+
 ## Exam checks and wording
 
 Objective 3.3.4 says momentum is “always conserved” in interactions. Apply this to the complete isolated system: a selected pair of objects can exchange momentum with external surroundings. State the negligible-external-force condition explicitly. Coefficient of restitution is not required. At terminal velocity use zero resultant force, not zero weight or zero velocity.

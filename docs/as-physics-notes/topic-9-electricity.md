@@ -89,6 +89,57 @@ The quantity W above is energy; the unit W is watt. The two resistance-based pow
 
 Useful conversions: 1 mA = 10⁻³ A; 1 μA = 10⁻⁶ A; 1 mm² = 10⁻⁶ m²; 1 kΩ = 10³ Ω. There is no prescribed quantitative resistance-versus-light or resistance-versus-temperature formula for LDRs or NTC thermistors in these objectives; use the qualitative trend or supplied data.
 
+## Using the formulas in different situations
+
+Take e = 1.60 × 10⁻¹⁹ C. Convert mA, mm² and kΩ before substituting.
+
+### Situation: charge and number of electrons
+
+**Example — counting carriers.** A current of 0.40 A flows for 2.0 minutes. Q = It = 0.40 × 120 = 48 C. Number of electrons = 48 ÷ (1.60 × 10⁻¹⁹) = 3.0 × 10²⁰.
+
+### Situation: drift speed
+
+**Example — copper wire.** n = 8.5 × 10²⁸ m⁻³; A = 1.0 mm² = 1.0 × 10⁻⁶ m²; I = 2.0 A.
+
+- v = I ÷ (Anq) = 2.0 ÷ (1.0 × 10⁻⁶ × 8.5 × 10²⁸ × 1.60 × 10⁻¹⁹) = 1.5 × 10⁻⁴ m s⁻¹, about 0.15 mm per second.
+
+**Example — a thinner section.** Where the same wire narrows to half the diameter, the area is a quarter, so with the same current the drift speed is four times larger: 5.9 × 10⁻⁴ m s⁻¹.
+
+### Situation: energy per coulomb
+
+**Example — battery.** A 9.0 V battery drives 120 C round a circuit. Energy transferred W = VQ = 9.0 × 120 = 1080 J.
+
+### Situation: choosing the power formula
+
+**Example — heater.** A 1.15 kW heater runs on 230 V. I = P ÷ V = 5.0 A; R = V ÷ I = 46 Ω.
+
+**Example — halving the voltage.** On 115 V with the same resistance, P = V²/R = 115² ÷ 46 = 288 W: a quarter of the power, because both V and I halve.
+
+**Example — fixed current.** Two resistors of 2.0 Ω and 6.0 Ω are in series with 1.5 A. P = I²R gives 4.5 W and 13.5 W: at the same current, the larger resistance dissipates more. (In parallel, at the same p.d., the smaller resistance dissipates more.)
+
+### Situation: resistance at an operating point
+
+**Example — lamp.** A 12 V, 24 W lamp at full brightness carries I = 24 ÷ 12 = 2.0 A, so R = 6.0 Ω. At 2.0 V it carries 0.80 A, so R = 2.5 Ω. The cooler filament has a lower resistance: the lamp is not ohmic.
+
+### Situation: resistivity
+
+**Example — heating element.** Nichrome wire (ρ = 1.1 × 10⁻⁶ Ω m), 2.0 m long, diameter 0.40 mm.
+
+- A = π(0.20 × 10⁻³)² = 1.26 × 10⁻⁷ m².
+- R = ρL ÷ A = 1.1 × 10⁻⁶ × 2.0 ÷ (1.26 × 10⁻⁷) = 17.5 Ω.
+
+**Example — find the length for a given resistance.** For 5.0 Ω of the same wire: L = RA ÷ ρ = 5.0 × 1.26 × 10⁻⁷ ÷ (1.1 × 10⁻⁶) = 0.57 m.
+
+**Example — comparing two wires.** Wire B is the same metal as wire A, twice as long and with twice the diameter. R ∝ L/d², so R_B/R_A = 2 ÷ 4 = 0.5.
+
+**Example — redrawing a wire.** A wire is stretched to twice its length at constant volume; its area halves. R = ρL/A becomes 2 × 2 = 4 times larger.
+
+### Situation: sensors at a fixed p.d.
+
+**Example — thermistor.** At a fixed 6.0 V, an NTC thermistor's resistance falls from 2.0 kΩ to 500 Ω as it warms. Current rises from 3.0 mA to 12 mA; power rises from 18 mW to 72 mW.
+
+**Example — LDR.** In brighter light an LDR's resistance falls, so at a fixed p.d. its current rises.
+
 ## Exam checks
 
 Distinguish current, charge and carrier count. Convert squared area units correctly. Keep drift speed separate from wave or signal propagation speed. State the constant-temperature condition for Ohm's law. Read I–V axes before interpreting slopes, and check whether voltage or current is fixed before predicting power changes. The listed objectives need no additional scope assumption; the diode sketch does not justify inventing a fixed turn-on voltage.

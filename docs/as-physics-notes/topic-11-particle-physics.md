@@ -128,4 +128,57 @@ This topic uses particle relationships and conservation equations more than nume
 
 For exam practice, explain the scattering evidence, write and balance decay equations, identify a neutrino versus antineutrino, and use constituent charges to justify a particle classification. Avoid treating zero nucleon number as zero mass or assuming that neutral means fundamental.
 
+## Using the formulas in different situations
+
+Take e = 1.60 × 10⁻¹⁹ C and 1 u = 1.66 × 10⁻²⁷ kg unless a question gives other values.
+
+### Situation: counting particles and finding nuclear charge
+
+**Example — uranium.** `^235_92 U` has 92 protons, 235 − 92 = 143 neutrons, and 92 electrons as a neutral atom. Nuclear charge q = Ze = 92 × 1.60 × 10⁻¹⁹ = 1.47 × 10⁻¹⁷ C.
+
+**Example — an ion.** A `^56_26 Fe` ion with charge +3e has 26 protons, 30 neutrons and 26 − 3 = 23 electrons.
+
+### Situation: completing a decay equation
+
+**Example — alpha.** Polonium-210 (Z = 84) emits an alpha particle. A: 210 − 4 = 206; Z: 84 − 2 = 82, which is lead. `^210_84 Po → ^206_82 Pb + ^4_2 α`.
+
+**Example — beta-minus.** Thorium-234 (Z = 90): `^234_90 Th → ^234_91 Pa + ^0_-1 e + ^0_0 anti-ν_e`. A unchanged; Z: 90 = 91 − 1 + 0.
+
+**Example — beta-plus.** Fluorine-18 (Z = 9): `^18_9 F → ^18_8 O + ^0_+1 e + ^0_0 ν_e`. Z: 9 = 8 + 1 + 0. Beta-plus pairs with a neutrino; beta-minus with an antineutrino.
+
+### Situation: spotting an impossible equation
+
+**Example — charge does not balance.** `^14_6 C → ^14_7 N + ^0_+1 e`. Charge: 6 on the left, 7 + 1 = 8 on the right, so this is wrong. Carbon-14 is a beta-minus emitter.
+
+**Example — missing particle.** n → p + e⁻ balances charge and nucleon number, but the continuous beta-energy spectrum shows a third particle shares the energy: the antineutrino must be included.
+
+### Situation: decay chains
+
+**Example — number of decays.** Thorium-232 (Z = 90) decays through a series of alpha and beta-minus emissions to lead-208 (Z = 82).
+
+- Only alpha decay changes A: (232 − 208) ÷ 4 = 6 alpha decays.
+- Six alphas alone would give Z = 90 − 12 = 78. Each beta-minus raises Z by 1, so 82 − 78 = 4 beta-minus decays.
+
+**Example — forwards.** Uranium-238 (Z = 92) after 8 alpha and 6 beta-minus decays: A = 238 − 32 = 206; Z = 92 − 16 + 6 = 82: `^206_82 Pb`.
+
+### Situation: converting unified atomic mass units
+
+**Example — alpha particle.** Mass 4.0015 u = 4.0015 × 1.66 × 10⁻²⁷ = 6.64 × 10⁻²⁷ kg.
+
+**Example — kg to u.** A nucleus of mass 3.82 × 10⁻²⁵ kg: 3.82 × 10⁻²⁵ ÷ (1.66 × 10⁻²⁷) = 230 u, so it has about 230 nucleons.
+
+### Situation: charges and classes of hadrons
+
+**Example — baryons.** uus: +2/3 + 2/3 − 1/3 = +1, so charge +e; three quarks make a baryon. The antiproton (anti-u anti-u anti-d): −2/3 − 2/3 + 1/3 = −1, so charge −e.
+
+**Example — mesons.** u with anti-s: +2/3 + 1/3 = +1, so +e. d with anti-d: −1/3 + 1/3 = 0. Each is one quark and one antiquark.
+
+**Example — classify.** A particle of charge 0 made of udd is a baryon (the neutron); a neutral particle with no quarks, such as the neutrino, is a lepton. Charge alone does not tell you the class.
+
+### Situation: quark changes in beta decay
+
+**Example — beta-minus.** A neutron (udd) becomes a proton (uud): one d becomes u. Charge: −1/3 = +2/3 + (−1) + 0, in units of e, with an electron and electron antineutrino emitted.
+
+**Example — beta-plus.** A proton (uud) in a nucleus becomes a neutron (udd): one u becomes d. Charge: +2/3 = −1/3 + 1 + 0, with a positron and electron neutrino emitted.
+
 Source: [supplied Cambridge syllabus](C:/Users/USER/Downloads/664565-2025-2027-syllabus.pdf), printed page 25. [Checked objectives and source hash](../../lib/as-physics-syllabus.json). [Verification report](../as-physics-particles-verification.md).

@@ -92,4 +92,62 @@ All resistance symbols (R, r, R1, R2, R_total, R_upper, R_lower, R_L and R_b) ha
 
 Common mistakes: calling e.m.f. a force; using terminal V/I as internal resistance; assuming parallel branch currents are equal for unequal resistors; adding parallel resistances directly; confusing a null comparison current with zero driver current; and predicting a sensor output without specifying where the sensor sits.
 
+## Using the formulas in different situations
+
+### Situation: internal resistance from meter readings
+
+**Example — open circuit, then loaded.** A cell's terminal p.d. is 1.55 V with nothing connected and 1.40 V across a 4.0 Ω resistor.
+
+- Open circuit, so E = 1.55 V.
+- Loaded current I = 1.40 ÷ 4.0 = 0.35 A.
+- r = (E − V) ÷ I = (1.55 − 1.40) ÷ 0.35 = 0.43 Ω.
+
+**Example — two loaded readings.** A supply gives 1.20 V at 0.50 A and 1.00 V at 1.50 A. From V = E − Ir: the p.d. falls 0.20 V when the current rises 1.00 A, so r = 0.20 Ω, and E = 1.20 + 0.50 × 0.20 = 1.30 V. On a graph of V against I, the gradient is −r and the intercept is E.
+
+**Example — short circuit.** A 6.0 V source with r = 0.50 Ω, shorted by a thick wire: I = E ÷ r = 12 A. The large current heats the source, which is why shorting a battery is dangerous.
+
+### Situation: a network with internal resistance
+
+**Example — find every current and p.d.** E = 12 V, r = 2.0 Ω. Externally, 6.0 Ω and 12 Ω in parallel are in series with a 4.0 Ω resistor.
+
+- Parallel pair: 6.0 × 12 ÷ (6.0 + 12) = 4.0 Ω; external total 8.0 Ω; with r, 10 Ω.
+- I = 12 ÷ 10 = 1.2 A. Terminal p.d. = 12 − 1.2 × 2.0 = 9.6 V.
+- P.d. across the 4.0 Ω resistor = 4.8 V; across the parallel pair = 4.8 V.
+- Branch currents: 4.8 ÷ 6.0 = 0.80 A and 4.8 ÷ 12 = 0.40 A, which add to 1.2 A.
+- Power: source 14.4 W = internal 2.88 W + external 11.52 W.
+
+### Situation: two sources (Kirchhoff's laws)
+
+**Example — find the branch currents.** Two branches join at the same two nodes, each with its positive terminal towards the top node: branch 1 has E₁ = 12 V and 2.0 Ω; branch 2 has E₂ = 6.0 V and 2.0 Ω. A third branch is a 4.0 Ω resistor. Assume currents I₁ and I₂ upwards through the sources and I₃ downwards through the 4.0 Ω.
+
+- Junction: I₃ = I₁ + I₂.
+- Loop through branch 1 and the 4.0 Ω: 12 = 2.0I₁ + 4.0I₃.
+- Loop through branch 2 and the 4.0 Ω: 6.0 = 2.0I₂ + 4.0I₃.
+- Substituting I₃: 12 = 6.0I₁ + 4.0I₂ and 6.0 = 4.0I₁ + 6.0I₂. Solving: I₁ = 2.4 A, I₂ = −0.60 A, I₃ = 1.8 A.
+- The minus sign means 0.60 A actually flows down through the 6.0 V source: it is being charged. Check: p.d. across 4.0 Ω = 7.2 V, and 12 − 2.4 × 2.0 = 7.2 V.
+
+### Situation: sensor in a potential divider
+
+**Example — thermistor at the top.** A 9.0 V supply; NTC thermistor (upper) in series with a fixed 5.0 kΩ resistor (lower); output across the lower resistor. The thermistor is 10 kΩ at 20 °C and 2.0 kΩ at 60 °C.
+
+- At 20 °C: V_out = 9.0 × 5.0 ÷ (10 + 5.0) = 3.0 V.
+- At 60 °C: V_out = 9.0 × 5.0 ÷ (2.0 + 5.0) = 6.4 V. Output rises with temperature, as the table predicts for a sensor in the upper position.
+
+### Situation: a voltmeter loading a divider
+
+**Example — real voltmeter.** Two 10 kΩ resistors divide 12 V. A voltmeter of resistance 100 kΩ is connected across the lower one.
+
+- Lower equivalent = 10 × 100 ÷ (10 + 100) = 9.09 kΩ.
+- Reading = 12 × 9.09 ÷ (10 + 9.09) = 5.71 V, not 6.00 V. A 10 kΩ voltmeter would read only 4.0 V: the voltmeter's resistance must be much larger than the resistor it measures.
+
+### Situation: potentiometer measurements
+
+**Example — e.m.f. and internal resistance.** A 1.000 m uniform wire has 2.00 V across it, so k = 2.00 V m⁻¹.
+
+- A cell alone balances at 0.730 m: at null no current flows from the cell, so E = 2.00 × 0.730 = 1.46 V.
+- With a 5.0 Ω resistor across the cell, the balance moves to 0.610 m: terminal p.d. V = 1.22 V.
+- Current through the resistor = 1.22 ÷ 5.0 = 0.244 A; r = (1.46 − 1.22) ÷ 0.244 = 0.98 Ω.
+
+**Example — comparison without k.** A 1.018 V standard cell balances at 50.9 cm and an unknown at 72.0 cm. V = 1.018 × 72.0 ÷ 50.9 = 1.44 V.
+
 Source: [supplied Cambridge syllabus](C:/Users/USER/Downloads/664565-2025-2027-syllabus.pdf). The two symbol images are renders of its printed pages 61–62. [Checked objectives and source hash](../../lib/as-physics-syllabus.json). [Topic verification](../as-physics-circuits-verification.md).

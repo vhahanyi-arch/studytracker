@@ -4,10 +4,15 @@ import { useEffect, useState } from "react";
 import { parseNotes, plainText, type Block, type Inline } from "@/lib/notes-markdown";
 import { CircuitSymbols } from "@/components/CircuitSymbols";
 
-// Renders one AS Physics topic's revision notes. The notes themselves live in
-// docs/as-physics-notes/ and are about 87 KB together, so they are fetched as
-// a separate chunk the first time a student opens any topic's notes, rather
-// than shipping with every page load.
+// Renders one physics topic's revision notes. The notes themselves live in
+// docs/as-physics-notes/ and docs/igcse-physics-notes/ and are large, so each
+// level is fetched as its own chunk the first time a student opens any of its
+// topics' notes, rather than shipping with every page load.
+
+/** The notes for the level a unit belongs to: igcse-u* or as-u*. */
+const notesFor = (unitId: string): Promise<Record<string, string>> => unitId.startsWith("igcse-")
+  ? import("@/lib/igcse-physics-notes.generated").then((m) => m.igcsePhysicsNotes)
+  : import("@/lib/as-physics-notes.generated").then((m) => m.asPhysicsNotes);
 
 function Inlines({ nodes }: { nodes: Inline[] }) {
   return <>{nodes.map((node, index) => {
@@ -69,10 +74,10 @@ export function RevisionNotes({ unitId, showTitle = false }: { unitId: string; s
   useEffect(() => {
     let live = true;
     setNotes({ state: "loading" });
-    import("@/lib/as-physics-notes.generated")
-      .then(({ asPhysicsNotes }) => {
+    notesFor(unitId)
+      .then((notes) => {
         if (!live) return;
-        const markdown = asPhysicsNotes[unitId];
+        const markdown = notes[unitId];
         setNotes(markdown ? { state: "ready", markdown } : { state: "missing" });
       })
       .catch(() => { if (live) setNotes({ state: "failed" }); });

@@ -66,6 +66,58 @@ Useful conversions: 1 mm = 10⁻³ m; 1 mm² = 10⁻⁶ m²; 1 MPa = 10⁶ Pa; 1
 | Eₚ = ½Fx = ½kx² | Eₚ: elastic potential energy, J; F: final applied force, N; x: extension, m; k: N m⁻¹ | From zero extension, within the proportional region. |
 | ΔEₚ = ½k(x₂² − x₁²) | ΔEₚ: energy change, J; k: N m⁻¹; x₁, x₂: initial and final extensions, m | Derived extra work for a spring with constant k over the interval. Not ½k(x₂ − x₁)². |
 
+## Using the formulas in different situations
+
+Convert to metres and square metres first: mm × 10⁻³, mm² × 10⁻⁶. Use the diameter's half (the radius) in πr².
+
+### Situation: spring constant and stored energy
+
+**Example — a spring.** A spring of natural length 20.0 cm is 24.0 cm long under a 6.0 N load. Extension x = 4.0 cm = 0.040 m; k = 6.0 ÷ 0.040 = 150 N m⁻¹. Stored energy = ½Fx = ½ × 6.0 × 0.040 = 0.12 J.
+
+### Situation: stretching a spring that is already stretched
+
+**Example — extra work.** The same spring is stretched from 4.0 cm to 10.0 cm extension. Extra work = ½k(x₂² − x₁²) = ½ × 150 × (0.100² − 0.040²) = 75 × 0.0084 = 0.63 J. The tempting ½ × 150 × 0.060² = 0.27 J is wrong: the force was already 6.0 N at the start.
+
+### Situation: Young modulus of a wire
+
+**Example — steel wire.** Length 2.00 m, diameter 0.50 mm, load 80 N, extension 4.0 mm.
+
+- A = π(0.25 × 10⁻³)² = 1.96 × 10⁻⁷ m².
+- Stress = 80 ÷ (1.96 × 10⁻⁷) = 4.07 × 10⁸ Pa.
+- Strain = 4.0 × 10⁻³ ÷ 2.00 = 2.0 × 10⁻³ (no unit).
+- E = 4.07 × 10⁸ ÷ (2.0 × 10⁻³) = 2.0 × 10¹¹ Pa.
+
+### Situation: predicting an extension
+
+**Example — copper wire.** E = 1.2 × 10¹¹ Pa, L = 3.0 m, d = 1.0 mm, F = 50 N.
+
+- A = π(0.50 × 10⁻³)² = 7.85 × 10⁻⁷ m².
+- x = FL ÷ (AE) = 50 × 3.0 ÷ (7.85 × 10⁻⁷ × 1.2 × 10¹¹) = 1.6 × 10⁻³ m = 1.6 mm.
+
+### Situation: E from a force–extension graph
+
+**Example — experiment.** The straight part of a graph of added force against extension has gradient 1.4 × 10⁴ N m⁻¹. The wire is 1.80 m long with diameter 0.40 mm.
+
+- A = π(0.20 × 10⁻³)² = 1.26 × 10⁻⁷ m².
+- E = gradient × L ÷ A = 1.4 × 10⁴ × 1.80 ÷ (1.26 × 10⁻⁷) = 2.0 × 10¹¹ Pa.
+- If force were plotted on the horizontal axis instead, the gradient would be x/F, and E = L ÷ (A × gradient).
+
+### Situation: changing the wire's dimensions
+
+**Example — scaling.** A wire of the same material is twice as long and has twice the diameter, under the same load. x = FL/(AE): L doubles (× 2) and A quadruples (÷ 4), so the extension halves. The spring constant k = AE/L doubles. The Young modulus is unchanged: it belongs to the material.
+
+### Situation: work from a non-linear graph
+
+**Example — piecewise area.** Force rises linearly from 0 to 20 N over the first 5.0 mm of extension, then from 20 N to 26 N over the next 4.0 mm. Work = ½ × 20 × 0.0050 + ½ × (20 + 26) × 0.0040 = 0.050 + 0.092 = 0.142 J. The formula ½Fx for the whole graph would give ½ × 26 × 0.0090 = 0.117 J, which is wrong because the graph is not one straight line.
+
+### Situation: elastic energy into kinetic energy
+
+**Example — spring launcher.** A spring with k = 400 N m⁻¹ is compressed by 5.0 cm and launches a 20 g ball. Stored energy = ½ × 400 × 0.050² = 0.50 J. If all becomes kinetic energy, v = √(2 × 0.50 ÷ 0.020) = 7.1 m s⁻¹.
+
+### Situation: loading beyond the elastic limit
+
+**Example — permanent extension.** A wire is loaded past its elastic limit, then unloaded; it is now 2.0 mm longer than at the start. That 2.0 mm is plastic deformation. The work done during loading is the area under the loading curve; the energy returned is only the area under the unloading line. The difference became internal energy in the wire.
+
 ## Exam checks
 
 Distinguish extension from total length, diameter from radius, Young modulus from spring constant, and elastic limit from proportionality limit. Label graph axes with units and convert extensions to metres before calculating work. No extra scope assumption is needed for the listed syllabus objectives; any energy-loss model beyond a stated graph must be supplied in the question.

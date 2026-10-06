@@ -97,6 +97,54 @@ Angles in radians are dimensionless ratios; the label rad clarifies the conventi
 | I = I₀ cos²θ | I₀: incident plane-polarised intensity, W m⁻²; I: transmitted intensity, W m⁻²; θ: angle between incoming polarisation and axis, rad (or degrees consistently) | Ideal polarising filter; already plane-polarised input. |
 | I_final = I_initial cos²θ₁ cos²θ₂ … | All I: W m⁻²; θ₁: first axis relative to initial polarisation; θ₂ and later angles: between successive axes, rad (or degrees) | Derived successive-filter application. Each filter acts on the preceding transmitted intensity. |
 
+## Using the formulas in different situations
+
+### Situation: wave equation with prefixes
+
+**Example — radio.** A station broadcasts at 95.8 MHz. λ = c ÷ f = 3.00 × 10⁸ ÷ (95.8 × 10⁶) = 3.13 m.
+
+**Example — identify the region.** f = 5.0 × 10¹⁴ Hz gives λ = 3.00 × 10⁸ ÷ (5.0 × 10¹⁴) = 6.0 × 10⁻⁷ m = 600 nm: visible. f = 3.0 × 10¹⁰ Hz gives λ = 0.010 m = 10 mm: microwave.
+
+### Situation: reading the two kinds of wave graph
+
+**Example — speed from two graphs.** A displacement–distance graph shows neighbouring crests 0.40 m apart (λ = 0.40 m). A displacement–time graph for one point shows neighbouring crests 0.020 s apart (T = 0.020 s). f = 1 ÷ T = 50 Hz and v = fλ = 50 × 0.40 = 20 m s⁻¹.
+
+### Situation: phase difference from position or time
+
+**Example — two points on a wave.** λ = 0.80 m. Points 0.20 m apart along the wave: Δφ = 360° × 0.20 ÷ 0.80 = 90° (π/2 rad). Points 0.40 m apart: 180° (antiphase). Points 0.80 m apart: 360°, which is in phase.
+
+**Example — two signals.** Both have period 4.0 ms; one reaches its peak 1.0 ms after the other. Δφ = 360° × 1.0 ÷ 4.0 = 90°, and the later signal lags.
+
+### Situation: using a CRO
+
+**Example — frequency and amplitude.** Time-base 0.50 ms div⁻¹; three complete cycles span 7.5 divisions. T = 7.5 × 0.50 ÷ 3 = 1.25 ms, so f = 1 ÷ (1.25 × 10⁻³) = 800 Hz. Y-gain 2.0 V div⁻¹; peak-to-peak height 5.0 divisions, so V_pp = 10 V and the amplitude is 5.0 V.
+
+### Situation: intensity and amplitude
+
+**Example — amplitude falls.** The amplitude of a wave falls to one third. I ∝ A², so the intensity falls to (1/3)² = 1/9 of its value.
+
+**Example — intensity doubles.** For twice the intensity, the amplitude rises by a factor of √2 = 1.41, not 2.
+
+**Example — intensity from power.** A 5.0 mW laser beam has a cross-sectional area of 2.0 mm². I = P ÷ S = 5.0 × 10⁻³ ÷ (2.0 × 10⁻⁶) = 2.5 × 10³ W m⁻².
+
+### Situation: Doppler effect for a moving source
+
+**Example — siren.** An 800 Hz siren moves at 30 m s⁻¹; sound speed 340 m s⁻¹.
+
+- Approaching: fₒ = 800 × 340 ÷ (340 − 30) = 877 Hz.
+- Receding: fₒ = 800 × 340 ÷ (340 + 30) = 735 Hz.
+- The emitted frequency is still 800 Hz; only the observed frequency changes.
+
+**Example — find the source speed.** A 500 Hz source is heard at 520 Hz as it approaches. Rearranging fₒ = fₛv ÷ (v − vₛ): vₛ = v(1 − fₛ ÷ fₒ) = 340 × (1 − 500 ÷ 520) = 13.1 m s⁻¹.
+
+### Situation: polarisers (Malus's law)
+
+**Example — one filter.** Plane-polarised light of intensity 12 W m⁻² meets a polariser whose axis is at 30° to the polarisation. I = 12 cos² 30° = 12 × 0.75 = 9.0 W m⁻².
+
+**Example — find the angle.** 25% is transmitted: cos² θ = 0.25, cos θ = 0.50, θ = 60°.
+
+**Example — three filters.** Polarised light of intensity I₀ meets filters at 45° and then 90° to its polarisation. After the first: I₀ cos² 45° = 0.50I₀, now polarised at 45°. The second is at 45° to that: 0.50I₀ × cos² 45° = 0.25I₀. Removing the middle filter leaves crossed axes and zero transmission: the middle filter lets light through.
+
 ## Exam checks
 
 Read the horizontal graph axis before identifying period or wavelength. Halve peak-to-peak CRO height for amplitude. Square amplitude ratios for intensity. Check the Doppler result is higher on approach and lower on recession. For each polariser, update both the intensity and the polarisation direction. Do not assume all electromagnetic waves have the same frequency because their free-space speeds are equal.

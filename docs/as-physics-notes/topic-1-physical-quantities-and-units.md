@@ -61,6 +61,69 @@ Examples of derived units from later mechanics definitions: force N = kg m s⁻�
 | Rₓ = Aₓ + Bₓ; Rᵧ = Aᵧ + Bᵧ | R: resultant of vectors A and B; all components share the quantity's SI unit | Add components; use minus signs for subtraction. Extend to more vectors. |
 | R = √(Rₓ² + Rᵧ²); tan θ = Rᵧ/Rₓ | R and components: same SI unit; θ: resultant direction from +x, rad | Perpendicular components only. Choose the correct quadrant; handle Rₓ = 0 separately. A zero resultant has no defined direction. |
 
+## Using the formulas in different situations
+
+### Situation: converting prefixed, squared and cubed units
+
+**Example — area.** A wire's cross-sectional area is 0.25 mm². Since 1 mm = 10⁻³ m, 1 mm² = 10⁻⁶ m², so A = 0.25 × 10⁻⁶ = 2.5 × 10⁻⁷ m². (Multiplying by 10⁻³ instead is the most common error.)
+
+**Example — density.** 7.9 g cm⁻³ = 7.9 × 10⁻³ kg ÷ 10⁻⁶ m³ = 7.9 × 10³ kg m⁻³.
+
+**Example — speed.** 90 km h⁻¹ = 90 × 10³ m ÷ 3600 s = 25 m s⁻¹.
+
+### Situation: checking an equation is homogeneous
+
+**Example — a motion equation.** Check s = ut + ½at². Left: m. Right: (m s⁻¹)(s) + (m s⁻²)(s²) = m + m. Every term has base unit m, so the equation is homogeneous. The ½ cannot be checked this way: a wrong numerical factor would still pass.
+
+**Example — an equation that fails.** A student writes v² = u² + 2a. The term 2a has unit m s⁻², but v² has m² s⁻². Terms with different base units cannot be added, so the equation is wrong (a distance is missing).
+
+### Situation: finding the base units of a constant
+
+**Example — drag constant.** Drag F = kv². Then k = F/v², with base units kg m s⁻² ÷ (m² s⁻²) = kg m⁻¹.
+
+**Example — Young modulus.** E = FL/(Ax): kg m s⁻² × m ÷ (m² × m) = kg m⁻¹ s⁻², the same as the pascal.
+
+### Situation: making an estimate
+
+**Example — power climbing stairs.** A student of mass about 60 kg climbs about 3 m of stairs in about 5 s. Power ≈ mgh/t = 60 × 9.81 × 3 ÷ 5 ≈ 350 W, so of order 10² W. An answer of 3.5 W or 35 kW would be implausible.
+
+**Example — kinetic energy of a car.** About 1000 kg at about 30 m s⁻¹: ½ × 1000 × 30² ≈ 4.5 × 10⁵ J.
+
+### Situation: uncertainty from repeated readings
+
+**Example — timing.** Readings: 2.47 s, 2.52 s, 2.49 s, 2.54 s. Mean = 10.02 ÷ 4 = 2.505 s. A common convention takes half the range as the uncertainty: (2.54 − 2.47) ÷ 2 = 0.035 s. Result: 2.51 ± 0.04 s. Quote the value to the same decimal place as its uncertainty.
+
+### Situation: combining uncertainties
+
+**Example — a difference.** Two lengths are 45.0 ± 0.1 cm and 12.0 ± 0.1 cm. Their difference is 33.0 ± 0.2 cm: absolute uncertainties add, even though the values subtract.
+
+**Example — density of a cube.** Side 2.00 ± 0.02 cm (1.0%); mass 62.4 ± 0.1 g (0.16%).
+
+- V = 2.00³ = 8.00 cm³, with 3 × 1.0% = 3.0% uncertainty (the power multiplies the percentage).
+- ρ = 62.4 ÷ 8.00 = 7.80 g cm⁻³, with 3.0% + 0.16% ≈ 3.2% uncertainty.
+- Absolute uncertainty = 0.032 × 7.80 = 0.25 g cm⁻³, so ρ = 7.8 ± 0.2 g cm⁻³.
+
+**Example — a pendulum.** g = 4π²L/T² with L = 0.800 ± 0.002 m (0.25%) and T = 1.80 ± 0.02 s (1.1%).
+
+- g = 4π² × 0.800 ÷ 1.80² = 9.75 m s⁻².
+- Percentage uncertainty = 0.25% + 2 × 1.1% ≈ 2.5%. The 4π² is exact and adds nothing.
+- g = 9.75 ± 0.24 m s⁻², quoted as 9.7 ± 0.2 m s⁻².
+
+### Situation: resolving a vector
+
+**Example — a pull at an angle.** A 50 N force acts at 30° above the horizontal. Horizontal component = 50 cos 30° = 43.3 N; vertical component = 50 sin 30° = 25.0 N.
+
+### Situation: adding vectors that are not perpendicular
+
+**Example — two forces.** 40 N along +x and 30 N at 60° to +x.
+
+- Rₓ = 40 + 30 cos 60° = 40 + 15 = 55 N; Rᵧ = 0 + 30 sin 60° = 26.0 N.
+- R = √(55² + 26.0²) = 60.8 N; θ = tan⁻¹(26.0 ÷ 55) = 25.3° above +x.
+
+### Situation: subtracting vectors (change in velocity)
+
+**Example — a turning ball.** A ball's velocity changes from 10 m s⁻¹ east to 10 m s⁻¹ north. Δv = v_final − v_initial = v_final + (−v_initial): add 10 m s⁻¹ north and 10 m s⁻¹ west. |Δv| = √(10² + 10²) = 14.1 m s⁻¹, directed north-west. The speed is unchanged but the velocity has changed.
+
 ## Exam checks
 
 Keep unit symbols distinct from quantity symbols, distinguish precision from accuracy, and attach a direction to vector answers. The syllabus does not prescribe a fixed list of numerical estimates: use reasonable estimates of quantities elsewhere in the syllabus.

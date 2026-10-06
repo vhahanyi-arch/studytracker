@@ -58,6 +58,72 @@ In the tables, u and v are initial and final signed velocities (m s⁻¹), a is 
 | x = uₓt; y = uᵧt − ½gt² | x, y: displacement from launch, m; t: s; g: m s⁻² | Upward +y; constant horizontal velocity; no resistance. |
 | vₓ = uₓ; vᵧ = uᵧ − gt | vₓ, vᵧ: velocity components, m s⁻¹; other symbols above | Same conditions; speed = √(vₓ² + vᵧ²). |
 
+## Using the formulas in different situations
+
+Choosing an equation: list s, u, v, a, t; mark the one not given and not wanted, and pick the equation without it. Choose a positive direction first and give every vector a sign. Take g = 9.81 m s⁻² unless told otherwise.
+
+### Situation: acceleration with no time given
+
+**Example — speeding up.** A car accelerates uniformly from 12 m s⁻¹ to 30 m s⁻¹ over 126 m.
+
+- t is not given, so use v² = u² + 2as: a = (30² − 12²) ÷ (2 × 126) = 756 ÷ 252 = 3.0 m s⁻².
+- Then t = (v − u) ÷ a = 18 ÷ 3.0 = 6.0 s.
+
+### Situation: braking to rest
+
+**Example — stopping distance.** A train at 25 m s⁻¹ decelerates at 0.50 m s⁻² (a = −0.50 m s⁻²).
+
+- s = (v² − u²) ÷ 2a = (0 − 625) ÷ (−1.0) = 625 m.
+- t = (0 − 25) ÷ (−0.50) = 50 s.
+- Stopping distance ∝ u² at a fixed deceleration: at 50 m s⁻¹ it would be 2500 m.
+
+### Situation: thrown vertically upwards
+
+**Example — from the ground.** A ball is thrown up at 15 m s⁻¹. Take up as positive, so a = −9.81 m s⁻².
+
+- At the top v = 0: height = u² ÷ 2g = 225 ÷ 19.62 = 11.5 m.
+- Time to the top = u ÷ g = 15 ÷ 9.81 = 1.53 s. At the top the velocity is zero but the acceleration is still −9.81 m s⁻².
+- With no air resistance it returns at −15 m s⁻¹ after 3.06 s.
+
+**Example — from a cliff.** The same throw from the edge of a 20 m cliff. When it hits the base, s = −20 m.
+
+- −20 = 15t − 4.905t², so 4.905t² − 15t − 20 = 0.
+- t = [15 + √(15² + 4 × 4.905 × 20)] ÷ (2 × 4.905) = (15 + 24.8) ÷ 9.81 = 4.06 s (reject the negative root).
+- v² = u² + 2as = 225 + 2(−9.81)(−20) = 617, so v = −24.8 m s⁻¹ (downwards).
+
+### Situation: dropped from rest
+
+**Example — a falling stone.** A stone falls 45 m from rest. h = ½gt² gives t = √(2h/g) = √(90 ÷ 9.81) = 3.03 s, and v = gt = 29.7 m s⁻¹.
+
+### Situation: displacement and distance from a velocity–time graph
+
+**Example — reversing.** An object moves at +4.0 m s⁻¹ for 3.0 s, then its velocity falls uniformly to −2.0 m s⁻¹ over the next 3.0 s.
+
+- Acceleration in the second stage = (−2.0 − 4.0) ÷ 3.0 = −2.0 m s⁻², so v = 0 at t = 5.0 s.
+- Areas: 0–3 s: 4.0 × 3.0 = 12 m; 3–5 s: ½ × 2.0 × 4.0 = 4.0 m; 5–6 s: ½ × 1.0 × (−2.0) = −1.0 m.
+- Displacement = 12 + 4.0 − 1.0 = 15 m. Distance = 12 + 4.0 + 1.0 = 17 m.
+
+### Situation: g from a free-fall experiment
+
+**Example — graph gradient.** A graph of h against t² is a straight line through the origin with gradient 4.90 m s⁻². Since h = ½gt², gradient = g/2, so g = 9.80 m s⁻². A line that misses the origin suggests a systematic timing delay.
+
+### Situation: horizontal launch
+
+**Example — ball off a table.** A ball leaves a 1.25 m high table horizontally at 3.0 m s⁻¹.
+
+- Vertical (from rest vertically): t = √(2 × 1.25 ÷ 9.81) = 0.505 s.
+- Horizontal (constant velocity): range = 3.0 × 0.505 = 1.51 m.
+- Landing velocity: vᵧ = 9.81 × 0.505 = 4.95 m s⁻¹ down; speed = √(3.0² + 4.95²) = 5.79 m s⁻¹ at tan⁻¹(4.95 ÷ 3.0) = 58.8° below the horizontal.
+
+### Situation: angled launch over level ground
+
+**Example — a kicked ball.** Launched at 20 m s⁻¹ at 30° above the horizontal.
+
+- uₓ = 20 cos 30° = 17.3 m s⁻¹; uᵧ = 20 sin 30° = 10.0 m s⁻¹.
+- Time of flight (y returns to 0): 0 = uᵧt − ½gt², so t = 2uᵧ ÷ g = 20 ÷ 9.81 = 2.04 s.
+- Range = uₓt = 17.3 × 2.04 = 35.3 m. Maximum height = uᵧ² ÷ 2g = 100 ÷ 19.62 = 5.10 m.
+- Landing at a different height: solve y = uᵧt − ½gt² for the actual landing value of y instead of using 2uᵧ/g.
+
 ## Exam checks
 
 Use signed velocities, identify whether distance or displacement is requested, and check constant acceleration before using the motion equations. Projectile range and time-of-flight shortcuts are not separately stated in the syllabus; derive the needed result from components and the actual landing height.

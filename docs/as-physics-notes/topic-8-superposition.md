@@ -82,6 +82,58 @@ There is no additional quantitative diffraction-at-a-gap formula required by sec
 | nλ/d ≤ 1 | n: nonnegative order magnitude; d, λ: m | Sine bound for a possible order. Equality gives grazing diffraction at 90°. |
 | N_maxima = 2n_max + 1 | N_maxima: count of maxima; n_max: largest allowed positive order, both dimensionless | Ideal grating with no missing orders, counting both sides and the central maximum. Apply any detector/screen restriction separately. |
 
+## Using the formulas in different situations
+
+### Situation: adding two pulses
+
+**Example — overlapping pulses.** A pulse of displacement +3.0 cm meets a pulse of −1.0 cm travelling the other way. Where they overlap, y = 3.0 + (−1.0) = +2.0 cm. After passing, each continues with its original shape.
+
+### Situation: stationary wave on a string
+
+**Example — find λ, v and the fundamental.** A 1.20 m string fixed at both ends vibrates in 3 loops at 150 Hz.
+
+- 3 loops = 3 × λ/2 = 1.20 m, so λ = 0.80 m.
+- v = fλ = 150 × 0.80 = 120 m s⁻¹.
+- Lowest frequency (1 loop): λ = 2.40 m, so f = 120 ÷ 2.40 = 50 Hz. The 150 Hz pattern is three times this.
+- Nodes are 0.40 m apart; a node and the nearest antinode are 0.20 m apart.
+
+### Situation: resonance tube (closed at one end)
+
+**Example — speed of sound.** With a 512 Hz tuning fork, resonance occurs at air-column lengths of 16.5 cm and 49.7 cm.
+
+- Successive resonances differ by λ/2: λ = 2 × (0.497 − 0.165) = 0.664 m.
+- v = 512 × 0.664 = 340 m s⁻¹.
+- Check: the first resonance should be λ/4 = 0.166 m, as observed (with no end correction).
+
+### Situation: microwaves reflected from a metal plate
+
+**Example — find λ and f.** A receiver passes through 5 consecutive minima over 5.6 cm. That is 4 intervals, each λ/2 = 1.4 cm, so λ = 2.8 cm. f = 3.00 × 10⁸ ÷ 0.028 = 1.1 × 10¹⁰ Hz.
+
+### Situation: two sources and path difference
+
+**Example — two loudspeakers in phase.** λ = 0.50 m. Point P is 3.00 m from one speaker and 3.75 m from the other. Path difference = 0.75 m = 1.5λ: a half-odd number of wavelengths, so destructive interference (quiet). At a point where the path difference is 1.00 m = 2λ, it is constructive (loud).
+
+**Example — speakers in antiphase.** Connecting one speaker the other way round adds a 180° phase difference, so P becomes loud and the 2λ point becomes quiet.
+
+### Situation: double-slit fringes
+
+**Example — find the wavelength.** Slit separation a = 0.50 mm; screen distance D = 2.0 m. Eleven bright fringe centres span 26 mm, which is 10 spacings, so x = 2.6 mm.
+
+- λ = ax ÷ D = 0.50 × 10⁻³ × 2.6 × 10⁻³ ÷ 2.0 = 6.5 × 10⁻⁷ m = 650 nm.
+
+**Example — predict a change.** Halving the slit separation doubles x; moving the screen to 3.0 m multiplies x by 1.5; using blue light (shorter λ) brings the fringes closer.
+
+### Situation: diffraction grating
+
+**Example — angles of orders.** A grating has 300 lines per mm; λ = 589 nm.
+
+- d = 1 ÷ (300 × 10³) = 3.33 × 10⁻⁶ m.
+- First order: sin θ = 589 × 10⁻⁹ ÷ (3.33 × 10⁻⁶) = 0.177, θ = 10.2°.
+- Second order: sin θ = 0.353, θ = 20.7°.
+- Highest order: n ≤ d/λ = 5.66, so n_max = 5, and 2 × 5 + 1 = 11 maxima in total.
+
+**Example — wavelength from an angular separation.** With 500 lines per mm (d = 2.00 × 10⁻⁶ m), the two second-order maxima are 56.0° apart. θ = 28.0°, so λ = d sin θ ÷ n = 2.00 × 10⁻⁶ × 0.469 ÷ 2 = 4.69 × 10⁻⁷ m = 469 nm.
+
 ## Exam checks
 
 Add signed displacements, not amplitudes indiscriminately. Identify nodes from zero amplitude throughout the cycle. Count intervals between fringes or nodes. Keep diffraction distinct from interference. Check coherence, units, grating order and the reference direction for every angle before substituting.
