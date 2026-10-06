@@ -4,14 +4,16 @@ import { useEffect, useState } from "react";
 import { parseNotes, plainText, type Block, type Inline } from "@/lib/notes-markdown";
 import { CircuitSymbols } from "@/components/CircuitSymbols";
 
-// Renders one physics topic's revision notes. The notes themselves live in
-// docs/as-physics-notes/ and docs/igcse-physics-notes/ and are large, so each
-// level is fetched as its own chunk the first time a student opens any of its
-// topics' notes, rather than shipping with every page load.
+// Renders one unit's revision notes. The notes themselves live in docs/ (AS
+// and IGCSE physics, Stage 8 and Stage 9 maths) and are large, so each course
+// is fetched as its own chunk the first time a student opens any of its
+// units' notes, rather than shipping with every page load.
 
-/** The notes for the level a unit belongs to: igcse-u* or as-u*. */
-const notesFor = (unitId: string): Promise<Record<string, string>> => unitId.startsWith("igcse-")
-  ? import("@/lib/igcse-physics-notes.generated").then((m) => m.igcsePhysicsNotes)
+/** The notes for the course a unit belongs to, from its id: s8-u*, s9-u*, igcse-u* or as-u*. */
+const notesFor = (unitId: string): Promise<Record<string, string>> =>
+  unitId.startsWith("s8-") ? import("@/lib/stage-8-maths-notes.generated").then((m) => m.stage8MathsNotes)
+  : unitId.startsWith("s9-") ? import("@/lib/stage-9-maths-notes.generated").then((m) => m.stage9MathsNotes)
+  : unitId.startsWith("igcse-") ? import("@/lib/igcse-physics-notes.generated").then((m) => m.igcsePhysicsNotes)
   : import("@/lib/as-physics-notes.generated").then((m) => m.asPhysicsNotes);
 
 function Inlines({ nodes }: { nodes: Inline[] }) {
@@ -35,7 +37,7 @@ function Inlines({ nodes }: { nodes: Inline[] }) {
 }
 
 /** The notes as rendered markup, given their markdown. Pure: no loading. */
-export function NotesBody({ markdown, showTitle = false }: { markdown: string; showTitle?: boolean }) {
+export function NotesBody({ markdown, showTitle = false, subject = "physics" }: { markdown: string; showTitle?: boolean; subject?: "physics" | "maths" }) {
   // A parser error must not take the whole screen down with it.
   let blocks: Block[];
   try { blocks = parseNotes(markdown); }
@@ -43,7 +45,7 @@ export function NotesBody({ markdown, showTitle = false }: { markdown: string; s
   // The topic title normally sits in the panel header already.
   const body = !showTitle && blocks[0]?.kind === "heading" && blocks[0].level === 1 ? blocks.slice(1) : blocks;
   let section = "";
-  return <article className="revision-notes">{body.map((block: Block, index) => {
+  return <article className="revision-notes" data-subject={subject}>{body.map((block: Block, index) => {
     switch (block.kind) {
       case "heading": {
         section = plainText(block.children).trim();
@@ -87,5 +89,5 @@ export function RevisionNotes({ unitId, showTitle = false }: { unitId: string; s
   if (notes.state === "loading") return <p className="notes-status">Loading revision notes…</p>;
   if (notes.state === "missing") return <p className="notes-status">Revision notes for this topic are not available yet.</p>;
   if (notes.state === "failed") return <p className="notes-status">The revision notes could not be loaded. Check your connection and try again.</p>;
-  return <NotesBody markdown={notes.markdown} showTitle={showTitle} />;
+  return <NotesBody markdown={notes.markdown} showTitle={showTitle} subject={/^s[89]-/.test(unitId) ? "maths" : "physics"} />;
 }

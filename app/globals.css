@@ -6126,6 +6126,8 @@ summary:focus-visible,
 .revision-notes h4 { font-size: var(--t-lead); margin: 22px 0 4px; color: var(--physics); }
 .revision-notes > :first-child { margin-top: 14px; border-top: 0; padding-top: 0; }
 .revision-notes a { color: var(--physics); text-underline-offset: 2px; }
+.revision-notes[data-subject="maths"] h4,
+.revision-notes[data-subject="maths"] a { color: var(--maths); }
 .revision-notes sub { font-size: 0.72em; }
 
 /* An antiparticle: the bar is the notation, so it has to be visible. */
@@ -6176,6 +6178,12 @@ summary:focus-visible,
   background: var(--subject-fill, var(--physics-fill)); border-color: var(--subject-fill, var(--physics-fill)); color: #fff;
 }
 .teacher-notes .revision-notes { padding: 0 28px 8px; }
+/* Stage 8/9 maths: the notes open from a button in the header. */
+.teacher-notes > header.stage89-notes-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px 16px; flex-wrap: wrap;
+}
+.teacher-notes:not(:has(.notes-topic-picker)) { padding-bottom: 0; }
+.teacher-notes:not(:has(.notes-topic-picker)) > header { border-bottom: 0; }
 
 /* Circuit symbols, drawn for StudyTrack from the syllabus forms. */
 .circuit-symbols { margin: 16px 0 26px; }

@@ -11,7 +11,7 @@
     "test": "node --import tsx --test \"tests/**/*.test.ts\"",
     "test:content": "node scripts/run-content-regression.mjs",
     "verify": "pnpm typecheck && pnpm test && pnpm test:content",
-    "notes": "node scripts/generate-physics-notes.mjs"
+    "notes": "node scripts/generate-revision-notes.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.31.9",

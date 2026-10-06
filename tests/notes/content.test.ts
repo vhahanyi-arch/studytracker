@@ -2,14 +2,18 @@ import {test} from 'node:test';import assert from 'node:assert/strict';
 import {parseNotes,plainText} from '@/lib/notes-markdown';
 import {asPhysicsNotes} from '@/lib/as-physics-notes.generated';
 import {igcsePhysicsNotes} from '@/lib/igcse-physics-notes.generated';
-import {asPhysicsUnits,igcsePhysicsUnits} from '@/lib/portal-content';
+import {stage8MathsNotes} from '@/lib/stage-8-maths-notes.generated';
+import {stage9MathsNotes} from '@/lib/stage-9-maths-notes.generated';
+import {asPhysicsUnits,igcsePhysicsUnits,stage8Units,stage9Units} from '@/lib/portal-content';
+import {framework,objectivesFor} from '@/lib/lower-secondary/framework';
 import {igcsePhysicsSyllabus} from '@/lib/physics-syllabus';
-import {LEVELS,notesByUnit,renderModule} from '../../scripts/generate-physics-notes.mjs';
+import {LEVELS,notesByUnit,renderModule} from '../../scripts/generate-revision-notes.mjs';
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
 
-const LEVEL_NOTES={as:{notes:asPhysicsNotes,units:asPhysicsUnits},igcse:{notes:igcsePhysicsNotes,units:igcsePhysicsUnits}} as const;
-const ALL_NOTES={...asPhysicsNotes,...igcsePhysicsNotes};
+const LEVEL_NOTES={as:{notes:asPhysicsNotes,units:asPhysicsUnits},igcse:{notes:igcsePhysicsNotes,units:igcsePhysicsUnits},stage8:{notes:stage8MathsNotes,units:stage8Units},stage9:{notes:stage9MathsNotes,units:stage9Units}} as const;
+const MATHS_NOTES={...stage8MathsNotes,...stage9MathsNotes};
+const ALL_NOTES={...asPhysicsNotes,...igcsePhysicsNotes,...MATHS_NOTES};
 
 for(const [level,{notes,units}] of Object.entries(LEVEL_NOTES) as Array<[keyof typeof LEVELS,(typeof LEVEL_NOTES)[keyof typeof LEVEL_NOTES]]>){
  // An edit to the markdown notes that is not regenerated would ship stale
@@ -116,3 +120,29 @@ test('IGCSE nuclear units render their equations as nuclides',()=>{
   assert.ok((text.match(/"kind":"nuclide"/g)||[]).length>=15,id);
  }
 });
+
+// ---- Stage 8 and 9 maths ---------------------------------------------------------
+
+test('every Stage 8 and 9 objective code is in a practice unit that has notes',()=>{
+ const units=new Set(framework.map(o=>o.unit));
+ for(const unit of units) assert.ok(MATHS_NOTES[unit],`${unit} has objectives but no notes`);
+});
+
+for(const [id,markdown] of Object.entries(MATHS_NOTES)){
+ // An objective with no heading citing it is an objective the notes forgot.
+ test(`${id} has a heading citing each of its framework objectives`,()=>{
+  const cited=headings(markdown,3).join('\n');
+  const codes=objectivesFor(id).map(o=>o.code);
+  assert.ok(codes.length>0,`${id} has no objectives in the framework`);
+  for(const code of codes) assert.ok(cited.includes(code),`${id} has no heading citing ${code}`);
+ });
+ // The shape students rely on: ideas, the facts and formulas, how to use them, and the pitfalls.
+ test(`${id} has key ideas, formulas, worked situations and common mistakes`,()=>{
+  const sections=headings(markdown,2);
+  assert.equal(sections[0],'Key ideas');
+  assert.ok(sections.includes('Key facts and formulas'),`${id} has no facts and formulas section`);
+  assert.ok(sections.includes('Using the methods in different situations'),`${id} has no worked situations`);
+  assert.equal(sections.at(-1),'Common mistakes');
+  assert.ok(headings(markdown,3).filter(h=>h.startsWith('Situation:')).length>=3,`${id} has fewer than three worked situations`);
+ });
+}
