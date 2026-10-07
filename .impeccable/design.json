@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-07T00:00:00Z",
+  "title": "Design System: StudyTrack",
+  "extensions": {
+    "colorMeta": {
+      "cover": { "role": "primary", "displayName": "Graphite Cover", "canonical": "oklch(27.8% 0.012 248.2)", "dark": "#24282c", "on": { "light": "#ffffff", "dark": "#ffffff" }, "tonalRamp": ["#070c10", "#20252a", "#3b4046", "#595e64", "#787e84", "#999fa5", "#bec5cb", "#e9eff6"] },
+      "cover-ink": { "role": "primary", "displayName": "Graphite (reading)", "dark": "#e8eaec" },
+      "stage7": { "role": "primary", "displayName": "Chrome Yellow", "canonical": "oklch(83.4% 0.158 89.0)", "dark": "#5e4a0b", "on": { "light": "#16181a", "dark": "#ffffff" }, "tonalRamp": ["#130900", "#2e2200", "#503d01", "#735a05", "#987917", "#c09921", "#edbd28", "#feedc3"] },
+      "stage7-ink": { "role": "primary", "displayName": "Deep Ochre", "dark": "#e3b341" },
+      "stage8": { "role": "primary", "displayName": "Oxide Orange", "canonical": "oklch(64.8% 0.173 41.7)", "dark": "#6e2a10", "on": { "light": "#16181a", "dark": "#ffffff" }, "tonalRamp": ["#200000", "#431100", "#6e2400", "#9e3800", "#ce4f0f", "#f4733d", "#ffad8e", "#ffe9e2"] },
+      "stage8-ink": { "role": "primary", "displayName": "Burnt Oxide", "dark": "#f2895a" },
+      "stage9": { "role": "primary", "displayName": "Sienna", "canonical": "oklch(47.9% 0.119 42.2)", "dark": "#4e2313", "on": { "light": "#ffffff", "dark": "#ffffff" }, "tonalRamp": ["#200000", "#411300", "#6d2601", "#8f4a2b", "#b76340", "#dc8461", "#fcaf90", "#feeae2"] },
+      "stage9-ink": { "role": "primary", "displayName": "Deep Sienna", "dark": "#e3a07c" },
+      "igcse": { "role": "primary", "displayName": "Physics Teal", "canonical": "oklch(54.1% 0.090 192.8)", "dark": "#0a4a49", "on": { "light": "#ffffff", "dark": "#ffffff" }, "tonalRamp": ["#000f0f", "#002b2a", "#004a49", "#006c6a", "#288e8c", "#51b0ae", "#79d7d4", "#b7fefb"] },
+      "igcse-ink": { "role": "primary", "displayName": "Deep Teal", "dark": "#4cc7c3" },
+      "as": { "role": "primary", "displayName": "Ultramarine", "canonical": "oklch(43.0% 0.179 270.2)", "dark": "#1e2a78", "on": { "light": "#ffffff", "dark": "#ffffff" }, "tonalRamp": ["#040038", "#100471", "#212b9c", "#3a4fc1", "#5671e6", "#7b97fc", "#afc2fc", "#e8eefe"] },
+      "as-ink": { "role": "primary", "displayName": "Ultramarine (reading)", "dark": "#a3adff" },
+      "exam": { "role": "primary", "displayName": "Exam Violet", "canonical": "oklch(46.3% 0.153 302.2)", "dark": "#3d2266", "on": { "light": "#ffffff", "dark": "#ffffff" }, "tonalRamp": ["#14002a", "#33005a", "#502081", "#6f42a3", "#8f63c7", "#b185ec", "#d0b5fb", "#f2ebfe"] },
+      "exam-ink": { "role": "primary", "displayName": "Exam Violet (reading)", "dark": "#c7a6f2" },
+      "classroom": { "role": "primary", "displayName": "Classroom Grass", "canonical": "oklch(61.5% 0.162 137.5)", "dark": "#24521a", "on": { "light": "#16181a", "dark": "#ffffff" }, "tonalRamp": ["#001000", "#0c2c00", "#1b4d00", "#326e11", "#479222", "#69b549", "#8edc70", "#cfffbe"] },
+      "classroom-ink": { "role": "primary", "displayName": "Deep Grass", "dark": "#8dd068" },
+      "on-board-dark": { "role": "neutral", "displayName": "Binder Black", "purpose": "Text on the light boards (Stage 7, Stage 8, classroom) in the light theme." },
+      "on-board-light": { "role": "neutral", "displayName": "White", "purpose": "Text on the deep boards, and on every board at night." },
+      "on-level": { "role": "neutral", "displayName": "On Level", "dark": "#111315" },
+      "paper": { "role": "neutral", "displayName": "Milky Leaf", "canonical": "oklch(96.2% 0.003 165.1)", "dark": "#111315", "tonalRamp": ["#0a0b0b", "#232424", "#3f403f", "#5c5e5d", "#7c7e7d", "#9d9f9e", "#c3c4c4", "#edefee"] },
+      "sheet": { "role": "neutral", "displayName": "White Sheet", "dark": "#1a1e24" },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "oklch(24.5% 0.029 255.2)", "dark": "#f1f7ff", "tonalRamp": ["#040b17", "#1b2532", "#36414f", "#535f6e", "#727e8f", "#93a0b1", "#b8c5d7", "#e5f0fe"] },
+      "muted": { "role": "neutral", "displayName": "Muted Slate", "dark": "#939ca9" },
+      "line": { "role": "neutral", "displayName": "Hairline", "dark": "#2e3236" },
+      "rail": { "role": "neutral", "displayName": "Graphite Rail", "canonical": "oklch(23.3% 0.007 248.1)", "dark": "#0f1113", "tonalRamp": ["#090b0e", "#212427", "#3d4043", "#5a5e62", "#7a7e81", "#9b9fa3", "#c0c5c9", "#ebeff3"] },
+      "rail-ink": { "role": "neutral", "displayName": "Rail Ink" },
+      "rail-muted": { "role": "neutral", "displayName": "Rail Muted" },
+      "topbar": { "role": "neutral", "displayName": "Top Bar", "dark": "#0f1113" },
+      "topbar-line": { "role": "neutral", "displayName": "Top Bar Hairline", "dark": "#24282c" },
+      "mark-board": { "role": "neutral", "displayName": "Mark Board", "dark": "#e9ecee" },
+      "errata": { "role": "tertiary", "displayName": "Vermilion", "canonical": "oklch(49.9% 0.184 31.0)", "dark": "#ff9b85", "tonalRamp": ["#220000", "#4a0300", "#7a0d01", "#ad1905", "#d44430", "#fb6953", "#fbae9f", "#ffe9e4"] },
+      "errata-tint": { "role": "tertiary", "displayName": "Errata Tint", "dark": "#3a1d17" },
+      "errata-line": { "role": "tertiary", "displayName": "Errata Hairline", "dark": "#6b2e22" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Front-page hero on the graphite cover; sign-in uses the same cut at clamp(38px, 4vw, 60px)." },
+      "headline": { "displayName": "Board Headline", "purpose": "The screen's opening heading, set on the board, with the syllabus code inside it in the mono." },
+      "title": { "displayName": "Title", "purpose": "Every other heading; 19px for section heads on a leaf." },
+      "body": { "displayName": "Body", "purpose": "Reading text and the board standfirst, 56ch maximum on the board." },
+      "label": { "displayName": "Label", "purpose": "Figure labels and rail section names." },
+      "code": { "displayName": "Code", "purpose": "Syllabus codes and the board's running head (uppercase there)." },
+      "figure": { "displayName": "Figure", "purpose": "Counts, marks and scores, tabular." }
+    },
+    "shadows": [
+      { "name": "board-paint", "value": "0 0 0 100vmax var(--board)", "purpose": "Not elevation: paints the board colour out to the screen edges behind the board header, clipped to the top." },
+      { "name": "lit-filter", "value": "inset 0 4px 0 var(--level)", "purpose": "Not elevation: the 4px level-coloured bar on the active filter along a ruled figure line." }
+    ],
+    "motion": [
+      { "name": "step", "value": "90ms steps(2, end)", "purpose": "Every level change: board colour, header turn (from translateX(-10px)), active tab run-out (clip-path from inset(0 45% 0 0)), front-page tab nudge. Removed entirely under reduced motion." },
+      { "name": "press", "value": "transform 140ms cubic-bezier(0.23, 1, 0.32, 1); active scale(0.97)", "purpose": "Button press feedback (incumbent, kept)." }
+    ],
+    "breakpoints": [
+      { "name": "landing-fold", "value": "1100px" },
+      { "name": "drawer", "value": "900px" },
+      { "name": "dash-stack", "value": "760px" },
+      { "name": "phone", "value": "620px" },
+      { "name": "landing-phone", "value": "600px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button (leaf)",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one strong action on a leaf, filled in the level's reading colour.",
+      "html": "<div class=\"ds-leaf-demo\" style=\"--level:#7a5800\"><button class=\"ds-btn-primary\">Save Stage 7 class</button></div>",
+      "css": ".ds-leaf-demo { background: #f1f3f2; padding: 24px; } .ds-btn-primary { background: var(--level, #24292e); color: #ffffff; border: 0; border-radius: 4px; padding: 11px 17px; font: 700 15px/1.2 Archivo, Arial, sans-serif; transition: transform 140ms cubic-bezier(0.23, 1, 0.32, 1); } .ds-btn-primary:hover { background: color-mix(in srgb, var(--level, #24292e) 86%, #17212e); } .ds-btn-primary:focus-visible { outline: 2px solid var(--level, #24292e); outline-offset: 2px; } .ds-btn-primary:active { transform: scale(0.97); }"
+    },
+    {
+      "name": "Board Buttons (reversed and secondary)",
+      "kind": "button",
+      "refersTo": "button-on-board",
+      "description": "Actions set on the board: the primary reversed out of it, the secondary drawn in the on-board ink alone.",
+      "html": "<div class=\"ds-board\"><button class=\"ds-btn-board\">Save weekly focus</button> <button class=\"ds-btn-board-quiet\">Assigned papers</button></div>",
+      "css": ".ds-board { --board: #6e2a10; --on-board: #ffffff; background: var(--board); padding: 24px; display: flex; gap: 10px; } .ds-btn-board { background: var(--on-board); color: var(--board); border: 0; border-radius: 4px; padding: 11px 17px; font: 700 15px/1.2 Archivo, Arial, sans-serif; } .ds-btn-board:hover { background: color-mix(in srgb, var(--on-board) 86%, var(--board)); } .ds-btn-board-quiet { background: transparent; color: var(--on-board); border: 1.5px solid color-mix(in srgb, var(--on-board) 55%, transparent); border-radius: 4px; padding: 10px 16px; font: 650 15px/1.2 Archivo, Arial, sans-serif; } .ds-btn-board-quiet:hover { border-color: var(--on-board); background: color-mix(in srgb, var(--on-board) 8%, transparent); } .ds-btn-board:focus-visible, .ds-btn-board-quiet:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }"
+    },
+    {
+      "name": "Rail Navigation with Divider Tabs",
+      "kind": "nav",
+      "refersTo": "nav-tab-active",
+      "description": "The signature: each entry carries its level's tab on the rail's inner edge; the active entry runs out across the rail and joins the board.",
+      "html": "<div class=\"ds-shell\"><nav class=\"ds-rail\"><p>Lower secondary</p><button class=\"ds-nav ds-active\" style=\"--tab:#e3b341;--tab-on:#16181a\">Stage 7</button><button class=\"ds-nav\" style=\"--tab:#d4693e;--tab-on:#16181a\">Stage 8</button><button class=\"ds-nav\" style=\"--tab:#8f4a2b;--tab-on:#fff\">Stage 9</button><p>Physics</p><button class=\"ds-nav\" style=\"--tab:#167a78;--tab-on:#fff\">IGCSE 0625</button><button class=\"ds-nav\" style=\"--tab:#3446a8;--tab-on:#fff\">AS Level 9702</button></nav><div class=\"ds-board-fill\"></div></div>",
+      "css": ".ds-shell { display: flex; min-height: 240px; font-family: Archivo, Arial, sans-serif; } .ds-rail { background: #1b1e21; color: #d5d9dd; width: 200px; padding: 22px 0 28px 14px; display: flex; flex-direction: column; gap: 2px; } .ds-rail p { color: #9aa3ab; font-size: 13px; font-weight: 700; margin: 10px 14px 4px 10px; } .ds-nav { position: relative; text-align: left; background: transparent; color: #d5d9dd; border: 0; font: 600 15px/1.2 Archivo, Arial, sans-serif; border-radius: 4px 0 0 4px; padding: 9px 24px 9px 10px; } .ds-nav::after { content: \"\"; position: absolute; top: 4px; bottom: 4px; right: 0; width: 9px; border-radius: 3px 0 0 3px; background: var(--tab); } .ds-nav:hover { background: rgb(255 255 255 / 0.07); color: #fff; } .ds-nav:focus-visible { outline: 2px solid #fff; outline-offset: 2px; } .ds-nav.ds-active { background: var(--tab); color: var(--tab-on); font-weight: 750; margin-right: -1px; animation: ds-tab-out 90ms steps(2, end); } .ds-nav.ds-active::after { display: none; } .ds-board-fill { flex: 1; background: #e3b341; } @keyframes ds-tab-out { from { clip-path: inset(0 45% 0 0); } } @media (prefers-reduced-motion: reduce) { .ds-nav.ds-active { animation: none; } }"
+    },
+    {
+      "name": "Board Header on the Leaf",
+      "kind": "custom",
+      "refersTo": "leaf",
+      "description": "The screen's heading set on the board with its running head and code, and the leaf starting beneath it with a ruled section.",
+      "html": "<div class=\"ds-boardwrap\"><header class=\"ds-head\"><p class=\"ds-runhead\">Cambridge Lower Secondary Mathematics</p><h1>Stage 7 mastery <span class=\"ds-code\">0862</span></h1><p class=\"ds-stand\">Set this class's weekly focus and keep the full Stage 7 curriculum open for revision.</p></header><main class=\"ds-leaf\"><section class=\"ds-ruled\"><h3>Stage 7 students</h3><div class=\"ds-row\">Add existing student accounts to this class.</div></section></main></div>",
+      "css": ".ds-boardwrap { --board: #e3b341; --on-board: #16181a; background: var(--board); padding: 0 28px 28px; font-family: Archivo, Arial, sans-serif; } .ds-head { color: var(--on-board); padding: 40px 0 34px; animation: ds-turn 90ms steps(2, end); } .ds-runhead { font: 600 13px/1.2 'Red Hat Mono', monospace; letter-spacing: 0.02em; text-transform: uppercase; margin: 0 0 18px; padding-bottom: 10px; border-bottom: 1px solid color-mix(in srgb, var(--on-board) 38%, transparent); } .ds-head h1 { font-size: clamp(34px, 4.6vw, 60px); line-height: 0.98; font-stretch: 80%; font-weight: 800; letter-spacing: -0.02em; margin: 10px 0 0; } .ds-code { font-family: 'Red Hat Mono', monospace; font-weight: 400; letter-spacing: -0.03em; margin-left: 0.18em; } .ds-stand { font-size: 17px; font-weight: 450; line-height: 1.5; max-width: 56ch; margin: 14px 0 0; } .ds-leaf { background: #f1f3f2; color: #17212e; border-radius: 0 0 4px 4px; padding: 0 48px 64px; } .ds-ruled { border-top: 2px solid #17212e; padding-top: 14px; } .ds-ruled h3 { font-size: 19px; font-stretch: 88%; font-weight: 750; letter-spacing: -0.012em; margin: 0 0 8px; } .ds-row { border-top: 1px solid #dde3ea; padding: 12px 0; color: #5b6472; } @keyframes ds-turn { from { transform: translateX(-10px); } } @media (prefers-reduced-motion: reduce) { .ds-head { animation: none; } }"
+    },
+    {
+      "name": "Ruled Figure Line",
+      "kind": "custom",
+      "refersTo": "leaf",
+      "description": "Counts as one ruled line of mono figures, not a row of cards; the filter in use is lit in the level colour.",
+      "html": "<div class=\"ds-figs\" style=\"--level:#a63a0c\"><button><b>4</b><small>Waiting</small></button><button class=\"ds-lit\"><b>12</b><small>Ready</small></button><button><b>30</b><small>Published</small></button></div>",
+      "css": ".ds-figs { display: grid; grid-template-columns: repeat(3, 1fr); background: #f1f3f2; border-top: 2px solid #17212e; border-bottom: 1px solid #dde3ea; font-family: Archivo, Arial, sans-serif; } .ds-figs button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; background: transparent; border: 0; border-right: 1px solid #dde3ea; padding: 14px 18px 16px; color: #17212e; } .ds-figs button:last-child { border-right: 0; } .ds-figs b { font: 600 34px/1 'Red Hat Mono', monospace; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; } .ds-figs small { font-size: 13px; font-weight: 600; color: #5b6472; } .ds-figs .ds-lit { box-shadow: inset 0 4px 0 var(--level); background: color-mix(in srgb, var(--level) 12%, #ffffff); } .ds-figs button:focus-visible { outline: 2px solid var(--level); outline-offset: 2px; }"
+    },
+    {
+      "name": "Front-page Divider Tabs",
+      "kind": "custom",
+      "refersTo": "divider-tab",
+      "description": "On the graphite cover, the levels step down the fore edge as board-coloured tabs standing proud of it.",
+      "html": "<div class=\"ds-cover\"><a class=\"ds-tab\" href=\"#\" style=\"--board:#e3b341;--on-board:#16181a\"><b>Stage 7</b><small>0862</small></a><a class=\"ds-tab\" href=\"#\" style=\"--board:#d4693e;--on-board:#16181a\"><b>Stage 8</b><small>0862</small></a><a class=\"ds-tab\" href=\"#\" style=\"--board:#167a78;--on-board:#fff\"><b>IGCSE</b><small>0625</small></a><a class=\"ds-tab\" href=\"#\" style=\"--board:#3446a8;--on-board:#fff\"><b>AS Level</b><small>9702</small></a></div>",
+      "css": ".ds-cover { background: #24292e; padding: 24px 0 24px 120px; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; } .ds-tab { display: flex; flex-direction: column; justify-content: center; gap: 2px; width: 176px; min-height: 62px; padding: 10px 16px; background: var(--board); color: var(--on-board); text-decoration: none; border-radius: 4px 0 0 4px; transition: transform 90ms steps(2, end); font-family: Archivo, Arial, sans-serif; } .ds-tab b { font-size: 17px; font-weight: 800; font-stretch: 85%; line-height: 1.1; } .ds-tab small { font: 13px 'Red Hat Mono', monospace; } .ds-tab:hover { transform: translateX(-8px); } .ds-tab:focus-visible { outline: 2px solid #fff; outline-offset: 2px; } @media (prefers-reduced-motion: reduce) { .ds-tab { transition: none; } .ds-tab:hover { transform: none; } }"
+    },
+    {
+      "name": "Answer Input",
+      "kind": "input",
+      "description": "A white sheet field on the leaf with the shared level-coloured focus ring.",
+      "html": "<label class=\"ds-field\" style=\"--level:#0b6e6c\">Your answer<input class=\"ds-input\" placeholder=\"Enter the final value\"></label>",
+      "css": ".ds-field { display: grid; gap: 6px; background: #f1f3f2; padding: 20px; color: #17212e; font: 600 15px/1.3 Archivo, Arial, sans-serif; } .ds-input { background: #ffffff; color: #17212e; border: 1px solid #dde3ea; border-radius: 4px; padding: 11px 12px; font: 450 17px/1.4 Archivo, Arial, sans-serif; } .ds-input:focus-visible { outline: 2px solid var(--level); outline-offset: 2px; }"
+    },
+    {
+      "name": "Errata Slip",
+      "kind": "custom",
+      "refersTo": "errata-slip",
+      "description": "An error laid on the leaf in vermilion, the one colour no divider uses.",
+      "html": "<div style=\"background:#f1f3f2;padding:20px\"><p class=\"ds-errata\">That paper could not be read. Upload the question paper as a PDF.</p></div>",
+      "css": ".ds-errata { margin: 0; color: #b4220f; background: #fdebe6; border: 1px solid #f2b8aa; border-radius: 2px; padding: 10px 14px; font: 600 15px/1.4 Archivo, Arial, sans-serif; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Ring-Binder Divider",
+    "overview": "StudyTrack is a boxed-software reference manual with acetate leaves over coloured tab boards. Every Cambridge level is a divider in a ring binder, and the screen's whole ground is the current level's board at full strength, so a student or the teacher knows which class they are in from the colour of the screen before reading a word. The work sits on one milky, near-white leaf laid over the board, always in the same place. The dashboard and My progress are the binder's graphite cover, and so are the front page and the sign-in screen: the binder seen from outside, with the level tabs stepping down its fore edge.\n\nThe world is flat and printed. Boards are solid colour; nothing is graded, glossed or lifted. Depth comes only from stacking: board, then leaf, then the rules drawn on the leaf. Inside a leaf, work is ruled rather than boxed, the way a manual sets a section: a heavy rule opens it and hairlines divide its rows. One grotesque, Archivo, does all the reading, condensed and heavy on its width axis for heads the way a tab's label is set; Red Hat Mono is kept for what is genuinely code or a figure. Changes do not ease: a divider is turned, in two frames over 90 ms.\n\nThe system refuses the category default of one grey ground, one accent and the same white cards on every screen whatever the subject.",
+    "keyCharacteristics": [
+      "The current level's board fills the screen ground; the work sits on a single leaf above it.",
+      "The active sidebar entry is a tab that runs out across the rail and joins the board.",
+      "Flat boards: no gradients, no decorative shadows.",
+      "Sections on a leaf are ruled, not carded.",
+      "Archivo on its width axis for everything; Red Hat Mono only for syllabus codes, marks and counts.",
+      "Two-frame stepped motion (90 ms, `steps(2, end)`); reduced motion swaps instantly.",
+      "Vermilion appears only on errors."
+    ],
+    "rules": [
+      { "name": "The Whole Ground Rule", "body": "The current level's board is the screen's ground at full strength, set once by `data-level` on the shell. Components read `--board`, `--on-board`, `--level` and `--on-level`; they never pick a level hue by hand, except a tab that names its own level.", "section": "colors" },
+      { "name": "The Board and Leaf Rule", "body": "The board colour is for large ground and tabs; on the leaf, a level speaks only through its reading colour (`--level`). Never set leaf text in a board hue.", "section": "colors" },
+      { "name": "The Errata Rule", "body": "Vermilion is reserved for errors. A waiting count, a deadline or a highlight is never vermilion; on the cover, the queue figure is in the cover's ink and turns the classroom's lit green (`#8dd068`) when nothing waits.", "section": "colors" },
+      { "name": "The One Grotesque Rule", "body": "Archivo does all the reading and interface; heads get their character from the width axis (78 to 88%) and weight (750 to 800), never from a third family.", "section": "typography" },
+      { "name": "The Context In The Heading Rule", "body": "What a label above a heading would say travels inside the heading: the syllabus code is set large in the mono beside the level name (\"Stage 7 mastery 0862\", mono at weight 400), and a quieter aside (the tier, \"practice complete\") follows on the leaf at 0.62em in muted Archivo after a middle dot. The only line above a heading is the board's running head (below).", "section": "typography" },
+      { "name": "The Figures Are Mono Rule", "body": "Scores, counts, marks and syllabus codes are set in Red Hat Mono with tabular numerals; prose numbers are not.", "section": "typography" },
+      { "name": "The Flat Boards Rule", "body": "No gradients and no decorative shadows anywhere: boards, leaves, panels, buttons and Clerk's sign-in card are all shadowless.", "section": "elevation" },
+      { "name": "The Ruled Not Boxed Rule", "body": "A section on a leaf opens with a 2px ink rule and divides its rows with 1px hairlines; it has no background, border box or radius. The one lit section, this week's focus, opens with a 4px rule in the level colour instead.", "section": "shapes" },
+      { "name": "The Running Head Rule", "body": "The line above the board heading is a reference manual's running head: the real syllabus and section (\"Cambridge Lower Secondary Mathematics\"), once per screen, only on the board, ruled off. It never carries an invented label, and no other heading on any surface gets a label above it.", "section": "components" },
+      { "name": "The Two Frame Rule", "body": "Every change of level steps, it does not ease: `90ms steps(2, end)` for the board colour, the header turn, the tab run-out and the front-page tab nudge. Under reduced motion, all of it swaps instantly.", "section": "components" }
+    ],
+    "dos": [
+      "**Do** set `data-level` on the shell and let every component read `--board`, `--on-board`, `--level` and `--on-level`.",
+      "**Do** put the screen's heading on the board and the work on one leaf below it.",
+      "**Do** open sections on a leaf with a 2px ink rule and divide rows with hairlines.",
+      "**Do** set syllabus codes, marks and counts in Red Hat Mono with tabular numerals, and put the code inside the heading.",
+      "**Do** keep corners at 4px (2px for error slips, 0 for ruled sections).",
+      "**Do** animate level changes with `90ms steps(2, end)` and drop them entirely under reduced motion.",
+      "**Do** keep drawing and writing surfaces that frame a printed page white in every theme."
+    ],
+    "donts": [
+      "**Don't** use vermilion for anything but errors.",
+      "**Don't** use gradients or decorative shadows; boards and leaves are flat.",
+      "**Don't** box a leaf's sections as cards or a card grid, or fill a section with a tinted background.",
+      "**Don't** set leaf text in a board hue; use the level's reading colour.",
+      "**Don't** put a small-capitals label or eyebrow above a heading; the board's running head is the only line above a heading.",
+      "**Don't** ease level changes or fade them; a divider is turned.",
+      "**Don't** add a third type family or use glyphs from text faces as icons; the portal has one 24px stroke icon set."
+    ]
+  }
+}

@@ -1,10 +1,26 @@
 // The StudyTrack mark and the portal's one icon set, shared by the portal,
 // the sign-in screen and the public front page.
 
+// The mark is a ring-binder board with three dividers stepping down its fore
+// edge, in the Stage 7, Stage 8 and IGCSE Physics colours: the same tabs the
+// sidebar uses to say which class you are in.
+export function BrandMark() {
+  return (
+    <svg className="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+      <rect x="17" y="3" width="12" height="8" rx="1.5" fill="#f2c230" />
+      <rect x="17" y="12" width="12" height="8" rx="1.5" fill="#e2622a" />
+      <rect x="17" y="21" width="12" height="8" rx="1.5" fill="#0d7f7d" />
+      <rect className="brand-mark-board" x="2" y="2" width="22" height="28" rx="2.5" />
+      <circle className="brand-mark-hole" cx="7" cy="9" r="1.6" />
+      <circle className="brand-mark-hole" cx="7" cy="23" r="1.6" />
+    </svg>
+  );
+}
+
 export function Logo() {
   return (
     <div className="brand">
-      <span className="brand-mark">S</span>
+      <BrandMark />
       <div>
         <b>StudyTrack</b>
         <small>Cambridge learner planner</small>

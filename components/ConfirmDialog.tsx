@@ -5,7 +5,6 @@ import { ModalScrim } from "./ModalScrim";
 // teacher cannot take back. A browser prompt cannot show which students are
 // affected, so it asks the teacher to approve a number with no way to check it.
 export function ConfirmDialog({
-  eyebrow,
   title,
   description,
   items,
@@ -14,7 +13,6 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: {
-  eyebrow: string;
   title: string;
   description: string;
   items?: string[];
@@ -34,7 +32,6 @@ export function ConfirmDialog({
         <button type="button" className="x" onClick={onCancel} aria-label="Close">
           ×
         </button>
-        <small>{eyebrow}</small>
         <h2>{title}</h2>
         <p>{description}</p>
         {items && items.length > 0 && (

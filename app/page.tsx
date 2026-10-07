@@ -8,6 +8,7 @@ import {
   useUser,
 } from "@clerk/nextjs";
 import { igcsePhysicsSyllabus } from "@/lib/physics-syllabus";
+import { turnPage } from "@/lib/page-turn";
 import {
   type TeacherView,
   type AssignmentSummary,
@@ -74,7 +75,6 @@ function RolePortal() {
         </header>
         <section>
           <div className="choice-copy">
-            <p>SECURE ACCESS</p>
             <h1>Loading your workspace…</h1>
           </div>
         </section>
@@ -127,7 +127,6 @@ function FirstPasswordChange() {
       </header>
       <section>
         <div className="choice-copy">
-          <p>CHOOSE YOUR PASSWORD</p>
           <h1>Set a password only you know.</h1>
           <h2>
             Your teacher chose the password you just used, so it is not private.
@@ -204,7 +203,6 @@ function RoleSetup() {
       </header>
       <section>
         <div className="choice-copy">
-          <p>ACCOUNT SETUP</p>
           <h1>
             {claimable
               ? "Set up your teacher account."
@@ -236,14 +234,34 @@ function RoleSetup() {
   );
 }
 
+// Every screen belongs to one divider: a Cambridge level, the classroom, or
+// the binder's cover (the dashboard and My progress). The shell paints the
+// screen's ground in that divider's colour; see "The divider" in globals.css.
+type Divider = "cover" | "stage7" | "stage8" | "stage9" | "igcse" | "as" | "exam" | "classroom";
+
+const teacherDivider: Record<TeacherView, Divider> = {
+  dashboard: "cover",
+  stage7: "stage7",
+  stage8: "stage8",
+  stage9: "stage9",
+  physicsIgcse: "igcse",
+  physicsAs: "as",
+  physicsExam: "exam",
+  papers: "classroom",
+  submissions: "classroom",
+  students: "classroom",
+};
+
 function Shell({
   role,
   nav,
+  level,
   children,
 }: {
   role: "Teacher" | "Student";
   onSwitch: () => void;
   nav: React.ReactNode;
+  level: Divider;
   children: React.ReactNode;
 }) {
   const { user } = useUser();
@@ -273,7 +291,7 @@ function Shell({
           </span>
         </div>
       </header>
-      <div className="portal-shell">
+      <div className="portal-shell" data-level={level}>
         <aside {...drawer.asideProps}>
           <div className="portal-person">
             <span className={role.toLowerCase()}>
@@ -337,7 +355,7 @@ function TeacherPortal({ switchRole }: { switchRole: () => void }) {
               key={x[0]}
               className={view === x[0] ? "active" : ""}
               data-nav={x[1]}
-              onClick={() => setView(x[0])}
+              onClick={() => { if (view !== x[0]) turnPage(() => setView(x[0])); }}
             >
               <span><NavIcon name={x[1]} /></span>
               {x[2]}
@@ -348,7 +366,7 @@ function TeacherPortal({ switchRole }: { switchRole: () => void }) {
     </nav>
   );
   return (
-    <Shell role="Teacher" onSwitch={switchRole} nav={nav}>
+    <Shell role="Teacher" onSwitch={switchRole} nav={nav} level={teacherDivider[view]}>
       {view === "dashboard" ? (
         <TeacherDashboard setView={setView} upload={() => setModal(true)} />
       ) : view === "stage7" ? (
@@ -408,8 +426,7 @@ function TeacherPortal({ switchRole }: { switchRole: () => void }) {
             <button type="button" className="x" onClick={() => setModal(false)}>
               ×
             </button>
-            <small>NEW CAMBRIDGE ASSIGNMENT</small>
-            <h2>Upload paper materials</h2>
+            <h2>Upload a new Cambridge assignment</h2>
             <label>
               Subject profile
               <select name="profile" value={uploadProfile} onChange={(event)=>{setUploadProfile(event.target.value);setScheme(null);}}>
@@ -568,11 +585,9 @@ function TeacherDashboard({
           numbers sit beneath it rather than competing with it. */}
       <header className="dash-hero">
         <p className="dash-date">{today}, {firstName}</p>
-        <div className={dashboard && !dashboard.needs_review ? "dash-headline clear" : "dash-headline"}>
-          <b>{dashboard?.needs_review ?? "—"}</b>
-          <div>
-            <h1>{dashboard?.needs_review === 1 ? "paper" : "papers"} waiting to be marked</h1>
-            <p>
+        <div className={dashboard && !dashboard.needs_review ? "dash-queue clear" : "dash-queue"}>
+          <h1><b>{dashboard?.needs_review ?? "—"}</b> {dashboard?.needs_review === 1 ? "paper" : "papers"} waiting to be marked</h1>
+          <p>
               {dashboardError
                 ? "Your marking queue could not be loaded. Reload the page to try again."
                 : !dashboard
@@ -580,17 +595,11 @@ function TeacherDashboard({
                 : dashboard.needs_review
                   ? `Open the marking queue to review ${dashboard.needs_review === 1 ? "it" : "them"}.`
                   : "Everything handed in has been marked and published."}
-            </p>
-          </div>
+          </p>
         </div>
         <div className="dash-actions">
           <button className="primary" onClick={upload}>Upload &amp; assign paper</button>
         </div>
-        <dl className="dash-figures">
-          <div><dt>Students</dt><dd>{dashboard?.active_students ?? "—"}</dd></div>
-          <div><dt>Papers running</dt><dd>{dashboard?.active_papers ?? "—"}</dd></div>
-          <div><dt>Published average</dt><dd>{dashboard ? `${dashboard.class_average}%` : "—"}</dd></div>
-        </dl>
       </header>
       <div className="teacher-grid">
         <section className="panel">
@@ -641,7 +650,7 @@ function TeacherDashboard({
               : 0;
             return (
               <article key={assignment.id}>
-                <span>{assignment.subject === "Physics" ? "⚛" : "π"}</span>
+                <span><NavIcon name="papers" /></span>
                 <div>
                   <b>{assignment.title}</b>
                   <small>
@@ -683,6 +692,11 @@ function TeacherDashboard({
         )}
         {dashboardError && <DashboardEmpty text={dashboardError} />}
       </section>
+      <dl className="dash-figures">
+        <div><dt>Students</dt><dd>{dashboard?.active_students ?? "—"}</dd></div>
+        <div><dt>Papers running</dt><dd>{dashboard?.active_papers ?? "—"}</dd></div>
+        <div><dt>Published average</dt><dd>{dashboard ? `${dashboard.class_average}%` : "—"}</dd></div>
+      </dl>
     </>
   );
 }
@@ -698,7 +712,7 @@ function PastPaperLibrary({stage}:{stage:8|9}){
   const load=()=>{fetch("/api/assignments").then(response=>response.json()).then(rows=>setPapers((Array.isArray(rows)?rows:[]).filter((paper:AssignmentSummary)=>paper.is_practice_library&&paper.lower_secondary_stage===stage)));fetch(`/api/lower-secondary/full-papers?stage=${stage}`).then(response=>response.json()).then(result=>setFullPapers(Object.fromEntries((Array.isArray(result?.papers)?result.papers:[]).map((paper:FullPaperInfo)=>[paper.id,paper])))).catch(()=>setFullPapers({}));};
   useEffect(()=>{load();setMessage("");setShowUpload(false);setSetup(null);setReviewing(null);},[stage]);
   const upload=async(event:React.FormEvent<HTMLFormElement>)=>{event.preventDefault();setUploading(true);setMessage("Uploading both PDFs securely…");const data=new FormData(event.currentTarget);data.set("profile",`lower-secondary-stage${stage}`);data.set("paperMode","structured");data.set("className",`Stage ${stage} past-paper library`);data.set("library","true");data.set("stage",String(stage));const response=await fetch("/api/assignments",{method:"POST",body:data});const result=await response.json();setUploading(false);if(!response.ok){setMessage(result.error||"The paper could not be uploaded.");return;}setPapers(current=>[result,...current]);setShowUpload(false);setMessage("Paper saved. Open question setup to detect, match and approve its questions.");};
-  return <section className="panel past-paper-library"><header><div><small>TEACHER-CONTROLLED SOURCE LIBRARY</small><h3>Stage {stage} past papers</h3><p>Upload a question paper with its mark scheme, then approve every detected question before it joins practice.</p></div><button className="primary" onClick={()=>setShowUpload(value=>!value)}>{showUpload?"Cancel":"＋ Upload paper"}</button></header>{message&&<p className="queue-message">{message}</p>}{showUpload&&<form className="past-paper-upload" onSubmit={upload}><label>Paper title<input name="title" placeholder={`Stage ${stage} End-of-year paper`} required/></label><label>Year or session<input name="year" placeholder="2025" required/></label><label>Question paper PDF<input name="paper" type="file" accept="application/pdf,.pdf" required/></label><label>Mark scheme PDF<input name="scheme" type="file" accept="application/pdf,.pdf" required/></label><button className="primary" disabled={uploading}>{uploading?"Uploading…":"Save to library →"}</button></form>}<div className="past-paper-grid">{papers.map(paper=><article key={paper.id}><span>PDF</span><div><b>{paper.title}</b><small>Stage {stage} · {paper.source_year||"Year not set"}</small><em className={paper.status==="assigned"?"paper-ready":"paper-paused"}>{paper.status==="assigned"?"Approved for practice":"Teacher setup required"}</em></div><div className="past-paper-actions"><button onClick={()=>setReviewing(paper)}>Review uploaded files</button><button onClick={()=>setSetup(paper)}>{paper.status==="assigned"?"Review questions":"Set up questions"} →</button></div><FullPaperControls stage={stage} approved={paper.status==="assigned"} info={fullPapers[paper.id]??{id:paper.id,full_paper_set_at:null,due_date:null,maximum:0,attempts:[]}} changed={next=>setFullPapers(current=>({...current,[paper.id]:{...(current[paper.id]??{id:paper.id,maximum:0,attempts:[]}),...next}}))}/></article>)}{!papers.length&&!showUpload&&<p className="dashboard-empty">No Stage {stage} past papers have been uploaded yet.</p>}</div>{reviewing&&<FileReview assignment={reviewing} close={()=>setReviewing(null)} openSetup={()=>{setSetup(reviewing);setReviewing(null);}} replaced={(status,notice)=>{setPapers(current=>current.map(paper=>paper.id===reviewing.id?{...paper,status}:paper));setReviewing(current=>current?{...current,status}:current);setMessage(notice);}}/>}{setup&&<QuestionSetup assignment={setup} close={()=>setSetup(null)} saved={()=>{setPapers(current=>current.map(paper=>paper.id===setup.id?{...paper,status:"assigned"}:paper));setMessage(`Questions approved. Typed questions with an accepted answer now appear as past-paper practice on their Stage ${stage} unit.`);setSetup(null);}}/>}</section>;
+  return <section className="panel past-paper-library"><header><div><h3>Stage {stage} past-paper library</h3><p>Upload a question paper with its mark scheme, then approve every detected question before it joins practice.</p></div><button className="primary" onClick={()=>setShowUpload(value=>!value)}>{showUpload?"Cancel":"＋ Upload paper"}</button></header>{message&&<p className="queue-message">{message}</p>}{showUpload&&<form className="past-paper-upload" onSubmit={upload}><label>Paper title<input name="title" placeholder={`Stage ${stage} End-of-year paper`} required/></label><label>Year or session<input name="year" placeholder="2025" required/></label><label>Question paper PDF<input name="paper" type="file" accept="application/pdf,.pdf" required/></label><label>Mark scheme PDF<input name="scheme" type="file" accept="application/pdf,.pdf" required/></label><button className="primary" disabled={uploading}>{uploading?"Uploading…":"Save to library"}</button></form>}<div className="past-paper-grid">{papers.map(paper=><article key={paper.id}><span>PDF</span><div><b>{paper.title}</b><small>Stage {stage} · {paper.source_year||"Year not set"}</small><em className={paper.status==="assigned"?"paper-ready":"paper-paused"}>{paper.status==="assigned"?"Approved for practice":"Teacher setup required"}</em></div><div className="past-paper-actions"><button onClick={()=>setReviewing(paper)}>Review uploaded files</button><button onClick={()=>setSetup(paper)}>{paper.status==="assigned"?"Review questions":"Set up questions"}</button></div><FullPaperControls stage={stage} approved={paper.status==="assigned"} info={fullPapers[paper.id]??{id:paper.id,full_paper_set_at:null,due_date:null,maximum:0,attempts:[]}} changed={next=>setFullPapers(current=>({...current,[paper.id]:{...(current[paper.id]??{id:paper.id,maximum:0,attempts:[]}),...next}}))}/></article>)}{!papers.length&&!showUpload&&<p className="dashboard-empty">No Stage {stage} past papers have been uploaded yet.</p>}</div>{reviewing&&<FileReview assignment={reviewing} close={()=>setReviewing(null)} openSetup={()=>{setSetup(reviewing);setReviewing(null);}} replaced={(status,notice)=>{setPapers(current=>current.map(paper=>paper.id===reviewing.id?{...paper,status}:paper));setReviewing(current=>current?{...current,status}:current);setMessage(notice);}}/>}{setup&&<QuestionSetup assignment={setup} close={()=>setSetup(null)} saved={()=>{setPapers(current=>current.map(paper=>paper.id===setup.id?{...paper,status:"assigned"}:paper));setMessage(`Questions approved. Typed questions with an accepted answer now appear as past-paper practice on their Stage ${stage} unit.`);setSetup(null);}}/>}</section>;
 }
 
 function PhysicsSyllabusChecklist({ level }:{ level:"igcse"|"as" }) {
@@ -759,7 +773,7 @@ function PhysicsTeacher({ level }: { level: "igcse" | "as" }) {
     <section className="subject-slab physics">
       <div>
         <p className="slab-code">{level === "as" ? "Cambridge International AS Level Physics 9702" : "Cambridge IGCSE Physics 0625"}</p>
-        <h1>{level === "as" ? "AS Level Physics" : "IGCSE Physics"}</h1>
+        <h1>{level === "as" ? "AS Level Physics" : "IGCSE Physics"} <span className="board-code">{level === "as" ? "9702" : "0625"}</span></h1>
         <p className="slab-note">See how students are progressing through generated {level === "as" ? "AS Level" : "IGCSE"} Physics practice sets.</p>
       </div>
       <dl className="slab-figures">
@@ -848,7 +862,7 @@ function Stage89Teacher({ stage }: { stage: 8 | 9 }) {
     <section className="subject-slab maths">
       <div>
         <p className="slab-code">Cambridge Lower Secondary Mathematics</p>
-        <h1>Stage {stage} mastery</h1>
+        <h1>Stage {stage} mastery <span className="board-code">0862</span></h1>
         <p className="slab-note">Set this class&rsquo;s weekly focus and keep the full Stage {stage} curriculum open for revision.</p>
       </div>
       <dl className="slab-figures">
@@ -862,10 +876,10 @@ function Stage89Teacher({ stage }: { stage: 8 | 9 }) {
     <PastPaperLibrary stage={stage}/>
     <section className="panel stage7-class-manager"><header><div><h3>Stage {stage} students</h3><p>Select the existing student accounts that belong to this class.</p></div><b>{students.filter(student=>student.enrolled).length} enrolled</b></header><div className="stage7-class-tools"><input value={search} onChange={event=>setSearch(event.target.value)} placeholder="Search students…"/><button className="primary" onClick={saveClass}>Save Stage {stage} class</button></div>{classState&&<p className="queue-message">{classState}</p>}<div className="stage7-student-picker">{students.filter(student=>`${student.name} ${student.username}`.toLowerCase().includes(search.toLowerCase())).map(student=><label key={student.id} className={student.enrolled?"selected":""}><input type="checkbox" checked={student.enrolled} onChange={()=>{setClassState("");setStudents(current=>current.map(item=>item.id===student.id?{...item,enrolled:!item.enrolled}:item));}}/><span>{student.name.split(" ").map(part=>part[0]).slice(0,2).join("")}</span><div><b>{student.name}</b><small>@{student.username}</small></div><em>{student.enrolled?"Added":"Add"}</em></label>)}</div></section>
     <section className="panel stage7-progress-panel"><header><div><h3>Stage {stage} class mastery activity</h3><p>Current-stage work and prerequisite revision are shown together</p></div><span>{progress.filter(item=>item.mastered).length} mastered records</span></header>{progress.length?progress.map(item=>{const unit=allUnits.find(value=>value.id===item.chapter_id);return <article key={`${item.student_id}-${item.source_stage}-${item.chapter_id}-${item.past_paper?"past":"sets"}`}><span>{item.student_name.split(" ").map(part=>part[0]).slice(0,2).join("")}</span><div><b>{item.student_name} · {unit?.title||item.chapter_id}</b><small>{item.past_paper?`Stage ${item.source_stage} past-paper practice · ${item.attempts} set${item.attempts===1?"":"s"} · ${item.average}% average`:`Stage ${item.source_stage} mastery · ${item.attempts} practice sets · ${item.average}% average`}</small></div><em className={item.mastered?"mastered":"progress"}>{item.past_paper?"Practice only":item.mastered?"Mastered":`${item.strong_sets}/2 strong sets`}</em></article>}):<p className="dashboard-empty">Student results will appear here after the first practice set.</p>}</section>
-    <section className="panel stage89-focus-bar"><div><small>WEEKLY FOCUS</small><h3>{focus.length} of 6 units selected</h3><p>Students can still open every other Stage {stage} unit for independent revision.</p></div><button className="primary" onClick={saveFocus}>Save Stage {stage} focus</button>{focusState&&<b>{focusState}</b>}</section>
-    <section className="panel prerequisite-focus"><header><div><small>PREREQUISITE REVISION</small><h3>Earlier-stage foundations</h3><p>Add an earlier unit to this class’s weekly focus when students need reinforcement.</p></div><button onClick={()=>setShowRevision(value=>!value)}>{showRevision?"Hide earlier stages":"Choose earlier-stage focus"}</button></header>{showRevision&&<div className="stage7-chapter-grid teacher">{prerequisiteUnits.map(unit=>{const sourceStage=unit.id.startsWith("s8-")?8:7;const selected=focus.includes(unit.id);return <button key={`${sourceStage}-${unit.id}`} className={selected?"selected":""} onClick={()=>toggleFocus(unit.id)}><span>{unit.icon}</span><div><small>STAGE {sourceStage}</small><b>{unit.title}</b><p>{unit.summary}</p></div><em>{selected?"✓ This week":"+ Add focus"}</em></button>;})}</div>}</section>
+    <section className="panel stage89-focus-bar"><div><h3>Weekly focus: {focus.length} of 6 units selected</h3><p>Students can still open every other Stage {stage} unit for independent revision.</p></div><button className="primary" onClick={saveFocus}>Save Stage {stage} focus</button>{focusState&&<b>{focusState}</b>}</section>
+    <section className="panel prerequisite-focus"><header><div><h3>Prerequisite revision from earlier stages</h3><p>Add an earlier unit to this class’s weekly focus when students need reinforcement.</p></div><button onClick={()=>setShowRevision(value=>!value)}>{showRevision?"Hide earlier stages":"Choose earlier-stage focus"}</button></header>{showRevision&&<div className="stage7-chapter-grid teacher">{prerequisiteUnits.map(unit=>{const sourceStage=unit.id.startsWith("s8-")?8:7;const selected=focus.includes(unit.id);return <button key={`${sourceStage}-${unit.id}`} className={selected?"selected":""} onClick={()=>toggleFocus(unit.id)}><span>{unit.icon}</span><div><small>STAGE {sourceStage}</small><b>{unit.title}</b><p>{unit.summary}</p></div><em>{selected?"✓ This week":"+ Add focus"}</em></button>;})}</div>}</section>
     <section className="panel teacher-notes"><header className="stage89-notes-head"><div><h3>Stage {stage} revision notes</h3><p>Exactly what students see from each unit card and after a practice set.</p></div><button onClick={()=>setShowNotes(value=>!value)}>{showNotes?"Hide revision notes":"Show revision notes"}</button></header>{showNotes&&<><nav className="notes-topic-picker" aria-label="Unit">{units.map(unit=><button key={unit.id} aria-pressed={noteUnit===unit.id} className={noteUnit===unit.id?"active":""} onClick={()=>setNoteUnit(unit.id)}>{unit.title}</button>)}</nav><RevisionNotes unitId={noteUnit} showTitle /></>}</section>
-    {strands.map(strand=><section className="stage7-strand" key={strand}><header><div><small>STAGE {stage} STRAND</small><h2>{strand}</h2></div><span>{units.filter(unit=>unit.strand===strand).length} units</span></header><div className="stage7-chapter-grid teacher">{units.filter(unit=>unit.strand===strand).map(unit=>{const selected=focus.includes(unit.id);return <button key={unit.id} className={selected?"selected":""} onClick={()=>toggleFocus(unit.id)}><span>{unit.icon}</span><div><b>{unit.title}</b><p>{unit.summary}</p></div><em>{selected?"✓ This week":"+ Add focus"}</em></button>;})}</div></section>)}
+    {strands.map(strand=><section className="stage7-strand" key={strand}><header><div><h2>{strand}</h2></div><span>{units.filter(unit=>unit.strand===strand).length} units</span></header><div className="stage7-chapter-grid teacher">{units.filter(unit=>unit.strand===strand).map(unit=>{const selected=focus.includes(unit.id);return <button key={unit.id} className={selected?"selected":""} onClick={()=>toggleFocus(unit.id)}><span>{unit.icon}</span><div><b>{unit.title}</b><p>{unit.summary}</p></div><em>{selected?"✓ This week":"+ Add focus"}</em></button>;})}</div></section>)}
   </>;
 }
 
@@ -1083,7 +1097,7 @@ function PhysicsExamTeacher() {
             <h1>{reviewingSubmission.name}'s answers</h1>
             <h2>{paper?.title || "Paper"}</h2>
           </div>
-          <button onClick={() => setReviewingSubmission(null)}>← Submissions</button>
+          <button onClick={() => setReviewingSubmission(null)}>Submissions</button>
         </div>
         {error && <p className="error-text">{error}</p>}
         {reviewingSubmission.wholePaperFiles && reviewingSubmission.wholePaperFiles.length > 0 && (
@@ -1240,7 +1254,7 @@ function PhysicsExamTeacher() {
                 </div>
                 <span></span>
                 <div>
-                  <button onClick={() => setReviewingSubmission(submission)}>Review →</button>
+                  <button onClick={() => setReviewingSubmission(submission)}>Review</button>
                 </div>
               </article>
             );
@@ -1283,7 +1297,7 @@ function PhysicsExamTeacher() {
             )}
             <small>PDF · up to 25 MB each{readingWithAi ? " · scans supported" : " · needs the original Cambridge PDFs, not scans"}. Separate files are best: students can open the question paper, and a combined PDF would show them the mark scheme too.</small>
             {error && <p className="error-text">{error}</p>}
-            <button disabled={busy} className="primary full">{busy ? (readingWithAi ? "Uploading and starting…" : "Reading the paper…") : "Extract questions →"}</button>
+            <button disabled={busy} className="primary full">{busy ? (readingWithAi ? "Uploading and starting…" : "Reading the paper…") : "Extract questions"}</button>
             {readingWithAi && <small>Page images are sent to the configured OpenAI model. A whole paper takes a few minutes to read, and appears in your list when it is ready.</small>}
           </form>
         </ModalScrim>
@@ -1348,7 +1362,7 @@ function PhysicsExamStudent({ back }: { back: () => void }) {
             <h1>{result.paper.title}</h1>
             <h2>Submitted · {awarded} / {totalMarks}{waiting ? ` so far, ${waiting} question${waiting === 1 ? "" : "s"} still to be marked by your teacher` : ""}</h2>
           </div>
-          <button onClick={() => { setResult(null); load(); }}>← Back to papers</button>
+          <button onClick={() => { setResult(null); load(); }}>Back to papers</button>
         </div>
         {result.submission.grades.map((grade) => {
           const question = result.paper.questions.find((q) => q.id === grade.questionId);
@@ -1383,11 +1397,10 @@ function PhysicsExamStudent({ back }: { back: () => void }) {
     <>
       <div className="portal-heading">
         <div>
-          <p>Physics exam papers</p>
           <h1>Exam papers</h1>
           <h2>Papers your teacher has published for practice. Your answers are saved as you go.</h2>
         </div>
-        <button onClick={back}>← Back</button>
+        <button onClick={back}>Back</button>
       </div>
       {error && <p className="error-text">{error}</p>}
       <section className="panel paper-table">
@@ -1458,16 +1471,16 @@ function PhysicsStudent({ back, level }:{ back:()=>void; level:"igcse"|"as" }) {
 
   if(notesUnit)
     return <section className="stage7-practice panel revision-notes-panel">
-      <header><button onClick={()=>setNotesUnit(null)}>← Curriculum</button><div><small>{level.toUpperCase()} PHYSICS · REVISION NOTES</small><h2>{notesUnit.title}</h2></div><span>{level==="as"?"9702":"0625"}</span></header>
+      <header><button onClick={()=>setNotesUnit(null)}>Curriculum</button><div><h2>{notesUnit.title} <span className="heading-aside">revision notes</span></h2></div><span>{level==="as"?"9702":"0625"}</span></header>
       <main><RevisionNotes unitId={notesUnit.id} /></main>
-      <footer><button onClick={()=>setNotesUnit(null)}>Return to curriculum</button><button className="primary" onClick={()=>{const unit=notesUnit;setNotesUnit(null);startPractice(unit);}}>Practise this topic →</button></footer>
+      <footer><button onClick={()=>setNotesUnit(null)}>Return to curriculum</button><button className="primary" onClick={()=>{const unit=notesUnit;setNotesUnit(null);startPractice(unit);}}>Practise this topic</button></footer>
     </section>;
 
   if(practice&&session){
     const question=session.questions[cursor];
     if(result)
       return <section className="stage7-practice panel practice-summary">
-        <header><button onClick={closePractice}>← Curriculum</button><div><small>{level.toUpperCase()} PHYSICS · PRACTICE COMPLETE</small><h2>{practice.title}</h2></div><span>{result.mastered?"Mastered":"Keep practising"}</span></header>
+        <header><button onClick={closePractice}>Curriculum</button><div><h2>{practice.title} <span className="heading-aside">practice complete</span></h2></div><span>{result.mastered?"Mastered":"Keep practising"}</span></header>
         <main>
           <div className="mastery-score"><b>{result.score}%</b><span>{result.score>=80?"Strong set achieved":"Target: 80%"}</span></div>
           <h2>{result.mastered?"Unit mastery achieved":"Your worked review"}</h2>
@@ -1482,7 +1495,7 @@ function PhysicsStudent({ back, level }:{ back:()=>void; level:"igcse"|"as" }) {
         <footer><button onClick={closePractice}>Return to curriculum</button><button onClick={()=>openNotes(practice)}>Revision notes</button><button className="primary" onClick={()=>startPractice(practice)}>Start a fresh set</button></footer>
       </section>;
     return <section className="stage7-practice panel">
-      <header><button onClick={closePractice}>← Curriculum</button><div><small>{level.toUpperCase()} PHYSICS · {session.difficulty.toUpperCase()}</small><h2>{practice.title}</h2></div><span>Question {cursor+1} of {session.questions.length}</span></header>
+      <header><button onClick={closePractice}>Curriculum</button><div><h2>{practice.title} <span className="heading-aside">{session.difficulty}</span></h2></div><span>Question {cursor+1} of {session.questions.length}</span></header>
       <div className="practice-progress"><i style={{width:`${((cursor+1)/session.questions.length)*100}%`}}/></div>
       <main>
         <small>QUESTION {cursor+1}</small>
@@ -1496,8 +1509,8 @@ function PhysicsStudent({ back, level }:{ back:()=>void; level:"igcse"|"as" }) {
       <footer>
         <button onClick={()=>setHints(hints.map((value,index)=>index===cursor?true:value))}>{hints[cursor]?"Hint shown":"Show hint"}</button>
         <div>
-          <button disabled={cursor===0} onClick={()=>setCursor(cursor-1)}>← Previous</button>
-          {cursor<session.questions.length-1?<button className="primary" onClick={()=>setCursor(cursor+1)}>Next →</button>:<button className="primary" onClick={submitPractice}>Finish &amp; mark set</button>}
+          <button disabled={cursor===0} onClick={()=>setCursor(cursor-1)}>Previous</button>
+          {cursor<session.questions.length-1?<button className="primary" onClick={()=>setCursor(cursor+1)}>Next</button>:<button className="primary" onClick={submitPractice}>Finish &amp; mark set</button>}
         </div>
       </footer>
       {message&&<p className="queue-message">{message}</p>}
@@ -1506,9 +1519,9 @@ function PhysicsStudent({ back, level }:{ back:()=>void; level:"igcse"|"as" }) {
 
   return <>
     <div className="portal-heading">
-      <div><p>{level==="as"?"CAMBRIDGE AS LEVEL PHYSICS 9702":"CAMBRIDGE IGCSE PHYSICS 0625"}</p><h1>{level==="as"?"AS Level Physics practice":"IGCSE Physics practice"}</h1><h2>Generated practice questions with instant, reliable marking — separate from your assigned past papers.</h2></div>
+      <div><p>{level==="as"?"CAMBRIDGE AS LEVEL PHYSICS 9702":"CAMBRIDGE IGCSE PHYSICS 0625"}</p><h1>{level==="as"?"AS Level Physics practice":"IGCSE Physics practice"} <span className="board-code">{level==="as"?"9702":"0625"}</span></h1><h2>Generated practice questions with instant, reliable marking — separate from your assigned past papers.</h2></div>
       <div className="stage89-switch">
-        <button onClick={back}>← Assigned papers</button>
+        <button onClick={back}>Assigned papers</button>
       </div>
     </div>
     <div className="stage89-switch">
@@ -1518,7 +1531,7 @@ function PhysicsStudent({ back, level }:{ back:()=>void; level:"igcse"|"as" }) {
     {libraryView==="checklist" ? <PhysicsSyllabusChecklist level={level} /> : <>
     {message&&<p className="queue-message panel">{message}</p>}
     <div className="stage7-library-head">
-      <div><small>{level.toUpperCase()} CURRICULUM</small><h2>Topic library</h2><p>New topics are added regularly — available ones are ready to practise now.</p></div>
+      <div><h2>Topic library</h2><p>New topics are added regularly — available ones are ready to practise now.</p></div>
       <span>{units.filter(unit=>progress[unit.id]?.mastered).length} of {units.filter(unit=>unit.available).length} mastered</span>
     </div>
     <div className="stage7-chapter-grid student">{units.map(unit=>{
@@ -1529,7 +1542,7 @@ function PhysicsStudent({ back, level }:{ back:()=>void; level:"igcse"|"as" }) {
         <h3>{unit.title}</h3>
         <p>{unit.summary}</p>
         <div><em>{!unit.available?"Coming soon":item?.mastered?"Mastered":item?.attempts?"In progress":"Not started"}</em><b>{unit.available&&item?.attempts?`${item.average}%`:"—"}</b></div>
-        <button disabled={!unit.available} onClick={()=>startPractice(unit)}>{unit.available?"Practise unit →":"Coming soon"}</button>
+        <button disabled={!unit.available} onClick={()=>startPractice(unit)}>{unit.available?"Practise unit":"Coming soon"}</button>
         <button className="notes-link" onClick={()=>openNotes(unit)}>Revision notes</button>
       </article>;
     })}</div>
@@ -1582,28 +1595,28 @@ function Stage89Student({ back }:{ back:()=>void }) {
   const enrolledStages=([8,9] as const).filter(value=>records[value]?.enrolled);
 
   const closeSitting=()=>{setFullSitting(null);setFullListKey(key=>key+1);};
-  if(fullSitting)return <AnswerWorkspace assignment={fullSitting.paper} sitting={fullSitting.sitting} backLabel="← Past papers" back={closeSitting} submitted={(status,result)=>{closeSitting();if(status==="published"&&result?.submissionId)setFullResult(String(result.submissionId));else setMessage("Your paper was sent to your teacher. Your result will appear under Past papers once it is marked.");}}/>;
+  if(fullSitting)return <AnswerWorkspace assignment={fullSitting.paper} sitting={fullSitting.sitting} backLabel="Past papers" back={closeSitting} submitted={(status,result)=>{closeSitting();if(status==="published"&&result?.submissionId)setFullResult(String(result.submissionId));else setMessage("Your paper was sent to your teacher. Your result will appear under Past papers once it is marked.");}}/>;
   if(fullResult)return <FullPaperResult attemptId={fullResult} back={()=>setFullResult(null)}/>;
 
-  if(loaded&&!enrolledStages.length)return <><div className="portal-heading"><div><p>CAMBRIDGE LOWER SECONDARY MATHEMATICS</p><h1>Stages 8 and 9 mastery</h1><h2>Your teacher has not added you to a Stage 8 or Stage 9 class yet.</h2></div><button onClick={back}>← Assigned papers</button></div><section className="panel dashboard-empty">Ask your teacher to add your account under Stages 8 &amp; 9.</section></>;
+  if(loaded&&!enrolledStages.length)return <><div className="portal-heading"><div><p>CAMBRIDGE LOWER SECONDARY MATHEMATICS</p><h1>Stages 8 and 9 mastery</h1><h2>Your teacher has not added you to a Stage 8 or Stage 9 class yet.</h2></div><button onClick={back}>Assigned papers</button></div><section className="panel dashboard-empty">Ask your teacher to add your account under Stages 8 &amp; 9.</section></>;
   if(notesUnit)
     return <section className="stage7-practice panel revision-notes-panel">
-      <header><button onClick={()=>setNotesUnit(null)}>← Curriculum</button><div><small>STAGE {notesUnit.sourceStage} MATHEMATICS · REVISION NOTES</small><h2>{notesUnit.title}</h2></div><span>Stage {notesUnit.sourceStage}</span></header>
+      <header><button onClick={()=>setNotesUnit(null)}>Curriculum</button><div><h2>{notesUnit.title} <span className="heading-aside">Stage {notesUnit.sourceStage} revision notes</span></h2></div><span>Stage {notesUnit.sourceStage}</span></header>
       <main><RevisionNotes unitId={notesUnit.id} /></main>
-      <footer><button onClick={()=>setNotesUnit(null)}>Return to curriculum</button><button className="primary" onClick={()=>{const unit=notesUnit;setNotesUnit(null);startPractice(unit,unit.sourceStage);}}>Practise this unit →</button></footer>
+      <footer><button onClick={()=>setNotesUnit(null)}>Return to curriculum</button><button className="primary" onClick={()=>{const unit=notesUnit;setNotesUnit(null);startPractice(unit,unit.sourceStage);}}>Practise this unit</button></footer>
     </section>;
-  if(practice&&session){const question=session.questions[cursor];const past=!!session.past_paper;if(result)return <section className="stage7-practice panel practice-summary"><header><button onClick={closePractice}>← Curriculum</button><div><small>STAGE {practice.sourceStage} · {past?"PAST-PAPER PRACTICE COMPLETE":"PRACTICE COMPLETE"}</small><h2>{practice.title}</h2></div><span>{past?"Past-paper practice":result.mastered?"Mastered":"Keep practising"}</span></header><main><div className="mastery-score"><b>{result.score}%</b><span>{past?`${result.results.filter((item:any)=>item.correct).length} of ${result.results.length} correct`:result.score>=80?"Strong set achieved":"Target: 80%"}</span></div><h2>{!past&&result.mastered?`Stage ${practice.sourceStage} unit mastery achieved`:"Your worked review"}</h2><p>{past?`Past-paper practice does not count toward mastery · ${result.hints_used} hints used`:`${result.strong_sets} of 2 strong sets completed · ${result.hints_used} hints used`}</p><div className="worked-review">{result.results.map((item:any,index:number)=><article className={item.correct?"correct":"retry"} key={index}><span>{item.correct?"✓":"!"}</span><div><b>Question {index+1}: {item.prompt}</b><p>Your answer: {item.answer||"No answer"}</p><strong>{item.solution}</strong></div></article>)}</div></main><footer><button onClick={closePractice}>Return to curriculum</button>{hasNotes(practice.id)&&<button onClick={()=>openNotes(practice)}>Revision notes</button>}<button className="primary" onClick={()=>startPractice(practice,practice.sourceStage,past)}>{past?"More past-paper questions":"Start a fresh set"}</button></footer></section>;
-    return <section className="stage7-practice panel"><header><button onClick={closePractice}>← Curriculum</button><div><small>STAGE {practice.sourceStage} {past?"PAST-PAPER PRACTICE":`${practice.sourceStage<homeStage?"REVISION":"PRACTICE"} · ${session.difficulty.toUpperCase()}`}</small><h2>{practice.title}</h2></div><span>Question {cursor+1} of {session.questions.length}</span></header><div className="practice-progress"><i style={{width:`${((cursor+1)/session.questions.length)*100}%`}}/></div><main><small>QUESTION {cursor+1}</small>{question.objective&&<p className="practice-objective">{question.objective}</p>}<h1>{question.prompt}</h1>{question.source&&<PastPaperPracticeCrop source={question.source}/>} {hints[cursor]&&<p className="practice-hint">Hint: {question.hint}</p>}<label>Your answer{question.answerFormat&&<small className="answer-format">Answer format: {question.answerFormat}</small>}<input value={answers[cursor]} placeholder={question.answerFormat||"Enter your answer"} onChange={event=>setAnswers(answers.map((value,index)=>index===cursor?event.target.value:value))} onKeyDown={event=>{if(event.key==="Enter"){event.preventDefault();cursor<session.questions.length-1?setCursor(cursor+1):submitPractice();}}} autoFocus/></label></main><footer><button onClick={()=>setHints(hints.map((value,index)=>index===cursor?true:value))}>{hints[cursor]?"Hint shown":"Show hint"}</button><div><button disabled={cursor===0} onClick={()=>setCursor(cursor-1)}>← Previous</button>{cursor<session.questions.length-1?<button className="primary" onClick={()=>setCursor(cursor+1)}>Next →</button>:<button className="primary" onClick={submitPractice}>Finish &amp; mark set</button>}</div></footer>{message&&<p className="queue-message">{message}</p>}</section>;
+  if(practice&&session){const question=session.questions[cursor];const past=!!session.past_paper;if(result)return <section className="stage7-practice panel practice-summary"><header><button onClick={closePractice}>Curriculum</button><div><h2>{practice.title} <span className="heading-aside">Stage {practice.sourceStage} {past?"past-paper practice complete":"practice complete"}</span></h2></div><span>{past?"Past-paper practice":result.mastered?"Mastered":"Keep practising"}</span></header><main><div className="mastery-score"><b>{result.score}%</b><span>{past?`${result.results.filter((item:any)=>item.correct).length} of ${result.results.length} correct`:result.score>=80?"Strong set achieved":"Target: 80%"}</span></div><h2>{!past&&result.mastered?`Stage ${practice.sourceStage} unit mastery achieved`:"Your worked review"}</h2><p>{past?`Past-paper practice does not count toward mastery · ${result.hints_used} hints used`:`${result.strong_sets} of 2 strong sets completed · ${result.hints_used} hints used`}</p><div className="worked-review">{result.results.map((item:any,index:number)=><article className={item.correct?"correct":"retry"} key={index}><span>{item.correct?"✓":"!"}</span><div><b>Question {index+1}: {item.prompt}</b><p>Your answer: {item.answer||"No answer"}</p><strong>{item.solution}</strong></div></article>)}</div></main><footer><button onClick={closePractice}>Return to curriculum</button>{hasNotes(practice.id)&&<button onClick={()=>openNotes(practice)}>Revision notes</button>}<button className="primary" onClick={()=>startPractice(practice,practice.sourceStage,past)}>{past?"More past-paper questions":"Start a fresh set"}</button></footer></section>;
+    return <section className="stage7-practice panel"><header><button onClick={closePractice}>Curriculum</button><div><small>STAGE {practice.sourceStage} {past?"PAST-PAPER PRACTICE":`${practice.sourceStage<homeStage?"REVISION":"PRACTICE"} · ${session.difficulty.toUpperCase()}`}</small><h2>{practice.title}</h2></div><span>Question {cursor+1} of {session.questions.length}</span></header><div className="practice-progress"><i style={{width:`${((cursor+1)/session.questions.length)*100}%`}}/></div><main>{question.objective&&<p className="practice-objective">{question.objective}</p>}<h1>{question.prompt}</h1>{question.source&&<PastPaperPracticeCrop source={question.source}/>} {hints[cursor]&&<p className="practice-hint">Hint: {question.hint}</p>}<label>Your answer{question.answerFormat&&<small className="answer-format">Answer format: {question.answerFormat}</small>}<input value={answers[cursor]} placeholder={question.answerFormat||"Enter your answer"} onChange={event=>setAnswers(answers.map((value,index)=>index===cursor?event.target.value:value))} onKeyDown={event=>{if(event.key==="Enter"){event.preventDefault();cursor<session.questions.length-1?setCursor(cursor+1):submitPractice();}}} autoFocus/></label></main><footer><button onClick={()=>setHints(hints.map((value,index)=>index===cursor?true:value))}>{hints[cursor]?"Hint shown":"Show hint"}</button><div><button disabled={cursor===0} onClick={()=>setCursor(cursor-1)}>Previous</button>{cursor<session.questions.length-1?<button className="primary" onClick={()=>setCursor(cursor+1)}>Next</button>:<button className="primary" onClick={submitPractice}>Finish &amp; mark set</button>}</div></footer>{message&&<p className="queue-message">{message}</p>}</section>;
   }
 
-  return <><div className="portal-heading"><div><p>CAMBRIDGE LOWER SECONDARY · STAGE {homeStage} CLASS</p><h1>My mathematics mastery</h1><h2>Build current-stage mastery or revisit an earlier foundation whenever you need it.</h2></div><div className="stage89-switch">{enrolledStages.length>1&&enrolledStages.map(value=><button key={value} className={homeStage===value?"primary":""} onClick={()=>chooseHomeStage(value)}>Stage {value} class</button>)}<button onClick={back}>← Assigned papers</button></div></div>
-    <section className="panel cross-stage-picker"><header><div><small>CHOOSE YOUR PRACTICE LEVEL</small><h3>Current learning and earlier-stage revision</h3><p>Mastery is always recorded against the original stage of each unit.</p></div></header><div className="stage89-switch">{accessibleStages.slice().reverse().map(value=><button key={value} className={sourceStage===value?"primary":""} onClick={()=>setSourceStage(value)}>{value===homeStage?`Stage ${value} current`:`Stage ${value} revision`}</button>)}</div></section>
-    <section className="weekly-focus"><header><div><small>YOUR FOCUS THIS WEEK</small><h2>Stage {homeStage} class priorities</h2><p>Your teacher can include current units and prerequisite revision.</p></div><b>{focusUnits.length} units</b></header><div>{focusUnits.length?focusUnits.map(unit=>{const item=progress[unit.id];return <article key={`${unit.sourceStage}-${unit.id}`}><span>{unit.icon}</span><div><b>Stage {unit.sourceStage} · {unit.title}</b><p>{item?.mastered?"Mastered":`${item?.strong_sets||0} of 2 strong sets`}</p><i><em style={{width:`${Math.min(100,((item?.strong_sets||0)/2)*100)}%`}}/></i></div><button onClick={()=>startPractice(unit,unit.sourceStage)}>{item?.attempts?"Continue practice →":"Start practice →"}</button></article>}):<p className="dashboard-empty">Your teacher has not selected a weekly focus yet.</p>}</div></section>
-    {recommendations.length>0&&<section className="panel foundation-recommendations"><header><div><small>RECOMMENDED FOR YOU</small><h3>Strengthen the foundation first</h3><p>Your recent results suggest that these earlier-stage units will help with your current work.</p></div><span>Adaptive revision</span></header><div>{recommendations.map(unit=><article key={`${unit.sourceStage}-${unit.id}`}><span>{unit.icon}</span><div><small>STAGE {unit.sourceStage} FOUNDATION</small><b>{unit.title}</b><p>{unit.summary}</p></div><button onClick={()=>startPractice(unit,unit.sourceStage)}>Practise foundation</button></article>)}</div></section>}
+  return <><div className="portal-heading"><div><p>CAMBRIDGE LOWER SECONDARY · STAGE {homeStage} CLASS</p><h1>My mathematics mastery <span className="board-code">0862</span></h1><h2>Build current-stage mastery or revisit an earlier foundation whenever you need it.</h2></div><div className="stage89-switch">{enrolledStages.length>1&&enrolledStages.map(value=><button key={value} className={homeStage===value?"primary":""} onClick={()=>chooseHomeStage(value)}>Stage {value} class</button>)}<button onClick={back}>Assigned papers</button></div></div>
+    <section className="panel cross-stage-picker"><header><div><h3>Practise this stage or revise an earlier one</h3><p>Mastery is always recorded against the original stage of each unit.</p></div></header><div className="stage89-switch">{accessibleStages.slice().reverse().map(value=><button key={value} className={sourceStage===value?"primary":""} onClick={()=>setSourceStage(value)}>{value===homeStage?`Stage ${value} current`:`Stage ${value} revision`}</button>)}</div></section>
+    <section className="weekly-focus"><header><div><h2>This week&rsquo;s Stage {homeStage} focus</h2><p>Your teacher can include current units and prerequisite revision.</p></div><b>{focusUnits.length} units</b></header><div>{focusUnits.length?focusUnits.map(unit=>{const item=progress[unit.id];return <article key={`${unit.sourceStage}-${unit.id}`}><span>{unit.icon}</span><div><b>Stage {unit.sourceStage} · {unit.title}</b><p>{item?.mastered?"Mastered":`${item?.strong_sets||0} of 2 strong sets`}</p><i><em style={{width:`${Math.min(100,((item?.strong_sets||0)/2)*100)}%`}}/></i></div><button onClick={()=>startPractice(unit,unit.sourceStage)}>{item?.attempts?"Continue practice":"Start practice"}</button></article>}):<p className="dashboard-empty">Your teacher has not selected a weekly focus yet.</p>}</div></section>
+    {recommendations.length>0&&<section className="panel foundation-recommendations"><header><div><h3>Recommended: strengthen the foundation first</h3><p>Your recent results suggest that these earlier-stage units will help with your current work.</p></div><span>Adaptive revision</span></header><div>{recommendations.map(unit=><article key={`${unit.sourceStage}-${unit.id}`}><span>{unit.icon}</span><div><small>STAGE {unit.sourceStage} FOUNDATION</small><b>{unit.title}</b><p>{unit.summary}</p></div><button onClick={()=>startPractice(unit,unit.sourceStage)}>Practise foundation</button></article>)}</div></section>}
     {message&&<p className="queue-message panel">{message}</p>}
     <FullPaperList key={`${homeStage}-${fullListKey}`} stage={homeStage} open={(paper,sitting)=>{setMessage("");setFullSitting({paper,sitting});}} showAttempt={setFullResult}/>
-    <div className="stage7-library-head"><div><small>{sourceStage===homeStage?`STAGE ${sourceStage} CURRICULUM`:`STAGE ${sourceStage} PREREQUISITE REVISION`}</small><h2>{sourceStage===homeStage?"Current curriculum library":"Earlier-stage foundations"}</h2><p>{sourceStage===7?"Stage 7 question coverage will grow as its library is completed.":`All ${sourceUnits.length} Stage ${sourceStage} units are open for revision.`}</p></div><span>{sourceUnits.filter(unit=>progress[unit.id]?.mastered).length} of {sourceUnits.length} mastered</span></div>
-    <div className="stage7-chapter-grid student">{sourceUnits.map(unit=>{const item=progress[unit.id];const focused=focus.includes(unit.id);return <article key={`${sourceStage}-${unit.id}`} className={focused?"focus":""}><span>{unit.icon}</span><small>Stage {sourceStage} · {unit.strand}</small><h3>{unit.title}</h3><p>{unit.summary}</p><div><em>{item?.mastered?"Mastered":item?.attempts?"In progress":focused?"This week":"Not started"}</em><b>{item?.attempts?`${item.average}%`:"—"}</b></div><button onClick={()=>startPractice(unit,sourceStage)}>{focused?"Start weekly focus":"Practise unit"} →</button>{!!pastPaperCounts[unit.id]&&<button className="notes-link" onClick={()=>startPractice(unit,sourceStage,true)}>Past-paper questions ({pastPaperCounts[unit.id]}) →</button>}{hasNotes(unit.id)&&<button className="notes-link" onClick={()=>openNotes(unit)}>Revision notes</button>}</article>})}</div>
+    <div className="stage7-library-head"><div><h2>{sourceStage===homeStage?`Stage ${sourceStage} curriculum`:`Stage ${sourceStage} foundations for revision`}</h2><p>{sourceStage===7?"Stage 7 question coverage will grow as its library is completed.":`All ${sourceUnits.length} Stage ${sourceStage} units are open for revision.`}</p></div><span>{sourceUnits.filter(unit=>progress[unit.id]?.mastered).length} of {sourceUnits.length} mastered</span></div>
+    <div className="stage7-chapter-grid student">{sourceUnits.map(unit=>{const item=progress[unit.id];const focused=focus.includes(unit.id);return <article key={`${sourceStage}-${unit.id}`} className={focused?"focus":""}><span>{unit.icon}</span><h3>{unit.title}</h3><small>Stage {sourceStage} · {unit.strand}</small><p>{unit.summary}</p><div><em>{item?.mastered?"Mastered":item?.attempts?"In progress":focused?"This week":"Not started"}</em><b>{item?.attempts?`${item.average}%`:"—"}</b></div><button onClick={()=>startPractice(unit,sourceStage)}>{focused?"Start weekly focus":"Practise unit"}</button>{!!pastPaperCounts[unit.id]&&<button className="notes-link" onClick={()=>startPractice(unit,sourceStage,true)}>Past-paper questions ({pastPaperCounts[unit.id]})</button>}{hasNotes(unit.id)&&<button className="notes-link" onClick={()=>openNotes(unit)}>Revision notes</button>}</article>})}</div>
   </>;
 }
 
@@ -1650,7 +1663,7 @@ function Stage7Teacher() {
       <section className="subject-slab maths">
         <div>
           <p className="slab-code">Cambridge Lower Secondary Mathematics</p>
-          <h1>Stage 7 mastery</h1>
+          <h1>Stage 7 mastery <span className="board-code">0862</span></h1>
           <p className="slab-note">Set this class&rsquo;s weekly focus and keep the full Stage 7 curriculum open for revision.</p>
         </div>
         <div className="slab-side">
@@ -1674,7 +1687,7 @@ function Stage7Teacher() {
       <section className="panel stage7-progress-panel"><header><div><h3>Integers and place value progress</h3><p>Cloud-saved practice activity for the first automatic chapter engine</p></div><span>{integerProgress.filter(student=>student.mastered).length} mastered</span></header>{integerProgress.length?integerProgress.map(student=><article key={student.student_id}><span>{student.student_name.split(" ").map((part:string)=>part[0]).slice(0,2).join("")}</span><div><b>{student.student_name}</b><small>{student.attempts} practice sets · Last average {student.average}%</small></div><em className={student.mastered?"mastered":"progress"}>{student.mastered?"Mastered":`${student.strong_sets}/2 strong sets`}</em></article>):<p className="dashboard-empty">Student attempts will appear here after the first practice set is completed.</p>}</section>
       {["Number", "Algebra", "Geometry and Measure", "Statistics and Probability"].map((strand) => (
         <section className="stage7-strand" key={strand}>
-          <header><div><small>STAGE 7 STRAND</small><h2>{strand}</h2></div><span>{stage7Chapters.filter((chapter) => chapter.strand === strand).length} chapters</span></header>
+          <header><div><h2>{strand}</h2></div><span>{stage7Chapters.filter((chapter) => chapter.strand === strand).length} chapters</span></header>
           <div className="stage7-chapter-grid teacher">
             {stage7Chapters.filter((chapter) => chapter.strand === strand).map((chapter) => {
               const selected = focus.includes(chapter.id);
@@ -1719,15 +1732,15 @@ function Stage7Student({ back }: { back: () => void }) {
   };
   if (practice && session) {
     const question=session.questions[cursor];
-    if(result) return <section className="stage7-practice panel practice-summary"><header><button onClick={()=>{setPractice(null);setSession(null);setResult(null);}}>← Curriculum</button><div><small>PRACTICE COMPLETE</small><h2>{practice.title}</h2></div><span>{result.mastered?"Mastered":"Keep practising"}</span></header><main><div className="mastery-score"><b>{result.score}%</b><span>{result.score>=80?"Strong set achieved":"Target: 80%"}</span></div><h2>{result.mastered?"Chapter mastery achieved":"Your worked review"}</h2><p>{result.strong_sets} of 2 strong sets completed · {result.hints_used} hints used</p><div className="worked-review">{result.results.map((item:any,index:number)=><article className={item.correct?"correct":"retry"} key={index}><span>{item.correct?"✓":"!"}</span><div><b>Question {index+1}: {item.prompt}</b><p>Your answer: {item.answer||"No answer"}</p><strong>{item.solution}</strong></div></article>)}</div></main><footer><button onClick={()=>{setPractice(null);setSession(null);setResult(null);}}>Return to curriculum</button><button className="primary" onClick={()=>startPractice(practice)}>Start a fresh set</button></footer></section>;
-    return <section className="stage7-practice panel"><header><button onClick={()=>{setPractice(null);setSession(null);}}>← Curriculum</button><div><small>STAGE 7 PRACTICE · {session.difficulty.toUpperCase()}</small><h2>{practice.title}</h2></div><span>Question {cursor+1} of {session.questions.length}</span></header><div className="practice-progress"><i style={{width:`${((cursor+1)/session.questions.length)*100}%`}} /></div><main><small>QUESTION {cursor+1}</small><h1>{question.prompt}</h1>{hints[cursor]&&<p className="practice-hint">Hint: {question.hint}</p>}<label>Your answer<input value={answers[cursor]} onChange={event=>setAnswers(answers.map((value,index)=>index===cursor?event.target.value:value))} onKeyDown={event=>{if(event.key==="Enter"){event.preventDefault();cursor<session.questions.length-1?setCursor(cursor+1):submitPractice();}}} inputMode="numeric" autoFocus /></label></main><footer><button onClick={()=>setHints(hints.map((value,index)=>index===cursor?true:value))}>{hints[cursor]?"Hint shown":"Show hint"}</button><div><button disabled={cursor===0} onClick={()=>setCursor(cursor-1)}>← Previous</button>{cursor<session.questions.length-1?<button className="primary" onClick={()=>setCursor(cursor+1)}>Next →</button>:<button className="primary" onClick={submitPractice}>Finish & mark set</button>}</div></footer>{practiceMessage&&<p className="queue-message">{practiceMessage}</p>}</section>;
+    if(result) return <section className="stage7-practice panel practice-summary"><header><button onClick={()=>{setPractice(null);setSession(null);setResult(null);}}>Curriculum</button><div><h2>{practice.title} <span className="heading-aside">practice complete</span></h2></div><span>{result.mastered?"Mastered":"Keep practising"}</span></header><main><div className="mastery-score"><b>{result.score}%</b><span>{result.score>=80?"Strong set achieved":"Target: 80%"}</span></div><h2>{result.mastered?"Chapter mastery achieved":"Your worked review"}</h2><p>{result.strong_sets} of 2 strong sets completed · {result.hints_used} hints used</p><div className="worked-review">{result.results.map((item:any,index:number)=><article className={item.correct?"correct":"retry"} key={index}><span>{item.correct?"✓":"!"}</span><div><b>Question {index+1}: {item.prompt}</b><p>Your answer: {item.answer||"No answer"}</p><strong>{item.solution}</strong></div></article>)}</div></main><footer><button onClick={()=>{setPractice(null);setSession(null);setResult(null);}}>Return to curriculum</button><button className="primary" onClick={()=>startPractice(practice)}>Start a fresh set</button></footer></section>;
+    return <section className="stage7-practice panel"><header><button onClick={()=>{setPractice(null);setSession(null);}}>Curriculum</button><div><h2>{practice.title} <span className="heading-aside">{session.difficulty}</span></h2></div><span>Question {cursor+1} of {session.questions.length}</span></header><div className="practice-progress"><i style={{width:`${((cursor+1)/session.questions.length)*100}%`}} /></div><main><h1>{question.prompt}</h1>{hints[cursor]&&<p className="practice-hint">Hint: {question.hint}</p>}<label>Your answer<input value={answers[cursor]} onChange={event=>setAnswers(answers.map((value,index)=>index===cursor?event.target.value:value))} onKeyDown={event=>{if(event.key==="Enter"){event.preventDefault();cursor<session.questions.length-1?setCursor(cursor+1):submitPractice();}}} inputMode="numeric" autoFocus /></label></main><footer><button onClick={()=>setHints(hints.map((value,index)=>index===cursor?true:value))}>{hints[cursor]?"Hint shown":"Show hint"}</button><div><button disabled={cursor===0} onClick={()=>setCursor(cursor-1)}>Previous</button>{cursor<session.questions.length-1?<button className="primary" onClick={()=>setCursor(cursor+1)}>Next</button>:<button className="primary" onClick={submitPractice}>Finish & mark set</button>}</div></footer>{practiceMessage&&<p className="queue-message">{practiceMessage}</p>}</section>;
   }
   return <>
-    <div className="portal-heading"><div><p>CAMBRIDGE LOWER SECONDARY · STAGE 7</p><h1>My mathematics mastery</h1><h2>Complete this week’s focus or revise any chapter whenever you choose.</h2></div><button onClick={back}>← Assigned papers</button></div>
-    <section className="weekly-focus"><header><div><small>YOUR FOCUS THIS WEEK</small><h2>Build confidence with number</h2><p>Complete two practice sets at 80% or higher.</p></div><b>{progress.strong_sets} strong sets</b></header><div>{stage7Chapters.filter((chapter) => focus.includes(chapter.id)).map((chapter) => <article key={chapter.id}><span>{chapter.icon}</span><div><b>{chapter.title}</b><p>{chapter.id==="integers"?(progress.mastered?"Mastered":`${progress.attempts} attempts · ${progress.average}% recent average`):"Question engine coming next"}</p><i><em style={{ width: chapter.id==="integers"?`${Math.min(100,(progress.strong_sets/2)*100)}%`:"0%" }} /></i></div><button onClick={() => startPractice(chapter)}>{chapter.id==="integers"?(progress.attempts?"Continue practice →":"Start practice →"):"Preview"}</button></article>)}</div></section>
+    <div className="portal-heading"><div><p>CAMBRIDGE LOWER SECONDARY · STAGE 7</p><h1>My mathematics mastery <span className="board-code">0862</span></h1><h2>Complete this week’s focus or revise any chapter whenever you choose.</h2></div><button onClick={back}>Assigned papers</button></div>
+    <section className="weekly-focus"><header><div><h2>This week&rsquo;s focus: build confidence with number</h2><p>Complete two practice sets at 80% or higher.</p></div><b>{progress.strong_sets} strong sets</b></header><div>{stage7Chapters.filter((chapter) => focus.includes(chapter.id)).map((chapter) => <article key={chapter.id}><span>{chapter.icon}</span><div><b>{chapter.title}</b><p>{chapter.id==="integers"?(progress.mastered?"Mastered":`${progress.attempts} attempts · ${progress.average}% recent average`):"Question engine coming next"}</p><i><em style={{ width: chapter.id==="integers"?`${Math.min(100,(progress.strong_sets/2)*100)}%`:"0%" }} /></i></div><button onClick={() => startPractice(chapter)}>{chapter.id==="integers"?(progress.attempts?"Continue practice":"Start practice"):"Preview"}</button></article>)}</div></section>
     {practiceMessage&&<p className="queue-message panel">{practiceMessage}</p>}
-    <div className="stage7-library-head"><div><small>ALL STAGE 7 CHAPTERS</small><h2>Curriculum library</h2><p>Everything remains available for independent revision.</p></div><span>{progress.mastered?1:0} of {stage7Chapters.length} mastered</span></div>
-    <div className="stage7-chapter-grid student">{stage7Chapters.map((chapter) => <article key={chapter.id} className={focus.includes(chapter.id) ? "focus" : ""}><span>{chapter.icon}</span><small>{chapter.strand}</small><h3>{chapter.title}</h3><p>{chapter.summary}</p><div><em>{chapter.id==="integers"?(progress.mastered?"Mastered":progress.attempts?"In progress":"Not started"):"Available soon"}</em><b>{chapter.id==="integers"?`${progress.average||0}%`:"—"}</b></div><button onClick={() => startPractice(chapter)}>{chapter.id==="integers"?(focus.includes(chapter.id)?"Start weekly focus":"Practise chapter"):"Question engine next"} →</button></article>)}</div>
+    <div className="stage7-library-head"><div><h2>Stage 7 curriculum</h2><p>Everything remains available for independent revision.</p></div><span>{progress.mastered?1:0} of {stage7Chapters.length} mastered</span></div>
+    <div className="stage7-chapter-grid student">{stage7Chapters.map((chapter) => <article key={chapter.id} className={focus.includes(chapter.id) ? "focus" : ""}><span>{chapter.icon}</span><h3>{chapter.title}</h3><small>{chapter.strand}</small><p>{chapter.summary}</p><div><em>{chapter.id==="integers"?(progress.mastered?"Mastered":progress.attempts?"In progress":"Not started"):"Available soon"}</em><b>{chapter.id==="integers"?`${progress.average||0}%`:"—"}</b></div><button onClick={() => startPractice(chapter)}>{chapter.id==="integers"?(focus.includes(chapter.id)?"Start weekly focus":"Practise chapter"):"Question engine next"}</button></article>)}</div>
   </>;
 }
 function Papers({ upload }: { upload: () => void }) {
@@ -1832,7 +1845,6 @@ function Papers({ upload }: { upload: () => void }) {
     <>
       <section className="subject-slab classroom">
         <div>
-          <p className="slab-code">Content library</p>
           <h1>Papers &amp; assignments</h1>
           <p className="slab-note">Upload materials once, then assign them to any class.</p>
         </div>
@@ -1939,8 +1951,7 @@ function Papers({ upload }: { upload: () => void }) {
             }}
           >
             <button type="button" className="x" onClick={() => setManaging(null)}>×</button>
-            <small>MANAGE PAPER ACCESS</small>
-            <h2>{managing.title}</h2>
+            <h2>{managing.title} <span className="heading-aside">paper access</span></h2>
             <p>Select every student who should receive this paper.</p>
             <input
               aria-label="Search students"
@@ -2086,8 +2097,7 @@ function FileReview({
       <section className="file-review-shell">
         <header>
           <div>
-            <small>REVIEW UPLOADED FILES</small>
-            <h2>{assignment.title}</h2>
+            <h2>{assignment.title} <span className="heading-aside">uploaded files</span></h2>
             <p>{assignment.subject} · {assignment.syllabus}</p>
           </div>
           <button className="x" onClick={close} aria-label="Close file review">×</button>
@@ -2162,7 +2172,7 @@ function FileReview({
             {message && <p className="file-review-message">{message}</p>}
             {assignment.status !== "assigned" && (
               <button className="continue-file-setup" onClick={openSetup}>
-                Continue to question setup →
+                Continue to question setup
               </button>
             )}
           </aside>
@@ -3927,8 +3937,7 @@ function QuestionSetup({
       <div className="question-setup-shell">
         <header>
           <div>
-            <small>QUESTION SETUP</small>
-            <h2>{assignment.title}</h2>
+            <h2>{assignment.title} <span className="heading-aside">question setup</span></h2>
             <span className="subject-profile-badge">
               {assignment.subject} · {assignment.syllabus}
             </span>
@@ -3946,7 +3955,7 @@ function QuestionSetup({
           <section className="scheme-review-screen">
             <div className="scheme-review-toolbar">
               <button onClick={() => setReviewingScheme(false)}>
-                ← Back to question setup
+                Back to question setup
               </button>
               <div>
                 <small>TEACHER REVIEW</small>
@@ -3993,7 +4002,7 @@ function QuestionSetup({
                 disabled={!reviewComplete}
                 onClick={save}
               >
-                Approve & save for students →
+                Approve & save for students
               </button>
             </div>
             <div className="review-summary">
@@ -4027,7 +4036,7 @@ function QuestionSetup({
                   disabled={safeReviewCursor === 0}
                   onClick={() => setReviewCursor(Math.max(0, safeReviewCursor - 1))}
                 >
-                  ← Previous
+                  Previous
                 </button>
                 <b>
                   {filteredReviewIndexes.length
@@ -4038,7 +4047,7 @@ function QuestionSetup({
                   disabled={safeReviewCursor >= filteredReviewIndexes.length - 1}
                   onClick={() => setReviewCursor(safeReviewCursor + 1)}
                 >
-                  Next →
+                  Next
                 </button>
               </div>
             </div>
@@ -4242,7 +4251,7 @@ function QuestionSetup({
           <section className="crop-paper">
             <div className="crop-toolbar">
               <button disabled={page === 1} onClick={() => setPage(page - 1)}>
-                ← Previous page
+                Previous page
               </button>
               <b>
                 Page {page} of {pdf?.numPages || "…"}
@@ -4251,7 +4260,7 @@ function QuestionSetup({
                 disabled={!pdf || page === pdf.numPages}
                 onClick={() => setPage(page + 1)}
               >
-                Next page →
+                Next page
               </button>
             </div>
             <div className="crop-canvas-wrap">
@@ -4415,8 +4424,8 @@ function QuestionSetup({
               {assignment.resource_kind === "homework" || items.some(
                 (item) => item.expected_answer || item.mark_scheme_notes,
               )
-                ? assignment.resource_kind === "homework" ? "Review homework pages →" : "Review extracted answers →"
-                : "Approve & save for students →"}
+                ? assignment.resource_kind === "homework" ? "Review homework pages" : "Review extracted answers"
+                : "Approve & save for students"}
             </button>
           </aside>
         </div>
@@ -4479,7 +4488,6 @@ function Students() {
     <>
       <section className="subject-slab classroom">
         <div>
-          <p className="slab-code">Student accounts</p>
           <h1>Class roster</h1>
           <p className="slab-note">Create and manage secure student accounts. Each is issued a username and a temporary password the student replaces on first sign-in.</p>
         </div>
@@ -4536,8 +4544,7 @@ function Students() {
             <button type="button" className="x" onClick={() => setResetting(null)}>
               ×
             </button>
-            <small>RESET PASSWORD</small>
-            <h2>{accounts.find((s) => s.id === resetting)?.name}</h2>
+            <h2>Reset the password for {accounts.find((s) => s.id === resetting)?.name}</h2>
             <label htmlFor="reset-password">
               Temporary password
               <input
@@ -4566,8 +4573,7 @@ function Students() {
             <button type="button" className="x" onClick={() => setOpen(false)}>
               ×
             </button>
-            <small>NEW STUDENT ACCOUNT</small>
-            <h2>Create login details</h2>
+            <h2>Create a student account</h2>
             <div className="form-row">
               <label>
                 First name
@@ -4829,7 +4835,7 @@ function Submissions() {
             <h1>{active.student_name}</h1>
             <h2>{active.title}{active.attempt > 1 ? ` · Attempt ${active.attempt}` : ""}</h2>
           </div>
-          <button onClick={() => setActive(null)}>← Marking queue</button>
+          <button onClick={() => setActive(null)}>Marking queue</button>
           <button
             className="remark-submission"
             disabled={remarking}
@@ -4873,9 +4879,9 @@ function Submissions() {
             </select>
           </label>
           <div className="review-pager">
-            <button disabled={safeMarkCursor === 0} onClick={() => setMarkCursor(Math.max(0, safeMarkCursor - 1))}>← Previous</button>
+            <button disabled={safeMarkCursor === 0} onClick={() => setMarkCursor(Math.max(0, safeMarkCursor - 1))}>Previous</button>
             <b>{filteredMarks.length ? `${safeMarkCursor + 1} of ${filteredMarks.length}` : "No matches"}</b>
-            <button disabled={safeMarkCursor >= filteredMarks.length - 1} onClick={() => setMarkCursor(safeMarkCursor + 1)}>Next →</button>
+            <button disabled={safeMarkCursor >= filteredMarks.length - 1} onClick={() => setMarkCursor(safeMarkCursor + 1)}>Next</button>
           </div>
           <button
             className="approve-reliable"
@@ -4899,7 +4905,7 @@ function Submissions() {
             disabled={confirmedCount !== active.marks.length}
             onClick={() => saveReview(true)}
           >
-            Approve &amp; publish result →
+            Approve &amp; publish result
           </button>
         </section>
         {message && <p className="queue-message panel">{message}</p>}
@@ -4907,14 +4913,13 @@ function Submissions() {
           <section className="panel handwritten-page-review">
             <header>
               <div>
-                <small>HANDWRITTEN SUBMISSION</small>
-                <h3>Review the student’s complete page</h3>
+                <h3>Review the student’s complete handwritten page</h3>
                 <p>Use the full page alongside the question-by-question marking controls below.</p>
               </div>
               <div className="review-pager">
-                <button disabled={handwrittenPage === 0} onClick={() => setHandwrittenPage(Math.max(0, handwrittenPage - 1))}>← Previous</button>
+                <button disabled={handwrittenPage === 0} onClick={() => setHandwrittenPage(Math.max(0, handwrittenPage - 1))}>Previous</button>
                 <b>{handwrittenPage + 1} of {active.handwritten_count}</b>
-                <button disabled={handwrittenPage >= active.handwritten_count - 1} onClick={() => setHandwrittenPage(Math.min(active.handwritten_count - 1, handwrittenPage + 1))}>Next →</button>
+                <button disabled={handwrittenPage >= active.handwritten_count - 1} onClick={() => setHandwrittenPage(Math.min(active.handwritten_count - 1, handwrittenPage + 1))}>Next</button>
               </div>
             </header>
             <iframe
@@ -5090,7 +5095,7 @@ function Submissions() {
             <div>
               <button onClick={() => saveReview(false)}>Save review</button>
               <button className="primary" disabled={confirmedCount !== active.marks.length} onClick={() => saveReview(true)}>
-                Approve & publish result →
+                Approve & publish result
               </button>
             </div>
           </section>
@@ -5113,7 +5118,6 @@ function Submissions() {
     <>
       <section className="subject-slab classroom">
         <div>
-          <p className="slab-code">Marking queue</p>
           <h1>Student submissions</h1>
           <p className="slab-note">Review proposed marks, handwriting flags and student corrections. Nothing reaches a student until you publish it.</p>
         </div>
@@ -5131,7 +5135,6 @@ function Submissions() {
       </section>
       {confirmPublishAll && (
         <ConfirmDialog
-          eyebrow="PUBLISH RESULTS"
           title="Publish these results to students?"
           description="Each student below will be able to see their marks and feedback straight away. Publishing cannot be undone from here."
           items={submissions
@@ -5207,14 +5210,14 @@ function Submissions() {
                 disabled={queueAction === String(submission.id)}
                 onClick={() => publishReady(submission)}
               >
-                {queueAction === String(submission.id) ? "Publishing…" : "Publish result →"}
+                {queueAction === String(submission.id) ? "Publishing…" : "Publish result"}
               </button>
             ) : (
               <button
                 className="review-button"
                 onClick={() => openReview(submission)}
               >
-                {submission.status === "published" ? "Review record →" : "Review marks →"}
+                {submission.status === "published" ? "Review record" : "Review marks"}
               </button>
             )}
           </article>
@@ -5233,7 +5236,7 @@ function AnswerWorkspace({
   back,
   submitted,
   sitting,
-  backLabel = "← Assigned papers",
+  backLabel = "Assigned papers",
 }: {
   assignment: {
     id: string;
@@ -5595,7 +5598,6 @@ function AnswerWorkspace({
           <form id="student-answer-form" ref={formRef} className="answer-form" onSubmit={openSubmissionReview}>
             <div className="answer-form-title">
               <div>
-                <small>YOUR RESPONSE</small>
                 <h3>Complete the paper</h3>
               </div>
               <span className={`draft-status ${saveState}`}>
@@ -5610,7 +5612,7 @@ function AnswerWorkspace({
                         : "✓ Saved to account"}
               </span>
               <button type="submit" className="workspace-submit">
-                Review &amp; submit →
+                Review &amp; submit
               </button>
             </div>
             {assignment.paper_mode !== "multiple_choice" && (
@@ -5863,14 +5865,14 @@ function AnswerWorkspace({
                     disabled={activeIndex === 0}
                     onClick={() => setActiveIndex(activeIndex - 1)}
                   >
-                    ← Previous
+                    Previous
                   </button>
                   <span>
                     Answers and drawings are saved automatically to your account.
                   </span>
                   {!!paperQuestions.length && activeIndex === rows.length - 1 ? (
                     <button type="submit" className="primary submit-from-question">
-                      Review &amp; submit →
+                      Review &amp; submit
                     </button>
                   ) : (
                     <button
@@ -5891,8 +5893,8 @@ function AnswerWorkspace({
                       }}
                     >
                       {activeIndex === rows.length - 1
-                        ? "Add next question →"
-                        : "Next question →"}
+                        ? "Add next question"
+                        : "Next question"}
                     </button>
                   )}
                 </div>
@@ -5993,7 +5995,7 @@ function AnswerWorkspace({
         form="student-answer-form"
         className="primary fixed-student-submit"
       >
-        Review &amp; submit paper →
+        Review &amp; submit paper
       </button>
       {reviewingSubmission && (
         <ModalScrim
@@ -6003,7 +6005,6 @@ function AnswerWorkspace({
           <section className="submission-review-shell">
             <header>
               <div>
-                <small>FINAL CHECK</small>
                 <h2>Review before submitting</h2>
                 <p>{assignment.title}</p>
               </div>
@@ -6065,7 +6066,7 @@ function AnswerWorkspace({
                   >
                     <span>{answered ? "✓" : "!"}</span>
                     <b>Question {row.question || index + 1}</b>
-                    <small>{answered ? "Answered" : "Go to question →"}</small>
+                    <small>{answered ? "Answered" : "Go to question"}</small>
                   </button>
                 );
               })}
@@ -6099,7 +6100,7 @@ function AnswerWorkspace({
                   disabled={!confirmSubmission || submitting}
                   onClick={submitFinal}
                 >
-                  {submitting ? "Submitting…" : "Confirm & submit →"}
+                  {submitting ? "Submitting…" : "Confirm & submit"}
                 </button>
               </div>
             </footer>
@@ -6127,8 +6128,8 @@ function StudentProgress({ back }: { back: () => void }) {
 
   const heading = (
     <div className="portal-heading">
-      <div><p>MY PROGRESS</p><h1>Am I improving?</h1><h2>Your practice scores over time, and how much help you needed to reach them.</h2></div>
-      <button onClick={back}>← Assigned papers</button>
+      <div><h1>Am I improving?</h1><h2>Your practice scores over time, and how much help you needed to reach them.</h2></div>
+      <button onClick={back}>Assigned papers</button>
     </div>
   );
   if (!sessions) return <>{heading}<p className="queue-message panel">{state}</p></>;
@@ -6167,7 +6168,7 @@ function StudentProgress({ back }: { back: () => void }) {
     {heading}
 
     <section className="panel progress-verdict">
-      <div><small>OVER YOUR LAST {points.length} {points.length === 1 ? "SET" : "SETS"}</small><h2>{verdict}</h2></div>
+      <div><h2>{verdict}</h2><small>Over your last {points.length} {points.length === 1 ? "set" : "sets"}</small></div>
       {movement.enough && <div className="progress-figures">
         <div><small>AVERAGE SCORE</small><b>{movement.scoreFrom}% <em>→</em> {movement.scoreTo}%</b></div>
         <div><small>HINTS PER QUESTION</small><b>{asPercent(movement.hintRateFrom)} <em>→</em> {asPercent(movement.hintRateTo)}</b></div>
@@ -6175,7 +6176,7 @@ function StudentProgress({ back }: { back: () => void }) {
     </section>
 
     <section className="panel progress-chart">
-      <header><div><small>SCORE PER SET</small><h3>Your last {points.length} practice {points.length === 1 ? "set" : "sets"}</h3></div><span>{summary.strongSets} of {summary.sets} at 80% or better</span></header>
+      <header><div><h3>Score in each of your last {points.length} practice {points.length === 1 ? "set" : "sets"}</h3></div><span>{summary.strongSets} of {summary.sets} at 80% or better</span></header>
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Practice scores, oldest to newest: ${points.map((p) => p.score + "%").join(", ")}`}>
         {[0, 50, 100].map((value) => <g key={value}>
           <line x1={PAD_X} x2={W - PAD_X} y1={py(value)} y2={py(value)} className="grid" />
@@ -6194,7 +6195,7 @@ function StudentProgress({ back }: { back: () => void }) {
     </section>
 
     <section className="panel progress-units">
-      <header><div><small>BY UNIT</small><h3>First set against your most recent</h3></div><span>{units.length} {units.length === 1 ? "unit" : "units"} practised</span></header>
+      <header><div><h3>By unit: first set against your most recent</h3></div><span>{units.length} {units.length === 1 ? "unit" : "units"} practised</span></header>
       {units.map((unit) => <article key={unit.source + unit.track + unit.chapterId + (unit.pastPaper ? ":past" : "")}>
         <div><b>{titleFor(unit.chapterId)}</b><small>{unit.source === "physics" ? (unit.track === "as" ? "AS Level" : "IGCSE") : "Stage " + unit.track}{unit.pastPaper ? " · past-paper questions" : ""} · {unit.sets} {unit.sets === 1 ? "set" : "sets"}</small></div>
         <div className="progress-move">{unit.sets === 1
@@ -6280,40 +6281,55 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
       .then(setPublishedResults);
   }, []);
   const latest = savedAssignments[0];
+  const studentDivider: Divider = activeAssignment
+    ? "classroom"
+    : studentArea === "progress"
+      ? "cover"
+      : studentArea === "stage7"
+        ? "stage7"
+        : studentArea === "stage89"
+          ? lowerStage === 9 ? "stage9" : "stage8"
+          : studentArea === "physicsIgcse"
+            ? "igcse"
+            : studentArea === "physicsAs"
+              ? "as"
+              : studentArea === "physicsExam"
+                ? "exam"
+                : "classroom";
   const cleanNav = (
     <nav className="portal-nav">
       <p>My learning</p>
-      <button className={studentArea === "papers" ? "active" : ""} data-nav="papers" onClick={() => setStudentArea("papers")}>
+      <button className={studentArea === "papers" ? "active" : ""} data-nav="papers" onClick={() => { if (studentArea !== "papers") turnPage(() => setStudentArea("papers")); }}>
         <span><NavIcon name="papers" /></span>Assigned papers
       </button>
-      <button className={studentArea === "progress" ? "active" : ""} data-nav="progress" onClick={() => setStudentArea("progress")}>
+      <button className={studentArea === "progress" ? "active" : ""} data-nav="progress" onClick={() => { if (studentArea !== "progress") turnPage(() => setStudentArea("progress")); }}>
         <span><NavIcon name="progress" /></span>My progress
       </button>
-      <button className={studentArea === "stage7" ? "active" : ""} data-nav="stage7" onClick={() => setStudentArea("stage7")}>
+      <button className={studentArea === "stage7" ? "active" : ""} data-nav="stage7" onClick={() => { if (studentArea !== "stage7") turnPage(() => setStudentArea("stage7")); }}>
         <span><NavIcon name="stage7" /></span>Stage 7 mastery
       </button>
-      <button className={studentArea === "stage89" ? "active" : ""} data-nav={`stage${lowerStage ?? 8}`} onClick={() => setStudentArea("stage89")}>
+      <button className={studentArea === "stage89" ? "active" : ""} data-nav={`stage${lowerStage ?? 8}`} onClick={() => { if (studentArea !== "stage89") turnPage(() => setStudentArea("stage89")); }}>
         <span><NavIcon name={`stage${lowerStage ?? 8}`} /></span>
         {lowerStage ? `Stage ${lowerStage} mastery` : "Stages 8 & 9"}
       </button>
       {stage89Enrolled === false && (
         <>
-          <button className={studentArea === "physicsIgcse" ? "active" : ""} data-nav="igcse" onClick={() => setStudentArea("physicsIgcse")}>
+          <button className={studentArea === "physicsIgcse" ? "active" : ""} data-nav="igcse" onClick={() => { if (studentArea !== "physicsIgcse") turnPage(() => setStudentArea("physicsIgcse")); }}>
             <span><NavIcon name="igcse" /></span>IGCSE 0625
           </button>
-          <button className={studentArea === "physicsAs" ? "active" : ""} data-nav="as" onClick={() => setStudentArea("physicsAs")}>
+          <button className={studentArea === "physicsAs" ? "active" : ""} data-nav="as" onClick={() => { if (studentArea !== "physicsAs") turnPage(() => setStudentArea("physicsAs")); }}>
             <span><NavIcon name="as" /></span>AS Level 9702
           </button>
         </>
       )}
-      <button className={studentArea === "physicsExam" ? "active" : ""} data-nav="exam" onClick={() => setStudentArea("physicsExam")}>
+      <button className={studentArea === "physicsExam" ? "active" : ""} data-nav="exam" onClick={() => { if (studentArea !== "physicsExam") turnPage(() => setStudentArea("physicsExam")); }}>
         <span><NavIcon name="exam" /></span>Physics exam papers
       </button>
     </nav>
   );
   if (activeAssignment)
     return (
-      <Shell role="Student" onSwitch={switchRole} nav={cleanNav}>
+      <Shell role="Student" onSwitch={switchRole} nav={cleanNav} level={studentDivider}>
         <AnswerWorkspace
           assignment={activeAssignment}
           back={() => {
@@ -6349,39 +6365,38 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
     );
   if (studentArea === "progress")
     return (
-      <Shell role="Student" onSwitch={switchRole} nav={cleanNav}>
+      <Shell role="Student" onSwitch={switchRole} nav={cleanNav} level={studentDivider}>
         <StudentProgress back={() => setStudentArea("papers")} />
       </Shell>
     );
   if (studentArea === "stage7")
     return (
-      <Shell role="Student" onSwitch={switchRole} nav={cleanNav}>
+      <Shell role="Student" onSwitch={switchRole} nav={cleanNav} level={studentDivider}>
         <Stage7Student back={() => setStudentArea("papers")} />
       </Shell>
     );
   if (studentArea === "stage89")
     return (
-      <Shell role="Student" onSwitch={switchRole} nav={cleanNav}>
+      <Shell role="Student" onSwitch={switchRole} nav={cleanNav} level={studentDivider}>
         <Stage89Student back={() => setStudentArea("papers")} />
       </Shell>
     );
   if ((studentArea === "physicsIgcse" || studentArea === "physicsAs") && stage89Enrolled === false)
     return (
-      <Shell role="Student" onSwitch={switchRole} nav={cleanNav}>
+      <Shell role="Student" onSwitch={switchRole} nav={cleanNav} level={studentDivider}>
         <PhysicsStudent key={studentArea} level={studentArea === "physicsAs" ? "as" : "igcse"} back={() => setStudentArea("papers")} />
       </Shell>
     );
   if (studentArea === "physicsExam")
     return (
-      <Shell role="Student" onSwitch={switchRole} nav={cleanNav}>
+      <Shell role="Student" onSwitch={switchRole} nav={cleanNav} level={studentDivider}>
         <div className="pe-redesign"><PhysicsExamStudent back={() => setStudentArea("papers")} /></div>
       </Shell>
     );
   return (
-    <Shell role="Student" onSwitch={switchRole} nav={cleanNav}>
+    <Shell role="Student" onSwitch={switchRole} nav={cleanNav} level={studentDivider}>
       <div className="portal-heading">
         <div>
-          <p>CAMBRIDGE STUDY PORTAL</p>
           <h1>My assigned papers</h1>
           <h2>
             Open a question paper and complete it as instructed by your teacher.
@@ -6430,8 +6445,8 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
               StudentPaperStatus,
               { label: string; action: string }
             > = {
-              not_started: { label: "Not started", action: "Start paper →" },
-              in_progress: { label: "In progress", action: "Resume paper →" },
+              not_started: { label: "Not started", action: "Start paper" },
+              in_progress: { label: "In progress", action: "Resume paper" },
               submitted: { label: "Submitted", action: "Submitted" },
               awaiting_review: {
                 label: "Awaiting teacher review",

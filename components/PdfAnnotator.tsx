@@ -151,8 +151,9 @@ export function PdfAnnotator({
           <button
             disabled={pageNumber === 1}
             onClick={() => setPageNumber(pageNumber - 1)}
+            aria-label="Previous page"
           >
-            ←
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>
           </button>
           <b>
             Page {pageNumber} of {pdf?.numPages || "…"}
@@ -160,8 +161,9 @@ export function PdfAnnotator({
           <button
             disabled={!pdf || pageNumber === pdf.numPages}
             onClick={() => setPageNumber(pageNumber + 1)}
+            aria-label="Next page"
           >
-            →
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
           </button>
         </div>
         <button
@@ -172,7 +174,7 @@ export function PdfAnnotator({
             setReviewing(true);
           }}
         >
-          Review &amp; submit →
+          Review &amp; submit
         </button>
       </div>
       <div className="annotated-page">
@@ -198,7 +200,7 @@ export function PdfAnnotator({
             setReviewing(true);
           }}
         >
-          Review & submit →
+          Review & submit
         </button>
       </footer>
       {reviewing && (
@@ -209,7 +211,6 @@ export function PdfAnnotator({
           <section className="submission-review-shell paper-submission-review">
             <header>
               <div>
-                <small>FINAL CHECK</small>
                 <h2>Review annotated pages</h2>
                 <p>{assignment.title}</p>
               </div>
@@ -272,7 +273,7 @@ export function PdfAnnotator({
                   disabled={!confirmed || submitting}
                   onClick={submitPaper}
                 >
-                  {submitting ? "Submitting…" : "Confirm & submit →"}
+                  {submitting ? "Submitting…" : "Confirm & submit"}
                 </button>
               </div>
             </footer>

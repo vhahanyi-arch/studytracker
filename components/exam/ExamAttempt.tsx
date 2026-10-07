@@ -188,7 +188,7 @@ export function ExamAttempt({ paper, userId, onBack, onSubmitted }: {
         <h1>{paper.title}</h1>
         <h2>{questions.length} questions · {totalMarks} marks</h2>
       </div>
-      <button onClick={onBack}>← Paper library</button>
+      <button onClick={onBack}>Paper library</button>
     </div>
   );
 
@@ -221,7 +221,7 @@ export function ExamAttempt({ paper, userId, onBack, onSubmitted }: {
           <button className="primary" onClick={() => commit({
             savedAt: "", revision: paper.revision ?? 0, index: 0, answers: {}, flags: [], wholePaperFiles: [], checks: {},
             practice: choice.practice, startedAt: new Date().toISOString(), timerMinutes: choice.timer,
-          })}>Start the paper →</button>
+          })}>Start the paper</button>
         </section>
       </>
     );
@@ -307,7 +307,7 @@ export function ExamAttempt({ paper, userId, onBack, onSubmitted }: {
               : "Your teacher confirms the marks after you submit."}
           </p>
           <div className="attempt-nav">
-            <button onClick={() => go(questions.length - 1)}>← Back to the questions</button>
+            <button onClick={() => go(questions.length - 1)}>Back to the questions</button>
             <button disabled={busy} className="primary" onClick={submit}>{busy ? "Submitting…" : "Submit paper"}</button>
           </div>
         </section>
@@ -405,11 +405,11 @@ export function ExamAttempt({ paper, userId, onBack, onSubmitted }: {
         {check && <CheckResult check={check} />}
 
         <div className="attempt-nav">
-          <button disabled={draft.index === 0} onClick={() => go(draft.index - 1)}>← Previous</button>
+          <button disabled={draft.index === 0} onClick={() => go(draft.index - 1)}>Previous</button>
           <span>{draft.index + 1} of {questions.length}</span>
           {draft.index === questions.length - 1
-            ? <button className="primary" onClick={() => go(questions.length)}>Finish →</button>
-            : <button className="primary" onClick={() => go(draft.index + 1)}>Next →</button>}
+            ? <button className="primary" onClick={() => go(questions.length)}>Finish</button>
+            : <button className="primary" onClick={() => go(draft.index + 1)}>Next</button>}
         </div>
       </section>
 

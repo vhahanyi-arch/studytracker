@@ -109,7 +109,7 @@ export function ExamReview({ paper, busy, error, onBack, onPublish }: {
           <h2>{paper.title} · {questions.length} questions · {totalMarks} marks. Compare each question with how it will be marked, then publish.</h2>
           {fromText && <p>Read from the PDFs, without AI · {automatic} marked automatically · {questions.length - automatic} you mark</p>}
         </div>
-        <button onClick={onBack}>← Paper library</button>
+        <button onClick={onBack}>Paper library</button>
       </div>
       {error && <p className="error-text">{error}</p>}
       {paper.warnings.map((w, i) => <p className="reference" key={i}>{w}</p>)}

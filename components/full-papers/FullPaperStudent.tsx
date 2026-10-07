@@ -100,8 +100,7 @@ export function FullPaperList({
     <section className="panel full-papers" aria-labelledby="full-papers-title">
       <header>
         <div>
-          <small>PAST PAPERS</small>
-          <h3 id="full-papers-title">Sit a whole Stage {stage} paper</h3>
+          <h3 id="full-papers-title">Sit a whole Stage {stage} past paper</h3>
           <p>Practise on your own and see the answers straight away, or sit it for your teacher to mark. You can sit a paper again.</p>
         </div>
       </header>
@@ -129,7 +128,7 @@ export function FullPaperList({
               </div>
               <div className="full-paper-go">
                 {resuming ? (
-                  <button className="primary" onClick={() => open(paper, paper.sitting ?? undefined)}>Continue →</button>
+                  <button className="primary" onClick={() => open(paper, paper.sitting ?? undefined)}>Continue</button>
                 ) : waiting ? null : (
                   <button className={starting === paper.id ? "" : "primary"} onClick={() => setStarting(starting === paper.id ? null : paper.id)}>
                     {starting === paper.id ? "Cancel" : finished.length ? "Sit again" : "Sit this paper"}
@@ -156,7 +155,7 @@ export function FullPaperList({
                       {SITTING_TIMERS.map((minutes) => <option key={minutes} value={minutes}>{minutes} minutes</option>)}
                     </select>
                   </label>
-                  <button className="primary" onClick={() => open(paper, { practice, timerMinutes: timer, startedAt: new Date().toISOString() })}>Start →</button>
+                  <button className="primary" onClick={() => open(paper, { practice, timerMinutes: timer, startedAt: new Date().toISOString() })}>Start</button>
                 </div>
               )}
               {!!paper.attempts.length && (
@@ -196,7 +195,7 @@ export function FullPaperResult({ attemptId, back }: { attemptId: string; back: 
   return (
     <section className="panel full-paper-result">
       <header>
-        <button onClick={back}>← Past papers</button>
+        <button onClick={back}>Past papers</button>
         <div>
           <small>{detail ? `ATTEMPT ${detail.attempt} · ${detail.practice ? "PRACTICE" : "MARKED BY YOUR TEACHER"}` : "PAST PAPER"}</small>
           <h2>{detail?.title ?? "Loading…"}</h2>

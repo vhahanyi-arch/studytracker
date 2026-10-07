@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from "react";
-import { Logo, NavIcon } from "@/components/Brand";
+import { Logo } from "@/components/Brand";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TryQuestion } from "@/components/landing/TryQuestion";
 
@@ -17,18 +17,22 @@ const MARKING_STEPS = [
   ["Publish", "Your result appears once your teacher publishes it."],
 ] as const;
 
+// Each level is a divider in the same colour it has inside the portal, so the
+// tab a student follows here is the tab they will find in the sidebar.
 const LEVELS = {
   maths: [
-    ["stage7", "Stage 7", "Integers practice and a weekly focus from your teacher."],
-    ["stage8", "Stage 8", "Practice for every unit, a weekly focus and past-paper questions."],
-    ["stage9", "Stage 9", "Practice for every unit, a weekly focus and past-paper questions."],
-    ["papers", "IGCSE 0580 and AS 9709", "Papers your teacher sets, marked and returned here."],
+    ["stage7", "Stage 7", "Lower Secondary 0862", "Integers practice and a weekly focus from your teacher."],
+    ["stage8", "Stage 8", "Lower Secondary 0862", "Practice for every unit, a weekly focus and past-paper questions."],
+    ["stage9", "Stage 9", "Lower Secondary 0862", "Practice for every unit, a weekly focus and past-paper questions."],
+    ["classroom", "IGCSE and AS", "0580 · 9709", "Papers your teacher sets, marked and returned here."],
   ],
   physics: [
-    ["igcse", "IGCSE 0625", "Practice for 21 units, a syllabus checklist and past exam papers."],
-    ["as", "AS Level 9702", "Practice across 11 topics, revision notes and past exam papers."],
+    ["igcse", "IGCSE", "0625", "Practice for 21 units, a syllabus checklist and past exam papers."],
+    ["as", "AS Level", "9702", "Practice across 11 topics, revision notes and past exam papers."],
   ],
 } as const;
+
+const TABS = [...LEVELS.maths, ...LEVELS.physics];
 
 const QUESTIONS = [
   [
@@ -85,6 +89,16 @@ export function Landing() {
             </div>
           </div>
           <TryQuestion />
+          {/* The binder's fore edge: one tab per level, stepping down the
+              cover, each opening its divider further down the page. */}
+          <nav className="landing-tabs" aria-label="Levels">
+            {TABS.map(([level, name, code]) => (
+              <a key={level} href={`#level-${level}`} data-level={level}>
+                <b>{name}</b>
+                <small>{code.replace("Lower Secondary ", "")}</small>
+              </a>
+            ))}
+          </nav>
         </section>
 
         <section className="landing-marking" id="marking" aria-labelledby="marking-title">
@@ -104,24 +118,22 @@ export function Landing() {
 
         <section className="landing-levels" aria-labelledby="levels-title">
           <h2 id="levels-title">What you can do here</h2>
-          <div>
-            {(["maths", "physics"] as const).map((subject) => (
-              <article key={subject} className={subject}>
-                <h3>{subject === "maths" ? "Mathematics" : "Physics"}</h3>
-                <ul>
-                  {LEVELS[subject].map(([icon, level, text]) => (
-                    <li key={level}>
-                      <NavIcon name={icon} />
-                      <div>
-                        <b>{level}</b>
-                        <span>{text}</span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            ))}
-          </div>
+          {(["maths", "physics"] as const).map((subject) => (
+            <div key={subject} className="landing-subject">
+              <h3>{subject === "maths" ? "Mathematics" : "Physics"}</h3>
+              <ul>
+                {LEVELS[subject].map(([level, name, code, text]) => (
+                  <li key={level} id={`level-${level}`} data-level={level}>
+                    <div className="landing-divider-tab">
+                      <b>{name}</b>
+                      <small>{code}</small>
+                    </div>
+                    <p>{text}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </section>
 
         <section className="landing-parents" aria-labelledby="parents-title">

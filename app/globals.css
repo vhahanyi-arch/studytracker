@@ -41,7 +41,7 @@ body {
   margin: 0;
   background: var(--paper);
   color: var(--ink);
-  font-family: var(--font-public-sans), Arial, sans-serif;
+  font-family: var(--font-sans), Arial, sans-serif;
 }
 button,
 input,
@@ -4716,13 +4716,13 @@ label {
   --line: #dce1e6;
   --line-fill: #dce1e6;
   background: var(--paper);
-  font-family: var(--font-public-sans), Arial, sans-serif;
+  font-family: var(--font-sans), Arial, sans-serif;
 }
 
 .pe-redesign h1,
 .pe-redesign h2.pe-heading,
 .pe-redesign h3 {
-  font-family: var(--font-source-serif), Georgia, serif;
+  font-family: var(--font-sans), Arial, sans-serif;
   font-weight: 600;
   letter-spacing: 0;
 }
@@ -4731,7 +4731,7 @@ label {
   /* Replace the tracked-out all-caps eyebrow with a plain, quiet label */
   text-transform: none;
   letter-spacing: 0;
-  font-family: var(--font-public-sans), Arial, sans-serif;
+  font-family: var(--font-sans), Arial, sans-serif;
   font-size: 17px;
   font-weight: 600;
   color: var(--muted);
@@ -4751,7 +4751,7 @@ label {
 /* Global heading typography -- expanding the design pilot's serif
    headings (previously scoped to .pe-redesign only) app-wide. */
 h1, h2, h3 {
-  font-family: var(--font-source-serif), Georgia, serif;
+  font-family: var(--font-sans), Arial, sans-serif;
 }
 
 /* ---------- Physics: mastery-table (teacher progress view) ---------- */
@@ -5288,7 +5288,7 @@ h3 { font-size: var(--t-h3); line-height: 1.28; }
 .portal-heading p {
   text-transform: none;
   letter-spacing: 0;
-  font-family: var(--font-public-sans), Arial, sans-serif;
+  font-family: var(--font-sans), Arial, sans-serif;
   font-size: var(--t-small);
   font-weight: 600;
   color: var(--muted);
@@ -5301,7 +5301,7 @@ h3 { font-size: var(--t-h3); line-height: 1.28; }
   margin: 9px 0 7px;
 }
 .portal-heading h2 {
-  font-family: var(--font-public-sans), Arial, sans-serif;
+  font-family: var(--font-sans), Arial, sans-serif;
   font-size: var(--t-lead);
   font-weight: 400;
   color: var(--muted);
@@ -5381,7 +5381,7 @@ h3 { font-size: var(--t-h3); line-height: 1.28; }
 }
 .teacher-stats article b {
   display: block;
-  font-family: var(--font-source-serif), Georgia, serif;
+  font-family: var(--font-sans), Arial, sans-serif;
   font-size: var(--t-h1);
   font-weight: 600;
   line-height: 1.1;
@@ -5544,7 +5544,7 @@ body { background: var(--paper); }
 }
 .topbar b,
 .topbar > b {
-  font-family: var(--font-source-serif), Georgia, serif;
+  font-family: var(--font-sans), Arial, sans-serif;
   font-size: var(--t-h3);
   font-weight: 600;
   letter-spacing: -0.015em;
@@ -5630,7 +5630,7 @@ body { background: var(--paper); }
   flex-wrap: wrap;
 }
 .dash-headline > b {
-  font-family: var(--font-source-serif), Georgia, serif;
+  font-family: var(--font-sans), Arial, sans-serif;
   font-size: clamp(76px, 11vw, 132px);
   font-weight: 600;
   line-height: 0.82;
@@ -5646,7 +5646,7 @@ body { background: var(--paper); }
   max-width: 15ch;
 }
 .dash-headline p {
-  font-family: var(--font-public-sans), Arial, sans-serif;
+  font-family: var(--font-sans), Arial, sans-serif;
   font-size: var(--t-body);
   color: var(--muted);
   margin: 9px 0 0;
@@ -5676,7 +5676,7 @@ body { background: var(--paper); }
   margin: 0;
 }
 .dash-figures dd {
-  font-family: var(--font-source-serif), Georgia, serif;
+  font-family: var(--font-sans), Arial, sans-serif;
   font-size: var(--t-h2);
   font-weight: 600;
   margin: 4px 0 0;
@@ -5698,7 +5698,7 @@ body { background: var(--paper); }
 /* Scores are set the way a mark is set on a paper: tabular, right, and
    against its total rather than floating alone. */
 .submission-row strong {
-  font-family: var(--font-source-serif), Georgia, serif;
+  font-family: var(--font-sans), Arial, sans-serif;
   font-size: var(--t-lead);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -5770,7 +5770,7 @@ body { background: var(--paper); }
   color: #fff;
 }
 .subject-slab p.slab-note {
-  font-family: var(--font-public-sans), Arial, sans-serif;
+  font-family: var(--font-sans), Arial, sans-serif;
   font-size: var(--t-body);
   color: rgba(255, 255, 255, 0.78);
   margin: 12px 0 0;
@@ -5793,7 +5793,7 @@ body { background: var(--paper); }
   white-space: nowrap;
 }
 .slab-figures dd {
-  font-family: var(--font-source-serif), Georgia, serif;
+  font-family: var(--font-sans), Arial, sans-serif;
   font-size: 34px;
   font-weight: 600;
   margin: 6px 0 0;
@@ -5814,7 +5814,7 @@ body { background: var(--paper); }
   flex-wrap: wrap;
 }
 .subject-slab .slab-action {
-  font-family: var(--font-public-sans), Arial, sans-serif;
+  font-family: var(--font-sans), Arial, sans-serif;
   font-size: var(--t-small);
   font-weight: 600;
   color: var(--slab);
@@ -7347,7 +7347,7 @@ h1, h2, h3 { text-wrap: balance; }
   color: var(--l-subject);
 }
 .try-prompt {
-  font-family: var(--font-source-serif), Georgia, serif;
+  font-family: var(--font-sans), Arial, sans-serif;
   font-size: 22px;
   line-height: 1.35;
   margin: 8px 0 20px;
@@ -7658,4 +7658,1166 @@ h1, h2, h3 { text-wrap: balance; }
 @media (max-width: 620px) {
   .scheme-review-toolbar { grid-template-columns: 1fr; }
   .read-answer-lines { width: 100%; }
+}
+
+/* =================================================================
+   The divider
+   -----------------------------------------------------------------
+   Every Cambridge level is a coloured ring-binder divider. The
+   screen's whole ground is the current level's board at full
+   strength, so you know which class you are in before reading a
+   word, and the work sits on a milky leaf above it. The dashboard
+   and My progress are the binder's graphite cover.
+
+   The shell carries data-level (app/page.tsx, Shell). Each level
+   defines four colours:
+     --board     the divider itself, at full strength
+     --on-board  text and controls set directly on the board
+     --level     the level's colour on a leaf: links, selection,
+                 the primary button (>= 4.5:1 on the leaf)
+     --on-level  text on a --level fill
+
+   The signature: the sidebar entry you are on is a tab that runs
+   out across the rail and joins the board. Changes step in two
+   frames over 90 ms rather than easing, the way a divider is
+   turned, not faded.
+   ================================================================= */
+
+:root {
+  --d-cover: #24292e;      --d-cover-on: #ffffff;      --d-cover-ink: #24292e;
+  --d-stage7: #f2c230;     --d-stage7-on: #16181a;     --d-stage7-ink: #7a5800;
+  --d-stage8: #e2622a;     --d-stage8-on: #16181a;     --d-stage8-ink: #a63a0c;
+  --d-stage9: #93421f;     --d-stage9-on: #ffffff;     --d-stage9-ink: #8a3d1b;
+  --d-igcse: #0d7f7d;      --d-igcse-on: #ffffff;      --d-igcse-ink: #0b6e6c;
+  --d-as: #2e3fb0;         --d-as-on: #ffffff;         --d-as-ink: #2e3fb0;
+  --d-exam: #6a3d9e;       --d-exam-on: #ffffff;       --d-exam-ink: #6a3d9e;
+  --d-classroom: #4f9a2c;  --d-classroom-on: #16181a;  --d-classroom-ink: #2f6b16;
+  --on-level: #ffffff;
+
+  /* The leaf: near-white with no warmth in it, so it reads as acetate
+     over the board rather than paper. */
+  --paper: #f1f3f2;
+  --rail: #1b1e21;
+  --rail-ink: #d5d9dd;
+  --rail-muted: #9aa3ab;
+  --topbar: #fafbfa;
+  --topbar-line: #e2e5e3;
+  --mark-board: #1d2125;
+  --errata: #b4220f;
+  --errata-tint: #fdebe6;
+  --errata-line: #f2b8aa;
+  --step: 90ms steps(2, end);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --d-cover: #24282c;      --d-cover-on: #ffffff;  --d-cover-ink: #e8eaec;
+    --d-stage7: #5e4a0b;     --d-stage7-on: #ffffff; --d-stage7-ink: #f2c230;
+    --d-stage8: #6e2a10;     --d-stage8-on: #ffffff; --d-stage8-ink: #f2895a;
+    --d-stage9: #4e2313;     --d-stage9-on: #ffffff; --d-stage9-ink: #e3a07c;
+    --d-igcse: #0a4a49;      --d-igcse-on: #ffffff;  --d-igcse-ink: #4cc7c3;
+    --d-as: #1e2a78;         --d-as-on: #ffffff;     --d-as-ink: #a3adff;
+    --d-exam: #3d2266;       --d-exam-on: #ffffff;   --d-exam-ink: #c7a6f2;
+    --d-classroom: #24521a;  --d-classroom-on: #ffffff; --d-classroom-ink: #8dd068;
+    --on-level: #111315;
+    --rail: #0f1113;
+    --topbar: #0f1113;
+    --topbar-line: #24282c;
+    --mark-board: #e9ecee;
+    --errata: #ff9b85;
+    --errata-tint: #3a1d17;
+    --errata-line: #6b2e22;
+  }
+}
+:root[data-theme="dark"] {
+  --d-cover: #24282c;      --d-cover-on: #ffffff;  --d-cover-ink: #e8eaec;
+  --d-stage7: #5e4a0b;     --d-stage7-on: #ffffff; --d-stage7-ink: #f2c230;
+  --d-stage8: #6e2a10;     --d-stage8-on: #ffffff; --d-stage8-ink: #f2895a;
+  --d-stage9: #4e2313;     --d-stage9-on: #ffffff; --d-stage9-ink: #e3a07c;
+  --d-igcse: #0a4a49;      --d-igcse-on: #ffffff;  --d-igcse-ink: #4cc7c3;
+  --d-as: #1e2a78;         --d-as-on: #ffffff;     --d-as-ink: #a3adff;
+  --d-exam: #3d2266;       --d-exam-on: #ffffff;   --d-exam-ink: #c7a6f2;
+  --d-classroom: #24521a;  --d-classroom-on: #ffffff; --d-classroom-ink: #8dd068;
+  --on-level: #111315;
+  --rail: #0f1113;
+  --topbar: #0f1113;
+  --topbar-line: #24282c;
+  --mark-board: #e9ecee;
+  --errata: #ff9b85;
+  --errata-tint: #3a1d17;
+  --errata-line: #6b2e22;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .portal-shell[data-level] { --level-fill: var(--board); }
+}
+:root[data-theme="dark"] .portal-shell[data-level] { --level-fill: var(--board); }
+
+/* One level, four colours. Used by the shell, the sidebar tabs, and the
+   front page and sign-in tabs alike. */
+[data-level="cover"]     { --board: var(--d-cover);     --on-board: var(--d-cover-on);     --level: var(--d-cover-ink); }
+[data-level="stage7"]    { --board: var(--d-stage7);    --on-board: var(--d-stage7-on);    --level: var(--d-stage7-ink); }
+[data-level="stage8"]    { --board: var(--d-stage8);    --on-board: var(--d-stage8-on);    --level: var(--d-stage8-ink); }
+[data-level="stage9"]    { --board: var(--d-stage9);    --on-board: var(--d-stage9-on);    --level: var(--d-stage9-ink); }
+[data-level="igcse"]     { --board: var(--d-igcse);     --on-board: var(--d-igcse-on);     --level: var(--d-igcse-ink); }
+[data-level="as"]        { --board: var(--d-as);        --on-board: var(--d-as-on);        --level: var(--d-as-ink); }
+[data-level="exam"]      { --board: var(--d-exam);      --on-board: var(--d-exam-on);      --level: var(--d-exam-ink); }
+[data-level="classroom"] { --board: var(--d-classroom); --on-board: var(--d-classroom-on); --level: var(--d-classroom-ink); }
+
+/* ---------- type ---------- */
+
+/* One grotesque does the work. Heads run narrower and heavier, the way a
+   tab's label is set; codes and figures are in the mono. */
+h1, h2, h3,
+.portal-shell h1,
+.portal-shell h2,
+.portal-shell h3,
+.pe-redesign h1,
+.pe-redesign h2.pe-heading,
+.pe-redesign h3 {
+  font-family: var(--font-sans), Arial, sans-serif;
+  font-stretch: 88%;
+  font-weight: 750;
+  letter-spacing: -0.012em;
+}
+body { font-family: var(--font-sans), Arial, sans-serif; }
+::selection { background: var(--d-stage7); color: #16181a; }
+.portal-shell[data-level] ::selection { background: var(--board); color: var(--on-board); }
+
+/* ---------- the mark ---------- */
+
+.brand { gap: 10px; }
+.brand .brand-mark,
+.signin-brand .brand-mark {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  background: none;
+  border-radius: 0;
+  transform: none;
+  display: block;
+}
+.brand-mark-board { fill: var(--mark-board); }
+.brand-mark-hole { fill: var(--topbar); }
+.brand b {
+  font-stretch: 85%;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.portal-top .brand b { color: var(--ink); font-size: 21px; }
+.brand small { font-size: 13px; }
+
+/* ---------- the shell ---------- */
+
+.portal-top {
+  background: color-mix(in srgb, var(--topbar) 86%, transparent);
+  border-bottom: 1px solid var(--topbar-line);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .portal-top { background: var(--topbar); }
+}
+
+.portal-shell[data-level] {
+  background: var(--board);
+  transition: background-color var(--step);
+}
+
+/* The rail: the binder's edge, holding one tab per divider. */
+/* Above the board's painted-out header. Wide screens only: below 900px
+   the rail is the drawer, which positions itself. */
+@media (min-width: 901px) {
+  .portal-shell[data-level] > aside { position: relative; z-index: 2; }
+}
+.portal-shell[data-level] > aside {
+  background: var(--rail);
+  color: var(--rail-ink);
+  border-right: 0;
+  padding: 22px 0 28px 14px;
+}
+.portal-shell[data-level] .portal-person {
+  border-bottom: 1px solid rgb(255 255 255 / 0.1);
+  margin-right: 14px;
+}
+.portal-shell[data-level] .portal-person b { color: #fff; }
+.portal-shell[data-level] .portal-person small { color: var(--rail-muted); }
+.portal-shell[data-level] .portal-person > span {
+  border-radius: 4px;
+  background: #e9ecee;
+  color: #1b1e21;
+}
+.portal-top .portal-avatar.portal-avatar {
+  border-radius: 4px;
+  background: var(--mark-board);
+  color: var(--topbar);
+}
+.portal-shell[data-level] .portal-nav p {
+  color: var(--rail-muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  padding: 0 10px;
+  margin: 0 14px 4px 0;
+}
+.portal-shell[data-level] .portal-nav button {
+  margin-right: 0;
+  color: var(--rail-ink);
+  font-weight: 600;
+  border-radius: 4px 0 0 4px;
+  padding: 9px 24px 9px 10px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .portal-shell[data-level] .portal-nav button:hover {
+    background: rgb(255 255 255 / 0.07);
+    color: #fff;
+  }
+}
+
+/* Each entry owns a divider, whose tab stands on the rail's inner edge
+   against the board. */
+.portal-nav button[data-nav="home"],
+.portal-nav button[data-nav="progress"] { --tab: var(--d-cover); --tab-on: var(--d-cover-on); }
+.portal-nav button[data-nav="stage7"] { --tab: var(--d-stage7); --tab-on: var(--d-stage7-on); }
+.portal-nav button[data-nav="stage8"] { --tab: var(--d-stage8); --tab-on: var(--d-stage8-on); }
+.portal-nav button[data-nav="stage9"] { --tab: var(--d-stage9); --tab-on: var(--d-stage9-on); }
+.portal-nav button[data-nav="igcse"] { --tab: var(--d-igcse); --tab-on: var(--d-igcse-on); }
+.portal-nav button[data-nav="as"] { --tab: var(--d-as); --tab-on: var(--d-as-on); }
+.portal-nav button[data-nav="exam"] { --tab: var(--d-exam); --tab-on: var(--d-exam-on); }
+.portal-nav button[data-nav="papers"],
+.portal-nav button[data-nav="marking"],
+.portal-nav button[data-nav="students"] { --tab: var(--d-classroom); --tab-on: var(--d-classroom-on); }
+.portal-nav button[data-nav] { --board-of-tab: var(--tab); }
+
+.portal-shell[data-level] .portal-nav button[data-nav] > span { color: var(--rail-muted); }
+.portal-shell[data-level] .portal-nav button[data-nav]::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  right: 0;
+  width: 9px;
+  border-radius: 3px 0 0 3px;
+  background: var(--tab);
+}
+
+/* The signature: the entry you are on runs out across the rail as a tab
+   and joins the board. */
+.portal-shell[data-level] .portal-nav button.active {
+  background: var(--tab);
+  color: var(--tab-on);
+  font-weight: 750;
+  margin-right: -1px;
+  border-radius: 4px 0 0 4px;
+  animation: tab-out var(--step);
+}
+.portal-shell[data-level] .portal-nav button.active > span { color: var(--tab-on); }
+.portal-shell[data-level] .portal-nav button.active::after { display: none; }
+@keyframes tab-out {
+  from { clip-path: inset(0 45% 0 0); }
+}
+
+/* ---------- the leaf ---------- */
+
+/* The work sits on one milky leaf over the board. The board shows round
+   its edges; the screen's header is set on the board itself, above the
+   leaf (below). */
+.portal-shell[data-level] > .portal-main:not(#_) {
+  --subject: var(--level);
+  /* Fills carry white text, so in dark mode they take the deep board
+     rather than the level's light reading colour. */
+  --subject-fill: var(--level-fill, var(--level));
+  --subject-tint: color-mix(in srgb, var(--level) 12%, var(--sheet));
+  --accent: var(--level);
+  --accent-fill: var(--level);
+  --focus-ring: var(--level);
+  background: var(--paper);
+  width: calc(100% - 56px);
+  max-width: 1200px;
+  margin: 0 auto 28px;
+  padding: 0 48px 64px;
+  border-radius: 0 0 4px 4px;
+}
+.portal-shell[data-level] .pe-redesign {
+  --accent: var(--level);
+  --accent-fill: var(--level);
+  background: transparent;
+}
+
+/* The screen's header, set on the board: whichever heading opens the
+   screen is painted out to the board's edges above the leaf, so the leaf
+   appears to start beneath it. */
+.portal-main > :is(.subject-slab, .portal-heading, .dash-hero):first-child,
+.portal-main > .pe-redesign:first-child > :is(.subject-slab, .portal-heading):first-child,
+.portal-main > .pe-redesign:first-child > :first-child > .portal-heading:first-child {
+  --head-pad: 40px;
+  position: relative;
+  background: var(--board);
+  color: var(--on-board);
+  box-shadow: 0 0 0 100vmax var(--board);
+  clip-path: inset(-100vmax -100vmax 0 -100vmax);
+  border-radius: 0;
+  margin: 0 0 36px;
+  padding: var(--head-pad) 0 34px;
+  transition: background-color var(--step), box-shadow var(--step);
+  animation: divider-turn var(--step);
+}
+@keyframes divider-turn {
+  from { transform: translateX(-10px); }
+}
+
+/* Everything in the header reads on the board. */
+.portal-main > :is(.subject-slab, .portal-heading, .dash-hero):first-child :is(h1, h2, p, small, dt, dd, b),
+.portal-main > .pe-redesign:first-child :is(.subject-slab, .portal-heading):first-child :is(h1, h2, p, small, dt, dd, b) {
+  color: var(--on-board);
+}
+.portal-main .subject-slab h1,
+.portal-main > .portal-heading:first-child h1,
+.portal-main > .pe-redesign:first-child .portal-heading:first-child h1 {
+  font-size: clamp(34px, 4.6vw, 60px);
+  line-height: 0.98;
+  font-stretch: 80%;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 10px 0 0;
+  max-width: 20ch;
+}
+.portal-main .subject-slab .slab-code,
+.portal-main > .portal-heading:first-child > div > p:first-child,
+.portal-main > .pe-redesign:first-child .portal-heading:first-child > div > p:first-child,
+.portal-main .dash-date {
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin: 0;
+}
+.portal-main .subject-slab p.slab-note,
+.portal-main > .portal-heading:first-child h2,
+.portal-main > .pe-redesign:first-child .portal-heading:first-child h2 {
+  font-family: var(--font-sans), Arial, sans-serif;
+  font-stretch: 100%;
+  font-size: var(--t-body);
+  font-weight: 450;
+  line-height: 1.5;
+  letter-spacing: 0;
+  max-width: 56ch;
+  margin: 14px 0 0;
+}
+.portal-main .subject-slab .slab-figures dt,
+.portal-main .dash-figures dt {
+  font-size: 13px;
+  font-weight: 600;
+}
+.portal-main .subject-slab .slab-figures dd,
+.portal-main .dash-figures dd {
+  font-family: var(--font-mono), monospace;
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.portal-main .subject-slab { align-items: flex-end; }
+.portal-main > .portal-heading:first-child,
+.portal-main > .pe-redesign:first-child .portal-heading:first-child { gap: 24px; align-items: flex-end; }
+.portal-main > .portal-heading:first-child > div:first-child,
+.portal-main > .pe-redesign:first-child .portal-heading:first-child > div:first-child { flex: 1 1 auto; min-width: 0; }
+.portal-main > .portal-heading:first-child h1 { max-width: 24ch; }
+.portal-main .dash-headline h1 {
+  font-size: clamp(28px, 3vw, 40px);
+  line-height: 1.02;
+  font-stretch: 80%;
+  font-weight: 800;
+  max-width: 14ch;
+}
+.portal-main .dash-figures { border-top-color: color-mix(in srgb, var(--on-board) 22%, transparent); }
+.portal-main .dash-figures > div { border-right-color: color-mix(in srgb, var(--on-board) 22%, transparent); }
+
+/* The dashboard's one figure, set on the cover: how many papers are
+   waiting, in the cover's ink; green when the queue is clear. Vermilion
+   stays reserved for errata. */
+.portal-main > .dash-hero:first-child .dash-headline > b {
+  font-family: var(--font-mono), monospace;
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  color: var(--on-board);
+}
+.portal-main > .dash-hero:first-child .dash-headline.clear > b { color: #8dd068; }
+.portal-main > .dash-hero:first-child > .dash-actions { top: var(--head-pad); }
+.portal-main .dash-headline p { color: var(--on-board); opacity: 1; }
+
+/* Actions set on the board are reversed out of it: the board's own
+   colour on its ink. Secondary ones are drawn in the ink alone. */
+.portal-main .subject-slab .slab-action,
+.portal-main > :is(.portal-heading, .dash-hero):first-child button.primary,
+.portal-main > .dash-hero:first-child .dash-actions .primary {
+  background: var(--on-board);
+  color: var(--board);
+  border: 0;
+  border-radius: 4px;
+  font-weight: 700;
+  box-shadow: none;
+  filter: none;
+}
+.portal-main > .portal-heading:first-child button:not(.primary),
+.portal-main > .pe-redesign:first-child .portal-heading:first-child button:not(.primary) {
+  background: transparent;
+  color: var(--on-board);
+  border: 1.5px solid color-mix(in srgb, var(--on-board) 55%, transparent);
+  border-radius: 4px;
+  font-weight: 650;
+}
+@media (hover: hover) and (pointer: fine) {
+  .portal-main .subject-slab .slab-action:hover:not(:disabled),
+  .portal-main > :is(.portal-heading, .dash-hero):first-child button.primary:hover {
+    background: color-mix(in srgb, var(--on-board) 86%, var(--board));
+    filter: none;
+  }
+  .portal-main > .portal-heading:first-child button:not(.primary):hover,
+  .portal-main > .pe-redesign:first-child .portal-heading:first-child button:not(.primary):hover {
+    border-color: var(--on-board);
+    background: color-mix(in srgb, var(--on-board) 8%, transparent);
+  }
+}
+
+/* ---------- on the leaf ---------- */
+
+/* Panels are sheets on the leaf: crisp corners, a hairline, a short lift. */
+.portal-shell[data-level] .panel {
+  border-radius: 4px;
+  border-color: var(--line);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.04);
+}
+.portal-shell[data-level] .panel > header { border-bottom-color: var(--line); }
+.portal-shell[data-level] .panel header h3 { font-size: 19px; }
+
+/* The one strong action on a leaf is filled in the level's colour. */
+.portal-shell[data-level] button.primary,
+.portal-modal button.primary {
+  background: var(--level, var(--d-cover-ink));
+  color: var(--on-level);
+  border-radius: 4px;
+  font-weight: 700;
+  box-shadow: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .portal-shell[data-level] button.primary:hover:not(:disabled) {
+    filter: none;
+    background: color-mix(in srgb, var(--level) 86%, var(--ink));
+  }
+}
+
+/* Scores, counts and codes are figures: set in the mono, tabular. */
+.portal-shell[data-level] .submission-row strong,
+.portal-shell[data-level] .slab-figures dd,
+.portal-shell[data-level] .dash-figures dd {
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Errata: an error is a slip laid on the leaf, in vermilion, the one
+   colour no divider uses. */
+.error-text,
+.portal-shell[data-level] .error-text {
+  color: var(--errata);
+  background: var(--errata-tint);
+  border: 1px solid var(--errata-line);
+  border-radius: 2px;
+  font-size: var(--t-small);
+  font-weight: 600;
+  padding: 10px 14px;
+}
+
+/* ---------- phones ---------- */
+
+@media (max-width: 900px) {
+  .portal-shell[data-level] > .portal-main:not(#_) {
+    width: calc(100% - 20px);
+    padding: 0 20px 48px;
+    margin-bottom: 10px;
+  }
+  .portal-main > :is(.subject-slab, .portal-heading, .dash-hero):first-child,
+  .portal-main > .pe-redesign:first-child > :is(.subject-slab, .portal-heading):first-child,
+  .portal-main > .pe-redesign:first-child > :first-child > .portal-heading:first-child {
+    --head-pad: 26px;
+    margin-bottom: 26px;
+    padding-bottom: 26px;
+  }
+  /* In the drawer the active tab still runs to the drawer's edge. */
+  .portal-shell[data-level] > aside { padding-left: 12px; }
+}
+@media (max-width: 620px) {
+  .portal-shell[data-level] > .portal-main:not(#_) { padding: 0 14px 40px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-shell[data-level],
+  .portal-main > *:first-child,
+  .portal-shell[data-level] .portal-nav button.active { transition: none; animation: none; }
+}
+
+/* =================================================================
+   The divider, outside the portal: the front page and sign-in
+   -----------------------------------------------------------------
+   The front page is the binder seen from outside: a graphite cover
+   with the five level tabs stepping down its fore edge, and further
+   down each level opened at its divider. The tabs are the same
+   colours a student then finds in the sidebar.
+   ================================================================= */
+
+.landing {
+  --l-maths: var(--d-stage8-ink);
+  --l-maths-fill: var(--d-stage8-ink);
+  --l-physics: var(--d-igcse-ink);
+  --l-physics-fill: var(--d-igcse-ink);
+  background: var(--paper);
+}
+.landing .maths { --l-subject: var(--d-stage8-ink); --l-fill: var(--d-stage8-ink); --l-tint: color-mix(in srgb, var(--d-stage8-ink) 10%, var(--sheet)); }
+.landing .physics { --l-subject: var(--d-igcse-ink); --l-fill: var(--d-igcse-ink); --l-tint: color-mix(in srgb, var(--d-igcse-ink) 10%, var(--sheet)); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .landing .maths,
+  :root:not([data-theme="light"]) .landing .physics { --l-fill: var(--l-subject); }
+}
+:root[data-theme="dark"] .landing .maths,
+:root[data-theme="dark"] .landing .physics { --l-fill: var(--l-subject); }
+
+/* The bar and the hero are the cover: graphite in both themes. */
+.landing-bar {
+  max-width: none;
+  padding: 0 max(24px, calc((100vw - var(--l-width)) / 2 + 24px));
+  background: var(--d-cover);
+  color: #fff;
+}
+.landing-bar .brand b { color: #fff; font-size: 21px; }
+.landing-bar .brand small { color: #b9c0c7; }
+.landing-bar .brand-mark-board,
+.landing-foot .brand-mark-board,
+.signin-brand .brand-mark-board { fill: #eef0f1; }
+.landing-bar .brand-mark-hole,
+.landing-foot .brand-mark-hole,
+.signin-brand .brand-mark-hole { fill: var(--d-cover); }
+.landing-bar .theme-toggle,
+.landing-foot .theme-toggle { border-color: rgba(255, 255, 255, 0.24); background: transparent; }
+.landing-bar .theme-toggle button,
+.landing-foot .theme-toggle button { color: rgba(255, 255, 255, 0.78); }
+.landing-bar .theme-toggle button[aria-checked="true"],
+.landing-foot .theme-toggle button[aria-checked="true"] { background: #fff; color: #16181a; }
+.landing a.landing-signin {
+  background: #fff;
+  color: #16181a;
+  border: 0;
+  border-radius: 4px;
+}
+
+.landing-main { padding: 0; max-width: none; }
+.landing-main > section:not(.landing-hero) {
+  max-width: var(--l-width);
+  margin: 0 auto;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+.landing-hero {
+  position: relative;
+  background: var(--d-cover);
+  color: #fff;
+  padding: 64px max(24px, calc((100vw - var(--l-width)) / 2 + 24px)) 96px;
+  padding-right: max(196px, calc((100vw - var(--l-width)) / 2 + 196px));
+  gap: 56px;
+}
+.landing-hero-copy { padding-top: 24px; }
+.landing-hero h1 {
+  color: #fff;
+  font-size: clamp(44px, 5.6vw, 84px);
+  line-height: 0.94;
+  font-stretch: 78%;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  max-width: 12ch;
+}
+.landing-hero-copy > p { color: #c9cfd5; max-width: 38ch; }
+.landing .landing-cta {
+  background: var(--d-stage7);
+  color: #16181a !important;
+  border-radius: 4px;
+  font-weight: 750;
+}
+.landing-hero .landing-link { color: #fff; }
+
+/* The live question is a leaf laid on the cover. */
+.landing .try-question {
+  color: var(--ink);
+  border: 0;
+  border-top: 0;
+  border-radius: 4px;
+  background: var(--paper);
+  box-shadow: none;
+}
+.landing .try-subjects { border-radius: 4px; }
+.landing .try-subjects button { border-radius: 3px; }
+.landing .try-answer input { border-radius: 4px; background: var(--sheet); }
+.landing .try-primary,
+.landing .try-quiet { border-radius: 4px; }
+.landing .try-skeleton i { background: color-mix(in srgb, var(--ink) 8%, transparent); border-radius: 3px; }
+.landing .try-feedback p {
+  border-left: 0;
+  border-radius: 2px;
+  border: 1px solid color-mix(in srgb, var(--l-subject) 30%, transparent);
+}
+.landing .try-feedback p.wrong {
+  color: var(--errata);
+  background: var(--errata-tint);
+  border-color: var(--errata-line);
+}
+
+/* The fore edge: the tabs step down the cover's right side and stand
+   proud of it. */
+.landing-tabs {
+  position: absolute;
+  top: 64px;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 176px;
+}
+.landing-tabs a {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-height: 62px;
+  padding: 10px 16px;
+  background: var(--board);
+  color: var(--on-board);
+  text-decoration: none;
+  border-radius: 4px 0 0 4px;
+  transition: transform var(--step);
+}
+.landing-tabs a b { font-size: 17px; font-weight: 800; font-stretch: 85%; line-height: 1.1; }
+.landing-tabs a small { font-family: var(--font-mono), monospace; font-size: 13px; }
+@media (hover: hover) and (pointer: fine) {
+  .landing-tabs a:hover { transform: translateX(-8px); }
+}
+.landing-tabs a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* How marking works, on the leaf. */
+.landing-marking,
+.landing-levels,
+.landing-parents,
+.landing-faq { border-top: 0; }
+.landing-marking li { border-top: 4px solid var(--ink); }
+.landing-marking h3 { font-size: 28px; font-stretch: 80%; font-weight: 800; }
+
+/* The levels, each opened at its divider. */
+.landing-levels { padding-top: 24px; }
+.landing-levels > .landing-subject { display: block; margin-top: 44px; }
+.landing-subject h3 {
+  font-size: 15px;
+  font-family: var(--font-mono), monospace;
+  font-stretch: 100%;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+.landing-subject ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.landing-subject li,
+.landing-subject li + li {
+  padding: 0;
+  gap: 0;
+  border-top: 0;
+  display: grid;
+  grid-template-columns: minmax(180px, 260px) minmax(0, 1fr);
+  align-items: stretch;
+  background: var(--sheet);
+  border-radius: 4px;
+  overflow: hidden;
+  scroll-margin-top: 24px;
+}
+.landing-divider-tab {
+  background: var(--board);
+  color: var(--on-board);
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+.landing-divider-tab b { font-size: 26px; font-stretch: 80%; font-weight: 800; line-height: 1.05; }
+.landing-divider-tab small { font-family: var(--font-mono), monospace; font-size: 13px; }
+.landing-subject li > p {
+  margin: 0;
+  padding: 18px 24px;
+  align-self: center;
+  font-size: var(--t-body);
+  line-height: 1.5;
+  color: var(--ink);
+}
+.landing-subject li:target .landing-divider-tab { animation: divider-turn var(--step); }
+
+/* The foot closes the binder: graphite again. */
+.landing-foot {
+  max-width: none;
+  margin-top: 40px;
+  border-top: 0;
+  background: var(--d-cover);
+  color: #fff;
+  padding-left: max(24px, calc((100vw - var(--l-width)) / 2 + 24px));
+  padding-right: max(24px, calc((100vw - var(--l-width)) / 2 + 24px));
+}
+.landing-foot .brand b { color: #fff; }
+.landing-foot a { color: #fff; }
+
+@media (max-width: 1100px) {
+  .landing-hero { padding-right: max(24px, calc((100vw - var(--l-width)) / 2 + 24px)); padding-bottom: 40px; }
+  .landing-tabs {
+    position: static;
+    grid-column: 1 / -1;
+    flex-direction: row;
+    width: auto;
+    gap: 6px;
+    overflow-x: auto;
+    order: 2;
+    margin: 0 calc(-1 * max(24px, calc((100vw - var(--l-width)) / 2 + 24px)));
+    padding: 0 max(24px, calc((100vw - var(--l-width)) / 2 + 24px));
+    scrollbar-width: none;
+  }
+  .landing-tabs a,
+  .landing-tabs a:nth-child(n) {
+    margin-left: 0;
+    flex: 1 0 auto;
+    min-width: 120px;
+    min-height: 0;
+    border-radius: 4px;
+    padding: 10px 14px 12px;
+  }
+  .landing-hero-copy { order: 1; }
+  .landing .try-question { order: 3; }
+  @media (hover: hover) and (pointer: fine) {
+    .landing-tabs a:hover { transform: translateY(-6px); }
+  }
+}
+@media (max-width: 900px) {
+  .landing-hero { padding-top: 32px; }
+}
+@media (max-width: 600px) {
+  .landing-bar { padding: 0 16px; }
+  .landing-main > section:not(.landing-hero) { padding-left: 16px; padding-right: 16px; }
+  .landing-hero { padding-left: 16px; padding-right: 16px; }
+  .landing-tabs { margin-left: -16px; margin-right: -16px; padding: 0 16px; }
+  .landing-tabs a,
+  .landing-tabs a:nth-child(n) { min-width: 104px; }
+  .landing-hero h1 { font-size: 46px; }
+  .landing-subject li { grid-template-columns: minmax(0, 1fr); }
+  .landing-subject li > p { padding: 14px 18px 16px; }
+  .landing-divider-tab { padding: 14px 18px; }
+  .landing-foot { padding-left: 16px; padding-right: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-tabs a,
+  .landing-subject li:target .landing-divider-tab { transition: none; animation: none; }
+  .landing-tabs a:hover { transform: none; }
+}
+
+/* ---------- sign-in ---------- */
+
+.signin-brand {
+  background: var(--d-cover);
+  position: relative;
+  padding-right: 0;
+}
+.signin-head { padding-right: 60px; }
+.signin-brand h1 {
+  font-size: clamp(38px, 4vw, 60px);
+  line-height: 0.96;
+  font-stretch: 78%;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  max-width: 13ch;
+}
+/* The five levels step down the cover's fore edge, standing proud of it
+   towards the form. */
+.signin-levels {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  margin: 40px 0 0;
+}
+.signin-levels li,
+.signin-levels li:nth-child(n) {
+  display: block;
+  grid-row: auto;
+  background: var(--board);
+  color: var(--on-board);
+  font-size: var(--t-small);
+  font-weight: 750;
+  padding: 12px 18px;
+  border-radius: 4px 0 0 4px;
+  white-space: nowrap;
+}
+.signin-levels li:nth-child(1) { width: 52%; }
+.signin-levels li:nth-child(2) { width: 58%; }
+.signin-levels li:nth-child(3) { width: 64%; }
+.signin-levels li:nth-child(4) { width: 70%; }
+.signin-levels li:nth-child(5) { width: 76%; }
+.signin-form { background: var(--paper); }
+@media (max-width: 900px) {
+  /* As before: on a phone the form must start in the first screen, so the
+     tabs go and the mark carries the dividers. */
+  .signin-levels { display: none; }
+  .signin-brand { padding-right: 20px; }
+  .signin-head { padding-right: 0; }
+  .signin-brand h1 { font-size: 34px; }
+}
+
+/* ---------- flat leaves ---------- */
+
+/* A leaf holds its work directly: sections are ruled on it, not boxed as
+   cards. A heavy rule opens each section; hairlines divide its rows. */
+.portal-shell[data-level] .portal-main .panel,
+.portal-shell[data-level] .portal-main .stage7-rule {
+  background: transparent;
+  border: 0;
+  border-top: 2px solid var(--ink);
+  border-radius: 0;
+  box-shadow: none;
+}
+.portal-shell[data-level] .portal-main .panel > header { padding-left: 0; padding-right: 0; }
+
+/* Counts read as one ruled figure line, not a row of cards. */
+.portal-shell[data-level] .student-overview,
+.portal-shell[data-level] .marking-queue-stats {
+  gap: 0;
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--line);
+}
+.portal-shell[data-level] .student-overview article,
+.portal-shell[data-level] .marking-queue-stats button {
+  background: transparent;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 14px 18px 16px 0;
+}
+.portal-shell[data-level] .student-overview article + article,
+.portal-shell[data-level] .marking-queue-stats button + button { padding-left: 18px; }
+.portal-shell[data-level] .student-overview article:last-child,
+.portal-shell[data-level] .marking-queue-stats button:last-child { border-right: 0; }
+.portal-shell[data-level] .student-overview b,
+.portal-shell[data-level] .marking-queue-stats b {
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+/* The queue's filters are tabs along the rule: the one in use is lit in
+   the level's colour. */
+.portal-shell[data-level] .marking-queue-stats button.active,
+.portal-shell[data-level] .marking-queue-stats button.active.ready,
+.portal-shell[data-level] .marking-queue-stats button.active.published {
+  border-color: var(--line);
+  box-shadow: inset 0 4px 0 var(--level);
+  background: var(--subject-tint);
+}
+
+/* ---------- running heads ---------- */
+
+/* The line above a board's heading is the divider's running head: the
+   syllabus and section, ruled off across the board, as a reference
+   manual sets them. */
+.portal-main .subject-slab .slab-code,
+.portal-main > .portal-heading:first-child > div > p:first-child,
+.portal-main > .pe-redesign:first-child .portal-heading:first-child > div > p:first-child,
+.portal-main > .dash-hero:first-child .dash-date {
+  padding-bottom: 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--on-board) 38%, transparent);
+  margin-bottom: 18px;
+}
+
+/* ---------- phones ---------- */
+
+@media (max-width: 620px) {
+  .portal-shell[data-level] .student-overview,
+  .portal-shell[data-level] .marking-queue-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .portal-shell[data-level] .student-overview article,
+  .portal-shell[data-level] .marking-queue-stats button {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+    gap: 2px;
+    padding: 10px 8px 12px 0;
+  }
+  .portal-shell[data-level] .student-overview article + article,
+  .portal-shell[data-level] .marking-queue-stats button + button { padding-left: 10px; }
+  .portal-shell[data-level] .student-overview article > span,
+  .portal-shell[data-level] .marking-queue-stats button > span { display: none; }
+  .portal-shell[data-level] .student-overview small,
+  .portal-shell[data-level] .marking-queue-stats small { font-size: 13px; letter-spacing: 0; line-height: 1.25; }
+  .portal-shell[data-level] .student-overview b,
+  .portal-shell[data-level] .marking-queue-stats b { font-size: 26px; }
+  .portal-shell[data-level] .assigned-papers > article { padding-left: 0; padding-right: 0; gap: 12px; }
+  /* The name comes back: the tagline is what goes. */
+  .portal-top .brand > div { display: flex; }
+  .portal-top .brand b { font-size: 18px; }
+}
+
+/* At night the boards are deep, so an inactive tab on the dark rail would
+   all but vanish; it takes its level's lit reading colour instead. */
+.portal-nav button[data-nav="home"],
+.portal-nav button[data-nav="progress"] { --tab-lit: var(--d-cover-ink); }
+.portal-nav button[data-nav="stage7"] { --tab-lit: var(--d-stage7-ink); }
+.portal-nav button[data-nav="stage8"] { --tab-lit: var(--d-stage8-ink); }
+.portal-nav button[data-nav="stage9"] { --tab-lit: var(--d-stage9-ink); }
+.portal-nav button[data-nav="igcse"] { --tab-lit: var(--d-igcse-ink); }
+.portal-nav button[data-nav="as"] { --tab-lit: var(--d-as-ink); }
+.portal-nav button[data-nav="exam"] { --tab-lit: var(--d-exam-ink); }
+.portal-nav button:is([data-nav="papers"], [data-nav="marking"], [data-nav="students"]) { --tab-lit: var(--d-classroom-ink); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .portal-shell[data-level] .portal-nav button[data-nav]::after { background: var(--tab-lit); }
+}
+:root[data-theme="dark"] .portal-shell[data-level] .portal-nav button[data-nav]::after { background: var(--tab-lit); }
+
+/* ---------- headings that carry their own context ---------- */
+
+/* What used to be a small-capitals label above a heading now travels
+   inside it: the syllabus code set large on the board, and a quieter aside
+   (the tier, "practice complete") on the leaf. */
+.board-code {
+  font-family: var(--font-mono), monospace;
+  font-stretch: 100%;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  margin-left: 0.18em;
+  white-space: nowrap;
+}
+.heading-aside {
+  font-family: var(--font-sans), Arial, sans-serif;
+  font-stretch: 100%;
+  font-weight: 500;
+  font-size: 0.62em;
+  letter-spacing: 0;
+  color: var(--muted);
+  margin-left: 0.35em;
+  white-space: nowrap;
+}
+.heading-aside::before { content: "· "; }
+/* The strand under a unit's title, as its meta line. */
+.stage7-chapter-grid.student article > h3 + small { margin: 4px 0 0; color: var(--muted); font-weight: 600; }
+.progress-verdict h2 + small { display: block; margin-top: 6px; color: var(--muted); }
+
+/* ---------- the dashboard ---------- */
+
+/* The queue is the heading. The figure sits inside the sentence, set in
+   the mono, and turns green when nothing waits. */
+.portal-main > .dash-hero:first-child .dash-queue h1 {
+  font-size: clamp(38px, 5vw, 66px);
+  line-height: 0.98;
+  font-stretch: 80%;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  max-width: 16ch;
+  margin: 0;
+  color: var(--on-board);
+}
+.portal-main > .dash-hero:first-child .dash-queue h1 b {
+  font-family: var(--font-mono), monospace;
+  font-stretch: 100%;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+.portal-main > .dash-hero:first-child .dash-queue.clear h1 b { color: #8dd068; }
+.portal-main > .dash-hero:first-child .dash-queue p {
+  margin: 14px 0 0;
+  font-size: var(--t-body);
+  color: var(--on-board);
+}
+.portal-main > .dash-hero:first-child > .dash-actions { top: auto; bottom: 34px; }
+/* The three figures, lower down on the leaf: one ruled line. */
+.portal-main > .dash-figures {
+  margin: 36px 0 0;
+  border-top: 2px solid var(--ink);
+}
+.portal-main > .dash-figures dt { color: var(--muted); }
+.portal-main > .dash-figures dd { color: var(--ink); font-family: var(--font-mono), monospace; font-weight: 600; }
+.portal-main > .dash-figures > div { border-right-color: var(--line); }
+@media (max-width: 760px) {
+  .portal-main > .dash-hero:first-child > .dash-actions { position: static; margin-top: 22px; }
+}
+
+/* ---------- this week's focus, on the leaf ---------- */
+
+/* Not a filled card of cards: a section lit by a heavy rule in the
+   level's colour, its units as ruled rows. */
+.portal-shell[data-level] .weekly-focus {
+  background: transparent;
+  color: var(--ink);
+  border-radius: 0;
+  border-top: 4px solid var(--level);
+  padding: 16px 0 6px;
+}
+.portal-shell[data-level] .weekly-focus p { opacity: 1; color: var(--muted); }
+.portal-shell[data-level] .weekly-focus > header b { font-family: var(--font-mono), monospace; font-weight: 600; }
+.portal-shell[data-level] .weekly-focus > div { gap: 0 24px; }
+.portal-shell[data-level] .weekly-focus article {
+  background: transparent;
+  border-radius: 0;
+  border-top: 1px solid var(--line);
+  padding: 12px 0;
+}
+.portal-shell[data-level] .weekly-focus article i { background: var(--line); }
+.portal-shell[data-level] .weekly-focus article i em { background: var(--level); }
+.portal-shell[data-level] .weekly-focus article button {
+  border-radius: 4px;
+  background: var(--level);
+  color: var(--on-level);
+  font-weight: 700;
+}
+/* The unit glyphs (±, ½) stood in for icons; the unit's name says it. */
+.portal-shell[data-level] .weekly-focus article > span,
+.portal-shell[data-level] .stage7-chapter-grid.student article > span { display: none; }
+
+/* ---------- small repairs ---------- */
+
+.assigned-papers article em { white-space: nowrap; }
+
+/* =================================================================
+   Calmer, smoother, warmer (after the user's first week of testing:
+   "a bit laggy", "the colours take over", "the numbers feel robotic",
+   and switching binders "does not excite me")
+   ================================================================= */
+
+/* Softer boards. The same seven hues, with the brightest three (chrome
+   yellow, oxide, grass) and the rest eased off a little. Measured: dark
+   text on yellow 9.2:1, on oxide 5.0:1, on green 5.3:1; white on the rest
+   5.1:1 or more. */
+:root {
+  --d-stage7: #e3b341;
+  --d-stage8: #d4693e;
+  --d-stage9: #8f4a2b;
+  --d-igcse: #167a78;
+  --d-as: #3446a8;
+  --d-exam: #6b4596;
+  --d-classroom: #5a9c4c;
+}
+
+/* The colour lives in the top band and the rail's tabs only. Below the
+   band the page is calm paper, edge to edge, with no coloured frame round
+   the work. */
+.portal-shell[data-level] {
+  --g: 48px;
+  background: var(--paper);
+  transition: none;
+}
+.portal-shell[data-level] > .portal-main:not(#_) {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0 0 64px;
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--paper);
+}
+/* Every block keeps to one 1104px column with a gutter either side... */
+.portal-shell[data-level] > .portal-main > :not([class*="modal"], .pe-redesign, :is(.subject-slab, .portal-heading, .dash-hero):first-child),
+.portal-shell[data-level] > .portal-main > .pe-redesign > :not(:is(.subject-slab, .portal-heading):first-child, :first-child:has(> .portal-heading:first-child)) {
+  max-width: 1104px;
+  margin-inline: max(var(--g), calc((100% - 1104px) / 2));
+}
+.portal-shell[data-level] > .portal-main > .pe-redesign { max-width: none; margin-inline: 0; }
+/* ...except the screen's heading, which is the band: full width, its
+   content held to the same column by its padding. Painted as an ordinary
+   background, which is cheap to scroll, where the band used to be a
+   screen-wide shadow clipped to shape. */
+.portal-main > :is(.subject-slab, .portal-heading, .dash-hero):first-child,
+.portal-main > .pe-redesign:first-child > :is(.subject-slab, .portal-heading):first-child,
+.portal-main > .pe-redesign:first-child > :first-child > .portal-heading:first-child {
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: max(var(--g), calc((100% - 1104px) / 2));
+  box-shadow: none;
+  clip-path: none;
+  transition: none;
+  animation: none;
+}
+.portal-main > .pe-redesign:first-child > :first-child:has(> .portal-heading:first-child) {
+  max-width: none;
+  margin-inline: 0;
+}
+.portal-main > .dash-hero:first-child > .dash-actions {
+  right: max(var(--g), calc((100% - 1104px) / 2));
+}
+@media (max-width: 900px) {
+  .portal-shell[data-level] { --g: 20px; }
+  .portal-shell[data-level] > .portal-main:not(#_) { width: 100%; padding: 0 0 48px; margin: 0; }
+}
+@media (max-width: 620px) {
+  .portal-shell[data-level] { --g: 14px; }
+}
+
+/* Smooth, not stepped. The two-frame steps read as stutter. */
+.portal-shell[data-level] .portal-nav button.active { animation: none; }
+.portal-shell[data-level] .portal-nav button {
+  transition: background-color 160ms cubic-bezier(0.23, 1, 0.32, 1), color 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.landing-tabs a { transition: transform 180ms cubic-bezier(0.23, 1, 0.32, 1); }
+.landing-subject li:target .landing-divider-tab { animation: none; }
+
+/* ---------- figures ---------- */
+
+/* Counts, scores, percentages and codes: bold rounded numerals. */
+.board-code,
+.portal-shell[data-level] .portal-main .slab-figures dd,
+.portal-shell[data-level] .portal-main .dash-figures dd,
+.portal-shell[data-level] .stage7-rule > span,
+.portal-main > .dash-hero:first-child .dash-queue h1 b,
+.portal-shell[data-level] .submission-row strong,
+.portal-shell[data-level] .student-overview b,
+.portal-shell[data-level] .marking-queue-stats b,
+.portal-shell[data-level] .weekly-focus > header b,
+.portal-shell[data-level] .mastery-score b,
+.landing-tabs a small,
+.landing-divider-tab small {
+  font-family: var(--font-figures), var(--font-sans), sans-serif;
+  font-stretch: 100%;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.board-code { font-weight: 800; margin-left: 0.22em; }
+.landing-tabs a small,
+.landing-divider-tab small { font-weight: 800; font-size: 14px; }
+
+/* ---------- turning a page ---------- */
+
+/* lib/page-turn.ts: the old screen lifts at its right edge and swings
+   away over the binding, the rail, while the new one waits beneath in a
+   little shadow that clears as the page goes. The rail and top bar change
+   in place. */
+.portal-shell[data-level] > .portal-main { view-transition-name: binder; }
+html.page-turn::view-transition-old(root),
+html.page-turn::view-transition-new(root) { animation: none; }
+html.page-turn::view-transition-group(binder) { animation: none; }
+html.page-turn::view-transition-old(binder) {
+  z-index: 2;
+  transform-origin: left center;
+  backface-visibility: hidden;
+  animation: page-turn-away 520ms cubic-bezier(0.55, 0.06, 0.32, 1) both;
+}
+html.page-turn::view-transition-new(binder) {
+  animation: page-turn-under 520ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+@keyframes page-turn-away {
+  0% { transform: perspective(2200px) rotateY(0deg); filter: brightness(1); }
+  100% { transform: perspective(2200px) rotateY(-92deg); filter: brightness(0.78); }
+}
+@keyframes page-turn-under {
+  0% { filter: brightness(0.86); }
+  100% { filter: brightness(1); }
 }
