@@ -36,13 +36,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'StudyTrack — Cambridge Learner Planner',
     description: 'Plan and track Cambridge Mathematics and Physics study tasks from Lower Secondary through AS Level.',
-    images: ['/og.png'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'StudyTrack — Cambridge Learner Planner',
     description: 'Plan and track Cambridge Mathematics and Physics study tasks from Lower Secondary through AS Level.',
-    images: ['/og.png'],
   },
 };
 
