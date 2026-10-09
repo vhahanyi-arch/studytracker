@@ -6,12 +6,13 @@ type Handler = (request: Request, context: { params: Promise<any> }) => Promise<
 
 export async function call(
   handler: Handler,
-  options: { as?: string | null; json?: unknown; form?: Record<string, string | File | File[]>; params?: Record<string, string>; query?: string } = {},
+  options: { as?: string | null; json?: unknown; raw?: string; form?: Record<string, string | File | File[]>; params?: Record<string, string>; query?: string } = {},
 ) {
   signIn(options.as ?? null);
   const init: RequestInit = { method: "POST" };
-  if (options.json !== undefined) {
-    init.body = JSON.stringify(options.json);
+  if (options.json !== undefined || options.raw !== undefined) {
+    // `raw` sends the text as it is, for a body that is not valid JSON.
+    init.body = options.raw ?? JSON.stringify(options.json);
     init.headers = { "content-type": "application/json" };
   } else if (options.form) {
     const form = new FormData();

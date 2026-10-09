@@ -8,6 +8,7 @@ import {
   type Outcome,
   type UserStore,
 } from "@/lib/auth-rules";
+import { readJsonObject, unreadableBody } from "@/lib/request-body";
 
 // Teacher-only student administration. The scoping rule -- every student is
 // owned by the teacher who created them, so one teacher can never list or
@@ -38,7 +39,9 @@ export async function GET() {
 export async function POST(request: Request) {
   const session = await teacherSession();
   if (session.error) return session.error;
-  return respond(await createStudent(session.store, session.userId, await request.json()));
+  const body = await readJsonObject(request);
+  if (!body) return unreadableBody();
+  return respond(await createStudent(session.store, session.userId, body));
 }
 
 // Reset a student's password. Scoped to the teacher's own students so one
@@ -46,5 +49,7 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   const session = await teacherSession();
   if (session.error) return session.error;
-  return respond(await resetStudentPassword(session.store, session.userId, await request.json()));
+  const body = await readJsonObject(request);
+  if (!body) return unreadableBody();
+  return respond(await resetStudentPassword(session.store, session.userId, body));
 }

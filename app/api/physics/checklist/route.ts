@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
+import { readJsonObject, unreadableBody } from "@/lib/request-body";
 
 function levelFrom(value: unknown) {
   const level = String(value || "");
@@ -24,7 +25,8 @@ export async function POST(request: Request) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
   await ensureSchema();
-  const body = await request.json();
+  const body = await readJsonObject(request);
+  if (!body) return unreadableBody();
   const level = levelFrom(body.level);
   const objectiveId = String(body.objectiveId || "");
   if (!objectiveId) return NextResponse.json({ error: "No objective specified." }, { status: 400 });

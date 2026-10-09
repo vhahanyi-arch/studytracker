@@ -1,6 +1,7 @@
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { completeFirstPassword, type UserStore } from "@/lib/auth-rules";
+import { readJsonObject, unreadableBody } from "@/lib/request-body";
 
 // Completes the forced first-sign-in password change. The rule that it refuses
 // once mustChangePassword is cleared -- so this cannot become a general "change
@@ -10,7 +11,9 @@ export async function POST(request: Request) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
 
-  const password = String((await request.json()).password ?? "");
+  const body = await readJsonObject(request);
+  if (!body) return unreadableBody();
+  const password = String(body.password ?? "");
   const clerk = await clerkClient();
 
   const result = await completeFirstPassword(

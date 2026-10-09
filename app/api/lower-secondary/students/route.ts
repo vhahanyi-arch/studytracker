@@ -3,6 +3,7 @@ import { allStudents, type UserStore } from "@/lib/auth-rules";
 import { ensureSchema, sql } from "@/lib/db";
 import { currentViewer } from "@/lib/session";
 import { displayName } from "@/lib/students";
+import { readJsonObject, unreadableBody } from "@/lib/request-body";
 
 async function teacherViewer() {
   const viewer = await currentViewer();
@@ -30,7 +31,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const viewer = await teacherViewer();
   if (!viewer) return NextResponse.json({ error: "Teacher access is required." }, { status: 403 });
-  const body = await request.json();
+  const body = await readJsonObject(request);
+  if (!body) return unreadableBody();
   const stage = requestedStage(request, body.stage);
   const requested = Array.from(new Set<string>(Array.isArray(body.studentIds) ? body.studentIds.map(String) : []));
   const valid = new Set((await allStudents(viewer.clerk.users as unknown as UserStore)).map((user) => user.id));

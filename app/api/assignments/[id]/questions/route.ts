@@ -4,6 +4,7 @@ import { studentPaper } from "@/lib/paper-access";
 import { cleanAnswerLabels } from "@/lib/answer-lines";
 import { cleanQuestion, LOCKED_QUESTIONS_ERROR, planQuestionSave, type SavedQuestion } from "@/lib/question-save";
 import { currentViewer } from "@/lib/session";
+import { readJsonObject, unreadableBody } from "@/lib/request-body";
 
 async function viewerFor(assignmentId: string) {
   const viewer = await currentViewer();
@@ -58,7 +59,8 @@ export async function POST(
       { error: "Teacher access is required." },
       { status: 403 },
     );
-  const body = await request.json();
+  const body = await readJsonObject(request);
+  if (!body) return unreadableBody();
   const questions = Array.isArray(body.questions) ? body.questions : [];
   if (!questions.length)
     return NextResponse.json(

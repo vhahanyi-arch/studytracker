@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
 import { currentViewer } from "@/lib/session";
+import { readJsonObject, unreadableBody } from "@/lib/request-body";
 
 export async function POST(
   request: Request,
@@ -23,7 +24,8 @@ export async function POST(
       { error: "Submission not found." },
       { status: 404 },
     );
-  const body = await request.json();
+  const body = await readJsonObject(request);
+  if (!body) return unreadableBody();
   const marks = Array.isArray(body.marks) ? body.marks : [];
   // Every mark on this submission with its question's maximum, read once; the
   // teacher's changes are applied here and written back in one statement.

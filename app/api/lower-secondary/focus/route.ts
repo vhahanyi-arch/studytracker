@@ -1,6 +1,7 @@
 import { currentViewer } from "@/lib/session";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
+import { readJsonObject, unreadableBody } from "@/lib/request-body";
 
 const stage7Allowed = new Set([
   "integers", "fractions", "ratio", "powers", "expressions", "equations",
@@ -61,7 +62,8 @@ export async function POST(request: Request) {
   const { userId, user: teacher } = session;
   if (teacher.publicMetadata.role !== "teacher")
     return NextResponse.json({ error: "Teacher access is required." }, { status: 403 });
-  const body = await request.json();
+  const body = await readJsonObject(request);
+  if (!body) return unreadableBody();
   const stage = requestedStage(request, body.stage);
   const allowed = allowedForStage(stage);
   const chapters = Array.from(new Set<string>(Array.isArray(body.chapters) ? body.chapters.map(String) : []))

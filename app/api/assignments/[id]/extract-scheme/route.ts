@@ -8,6 +8,7 @@ import {
 } from "@/lib/cambridge-analysis";
 import { ensureSchema, sql } from "@/lib/db";
 import { extractPdfPages, readPrivatePdf } from "@/lib/server-pdf";
+import { readJsonObject, unreadableBody } from "@/lib/request-body";
 
 export const maxDuration = 60;
 
@@ -31,7 +32,8 @@ export async function POST(
   if (user.publicMetadata.role !== "teacher")
     return NextResponse.json({ error: "Teacher access only." }, { status: 403 });
 
-  const body = await request.json();
+  const body = await readJsonObject(request);
+  if (!body) return unreadableBody();
   const questions: Question[] = Array.isArray(body.questions)
     ? body.questions.slice(0, 100)
     : [];

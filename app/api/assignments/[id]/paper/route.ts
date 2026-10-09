@@ -2,6 +2,7 @@ import { currentViewer } from "@/lib/session";
 import { get, put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
+import { readJsonObject, unreadableBody } from "@/lib/request-body";
 
 export async function GET(
   _request: Request,
@@ -50,7 +51,8 @@ export async function PUT(
     );
 
   const isJson = request.headers.get("content-type")?.includes("application/json");
-  const payload = isJson ? await request.json() : null;
+  const payload = isJson ? await readJsonObject(request) : null;
+  if (isJson && !payload) return unreadableBody();
   const form = isJson ? null : await request.formData();
   const paper = form?.get("paper");
   const suppliedUrl = String(payload?.paperUrl || "").trim();

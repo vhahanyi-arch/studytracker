@@ -14,6 +14,7 @@ import {
   type PhysicsQuestion,
 } from "@/lib/physics-question-engine";
 import { hintsUsed as countHints, isMastered, isSessionId, markPracticeSet, nextDifficulty } from "@/lib/practice-sessions";
+import { readJsonObject, unreadableBody } from "@/lib/request-body";
 
 function levelFrom(value: unknown) {
   const level = String(value || "");
@@ -90,7 +91,8 @@ export async function POST(request: Request) {
   if (user.publicMetadata.role !== "student")
     return NextResponse.json({ error: "Student access is required." }, { status: 403 });
   await ensureSchema();
-  const body = await request.json();
+  const body = await readJsonObject(request);
+  if (!body) return unreadableBody();
   const level = levelFrom(body.level);
   const chapter = String(body.chapter || "");
 

@@ -11,6 +11,7 @@ import {
 } from "@/lib/lower-secondary-question-engine";
 import { PAST_PAPER, pastPaperSet, type PastPaperRow } from "@/lib/past-paper-practice";
 import { hintsUsed as countHints, isMastered, isSessionId, markPracticeSet, nextDifficulty } from "@/lib/practice-sessions";
+import { readJsonObject, unreadableBody } from "@/lib/request-body";
 
 function stageFrom(value: unknown) {
   const stage = Number(value);
@@ -150,7 +151,8 @@ export async function POST(request: Request) {
   if (user.publicMetadata.role !== "student")
     return NextResponse.json({ error: "Student access is required." }, { status: 403 });
   await ensureSchema();
-  const body = await request.json();
+  const body = await readJsonObject(request);
+  if (!body) return unreadableBody();
   const sourceStage = stageFrom(body.stage);
   const homeStage = stageFrom(body.homeStage ?? body.stage);
   const chapter = String(body.chapter || (sourceStage === 7 ? "integers" : ""));

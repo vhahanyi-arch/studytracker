@@ -1,9 +1,12 @@
 import { currentViewer } from "@/lib/session";
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { NextResponse } from "next/server";
+import { readJsonObject, unreadableBody } from "@/lib/request-body";
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as HandleUploadBody;
+  const parsed = await readJsonObject(request);
+  if (!parsed) return unreadableBody();
+  const body = parsed as unknown as HandleUploadBody;
   try {
     const result = await handleUpload({
       request,
