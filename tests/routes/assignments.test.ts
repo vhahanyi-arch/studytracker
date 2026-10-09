@@ -143,6 +143,17 @@ test("a student's view of the questions carries no part of the answer key", asyn
   for (const secret of ["x=3", "M1 for method", "AI proposal", "AI accepted"]) assert.ok(!text.includes(secret), `the student response contains ${secret}`);
 });
 
+test("a paper saves up to 500 questions and refuses more, changing nothing", async () => {
+  const id = await paper();
+  const many = (count: number) => Array.from({ length: count }, (_, index) => ({ label: String(index + 1), marks: 1, page_number: index + 1 }));
+  const count = async () => (await sql`SELECT id FROM assignment_questions WHERE assignment_id = ${id}`).length;
+  const refused = await call(questions.POST, { as: "t1", params: { id }, json: { questions: many(501) } });
+  assert.deepEqual([refused.status, refused.body.error], [400, "A paper can have at most 500 questions."]);
+  assert.equal(await count(), 3, "the paper keeps its questions");
+  assert.deepEqual((await call(questions.POST, { as: "t1", params: { id }, json: { questions: many(500) } })).body, { saved: 500 });
+  assert.equal(await count(), 500);
+});
+
 test("before anyone submits, a paper can gain and lose questions", async () => {
   const id = await paper();
   const ids = async () => (await sql`SELECT id FROM assignment_questions WHERE assignment_id = ${id} ORDER BY position`).map((row) => String(row.id));

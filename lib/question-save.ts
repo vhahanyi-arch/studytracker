@@ -52,6 +52,12 @@ export function cleanQuestion(question: Record<string, unknown>, index: number) 
 }
 
 export type CleanQuestion = ReturnType<typeof cleanQuestion>;
+// The most questions one paper can save. The largest real paper is a homework
+// book saved as one question per page (Stage 8 Book 2: 108 pages of exercises),
+// so this leaves room to spare while stopping an unbounded request.
+export const MAX_QUESTIONS = 500;
+export const TOO_MANY_QUESTIONS = `A paper can have at most ${MAX_QUESTIONS} questions.`;
+
 export type SavedQuestion = { id: string; position: number; label: string };
 
 export const LOCKED_QUESTIONS_ERROR =

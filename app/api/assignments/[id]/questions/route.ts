@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
 import { studentPaper } from "@/lib/paper-access";
 import { cleanAnswerLabels } from "@/lib/answer-lines";
-import { cleanQuestion, LOCKED_QUESTIONS_ERROR, planQuestionSave, type SavedQuestion } from "@/lib/question-save";
+import { cleanQuestion, LOCKED_QUESTIONS_ERROR, MAX_QUESTIONS, planQuestionSave, TOO_MANY_QUESTIONS, type SavedQuestion } from "@/lib/question-save";
 import { currentViewer } from "@/lib/session";
 import { readJsonObject, unreadableBody } from "@/lib/request-body";
 
@@ -67,6 +67,8 @@ export async function POST(
       { error: "Add at least one question." },
       { status: 400 },
     );
+  if (questions.length > MAX_QUESTIONS)
+    return NextResponse.json({ error: TOO_MANY_QUESTIONS }, { status: 400 });
   const cleaned = questions.map((question: Record<string, unknown>, index: number) => cleanQuestion(question, index));
   const [existing, submitted] = await Promise.all([
     sql`SELECT id, position, label FROM assignment_questions WHERE assignment_id = ${id}`,
