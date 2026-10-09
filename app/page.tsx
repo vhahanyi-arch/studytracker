@@ -286,9 +286,6 @@ function Shell({
         <div>
           <ThemeToggle />
           <UserButton />
-          <span className={`portal-avatar ${role.toLowerCase()}`}>
-            {initials}
-          </span>
         </div>
       </header>
       <div className="portal-shell" data-level={level}>

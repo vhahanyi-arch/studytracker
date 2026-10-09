@@ -1012,24 +1012,15 @@ label {
   padding: 7px 9px;
   font-size: 13px;
 }
-.portal-avatar,
 .portal-person > span {
   display: grid;
   place-items: center;
   border-radius: 50%;
   font-weight: 800;
 }
-.portal-avatar {
-  width: 36px;
-  height: 36px;
-  color: #fff;
-  font-size: 15px;
-}
-.portal-avatar.teacher,
 .portal-person > span.teacher {
   background: var(--accent-fill);
 }
-.portal-avatar.student,
 .portal-person > span.student {
   background: #18a283;
 }
@@ -7844,11 +7835,6 @@ body { font-family: var(--font-sans), Arial, sans-serif; }
   border-radius: 4px;
   background: #e9ecee;
   color: #1b1e21;
-}
-.portal-top .portal-avatar.portal-avatar {
-  border-radius: 4px;
-  background: var(--mark-board);
-  color: var(--topbar);
 }
 .portal-shell[data-level] .portal-nav p {
   color: var(--rail-muted);
