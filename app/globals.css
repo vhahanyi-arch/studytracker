@@ -8794,30 +8794,26 @@ body { font-family: var(--font-sans), Arial, sans-serif; }
 .landing-tabs a small,
 .landing-divider-tab small { font-weight: 800; font-size: 14px; }
 
-/* ---------- turning a page ---------- */
+/* ---------- changing binder ---------- */
 
-/* lib/page-turn.ts: the old screen lifts at its right edge and swings
-   away over the binding, the rail, while the new one waits beneath in a
-   little shadow that clears as the page goes. The rail and top bar change
-   in place. */
+/* lib/binder-change.ts: a quiet fade. The old screen fades out quickly;
+   the new one fades in and rises 8px into place. Short and flat, because
+   switching binders happens all day. (A 3D page turn was tried first and
+   "looked odd" and "felt gimmicky".) The rail and top bar change in
+   place. */
 .portal-shell[data-level] > .portal-main { view-transition-name: binder; }
-html.page-turn::view-transition-old(root),
-html.page-turn::view-transition-new(root) { animation: none; }
-html.page-turn::view-transition-group(binder) { animation: none; }
-html.page-turn::view-transition-old(binder) {
-  z-index: 2;
-  transform-origin: left center;
-  backface-visibility: hidden;
-  animation: page-turn-away 520ms cubic-bezier(0.55, 0.06, 0.32, 1) both;
+html.binder-change::view-transition-old(root),
+html.binder-change::view-transition-new(root) { animation: none; }
+html.binder-change::view-transition-group(binder) { animation: none; }
+html.binder-change::view-transition-old(binder) {
+  animation: binder-out 140ms cubic-bezier(0.4, 0, 1, 1) both;
 }
-html.page-turn::view-transition-new(binder) {
-  animation: page-turn-under 520ms cubic-bezier(0.23, 1, 0.32, 1) both;
+html.binder-change::view-transition-new(binder) {
+  animation: binder-in 240ms cubic-bezier(0.23, 1, 0.32, 1) 40ms both;
 }
-@keyframes page-turn-away {
-  0% { transform: perspective(2200px) rotateY(0deg); filter: brightness(1); }
-  100% { transform: perspective(2200px) rotateY(-92deg); filter: brightness(0.78); }
+@keyframes binder-out {
+  to { opacity: 0; }
 }
-@keyframes page-turn-under {
-  0% { filter: brightness(0.86); }
-  100% { filter: brightness(1); }
+@keyframes binder-in {
+  from { opacity: 0; transform: translateY(8px); }
 }

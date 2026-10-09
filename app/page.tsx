@@ -8,7 +8,7 @@ import {
   useUser,
 } from "@clerk/nextjs";
 import { igcsePhysicsSyllabus } from "@/lib/physics-syllabus";
-import { turnPage } from "@/lib/page-turn";
+import { changeBinder } from "@/lib/binder-change";
 import {
   type TeacherView,
   type AssignmentSummary,
@@ -355,7 +355,7 @@ function TeacherPortal({ switchRole }: { switchRole: () => void }) {
               key={x[0]}
               className={view === x[0] ? "active" : ""}
               data-nav={x[1]}
-              onClick={() => { if (view !== x[0]) turnPage(() => setView(x[0])); }}
+              onClick={() => { if (view !== x[0]) changeBinder(() => setView(x[0])); }}
             >
               <span><NavIcon name={x[1]} /></span>
               {x[2]}
@@ -6299,30 +6299,30 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
   const cleanNav = (
     <nav className="portal-nav">
       <p>My learning</p>
-      <button className={studentArea === "papers" ? "active" : ""} data-nav="papers" onClick={() => { if (studentArea !== "papers") turnPage(() => setStudentArea("papers")); }}>
+      <button className={studentArea === "papers" ? "active" : ""} data-nav="papers" onClick={() => { if (studentArea !== "papers") changeBinder(() => setStudentArea("papers")); }}>
         <span><NavIcon name="papers" /></span>Assigned papers
       </button>
-      <button className={studentArea === "progress" ? "active" : ""} data-nav="progress" onClick={() => { if (studentArea !== "progress") turnPage(() => setStudentArea("progress")); }}>
+      <button className={studentArea === "progress" ? "active" : ""} data-nav="progress" onClick={() => { if (studentArea !== "progress") changeBinder(() => setStudentArea("progress")); }}>
         <span><NavIcon name="progress" /></span>My progress
       </button>
-      <button className={studentArea === "stage7" ? "active" : ""} data-nav="stage7" onClick={() => { if (studentArea !== "stage7") turnPage(() => setStudentArea("stage7")); }}>
+      <button className={studentArea === "stage7" ? "active" : ""} data-nav="stage7" onClick={() => { if (studentArea !== "stage7") changeBinder(() => setStudentArea("stage7")); }}>
         <span><NavIcon name="stage7" /></span>Stage 7 mastery
       </button>
-      <button className={studentArea === "stage89" ? "active" : ""} data-nav={`stage${lowerStage ?? 8}`} onClick={() => { if (studentArea !== "stage89") turnPage(() => setStudentArea("stage89")); }}>
+      <button className={studentArea === "stage89" ? "active" : ""} data-nav={`stage${lowerStage ?? 8}`} onClick={() => { if (studentArea !== "stage89") changeBinder(() => setStudentArea("stage89")); }}>
         <span><NavIcon name={`stage${lowerStage ?? 8}`} /></span>
         {lowerStage ? `Stage ${lowerStage} mastery` : "Stages 8 & 9"}
       </button>
       {stage89Enrolled === false && (
         <>
-          <button className={studentArea === "physicsIgcse" ? "active" : ""} data-nav="igcse" onClick={() => { if (studentArea !== "physicsIgcse") turnPage(() => setStudentArea("physicsIgcse")); }}>
+          <button className={studentArea === "physicsIgcse" ? "active" : ""} data-nav="igcse" onClick={() => { if (studentArea !== "physicsIgcse") changeBinder(() => setStudentArea("physicsIgcse")); }}>
             <span><NavIcon name="igcse" /></span>IGCSE 0625
           </button>
-          <button className={studentArea === "physicsAs" ? "active" : ""} data-nav="as" onClick={() => { if (studentArea !== "physicsAs") turnPage(() => setStudentArea("physicsAs")); }}>
+          <button className={studentArea === "physicsAs" ? "active" : ""} data-nav="as" onClick={() => { if (studentArea !== "physicsAs") changeBinder(() => setStudentArea("physicsAs")); }}>
             <span><NavIcon name="as" /></span>AS Level 9702
           </button>
         </>
       )}
-      <button className={studentArea === "physicsExam" ? "active" : ""} data-nav="exam" onClick={() => { if (studentArea !== "physicsExam") turnPage(() => setStudentArea("physicsExam")); }}>
+      <button className={studentArea === "physicsExam" ? "active" : ""} data-nav="exam" onClick={() => { if (studentArea !== "physicsExam") changeBinder(() => setStudentArea("physicsExam")); }}>
         <span><NavIcon name="exam" /></span>Physics exam papers
       </button>
     </nav>

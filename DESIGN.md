@@ -151,7 +151,7 @@ The system refuses the category default of one grey ground, one accent and the s
 - Flat boards: no gradients, no decorative shadows.
 - Sections on a leaf are ruled, not carded.
 - Archivo on its width axis for all words; Nunito at 800–900 (bold, rounded, tabular) for every figure and syllabus code; Red Hat Mono only for the small running head above a board heading.
-- Smooth, fast motion: 160 ms ease-out on the rail; moving to another binder turns the page (520 ms, view transition); reduced motion swaps instantly.
+- Smooth, fast motion: 160 ms ease-out on the rail; moving to another binder is a quiet fade (about 280 ms, view transition); reduced motion swaps instantly.
 - Vermilion appears only on errors.
 
 ## Colors
@@ -275,7 +275,7 @@ On the cover, the levels step down the fore edge as board-coloured tabs (176px w
 White sheet, 4px corners, with the shared focus ring. Clerk's form uses the same 4px corners, no shadow, and a 1px border.
 
 ### Motion
-**The Page Turn Rule.** Moving to another binder turns the page: the old screen (`view-transition-name: binder` on `.portal-main`) lifts at its right edge and swings away over the binding to -92° in 520 ms, darkening as it goes, while the new screen waits beneath in a shadow that clears. The rail and top bar change in place. `lib/page-turn.ts` wraps the state change; without view transitions or under reduced motion the screen simply changes. Nothing else steps or snaps. (Revised 2026-10-07: the two-frame steps read as lag.)
+**The Quiet Fade Rule.** Moving to another binder is a quiet fade: the old screen (`view-transition-name: binder` on `.portal-main`) fades out in 140 ms while the new one fades in and rises 8px into place over 240 ms. The rail and top bar change in place. `changeBinder` in `lib/binder-change.ts` wraps the state change; without view transitions or under reduced motion the screen simply changes. Switching binders happens all day, so nothing dramatic: a 3D page turn was tried and "looked odd" and "felt gimmicky" (2026-10-09).
 
 ## Do's and Don'ts
 
@@ -285,7 +285,7 @@ White sheet, 4px corners, with the shared focus ring. Clerk's form uses the same
 - **Do** open sections on a leaf with a 2px ink rule and divide rows with hairlines.
 - **Do** set syllabus codes, marks and counts in Nunito 800–900 with tabular numerals, and put the code inside the heading.
 - **Do** keep corners at 4px (2px for error slips, 0 for ruled sections).
-- **Do** move between binders with the page turn (`turnPage`), and drop it entirely under reduced motion.
+- **Do** move between binders with the quiet fade (`changeBinder`), and drop it entirely under reduced motion. **Don't** bring back 3D turns or other showpiece transitions on screens used all day.
 - **Do** keep drawing and writing surfaces that frame a printed page white in every theme.
 
 ### Don't:
