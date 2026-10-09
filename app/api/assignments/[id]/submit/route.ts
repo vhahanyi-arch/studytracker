@@ -14,6 +14,9 @@ const ALREADY_SUBMITTED = "You have already submitted this paper.";
 const STILL_WITH_TEACHER = "Your last attempt at this paper is still with your teacher. You can sit it again once it has been marked.";
 const isUniqueViolation = (error: unknown) =>
   (error as { code?: unknown } | null)?.code === "23505";
+const isForeignKeyViolation = (error: unknown) =>
+  (error as { code?: unknown } | null)?.code === "23503";
+const PAPER_CHANGED = "Your teacher changed this paper's questions just as you submitted. Reload the paper and submit again.";
 
 export async function POST(
   request: Request,
@@ -222,6 +225,11 @@ export async function POST(
     // this attempt's number.
     if (isUniqueViolation(error))
       return NextResponse.json({ error: access.fullPaper ? "This attempt was already submitted from another tab." : ALREADY_SUBMITTED }, { status: 409 });
+    // The teacher's save removed a question between the read above and this
+    // write (see the questions route), so a mark points at a question that is
+    // gone. Nothing was written; the student submits again on the new paper.
+    if (isForeignKeyViolation(error))
+      return NextResponse.json({ error: PAPER_CHANGED }, { status: 409 });
     throw error;
   }
   const sitting = access.fullPaper ? { attempt, practice, submissionId } : {};

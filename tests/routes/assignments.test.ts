@@ -78,6 +78,71 @@ test("once a student has submitted, questions cannot be added, removed or relabe
   assert.equal((await call(questions.POST, { as: "t1", params: { id }, json: { questions: respaced } })).status, 200);
 });
 
+// Runs `step` at the moment the next sql.transaction is called, before it
+// writes: the window between a route's checks and its write.
+function inTheGap(step: () => Promise<unknown>) {
+  const original = sql.transaction;
+  sql.transaction = (async (queries: Parameters<typeof original>[0]) => {
+    sql.transaction = original;
+    await step();
+    return original(queries);
+  }) as typeof original;
+}
+
+test("a submission that lands while the teacher removes a question keeps every mark", async () => {
+  const id = await paper();
+  inTheGap(() => call(submit.POST, { as: "s1", params: { id }, form: answers([{ question: "1", answer: "12" }]) }));
+  const saved = await call(questions.POST, { as: "t1", params: { id }, json: { questions: threeQuestions(["12", "3", "1/2"]).slice(0, 2) } });
+  assert.equal(saved.status, 409);
+  assert.match(saved.body.error, /already submitted/);
+  assert.equal((await marksFor("s1")).length, 3, "no mark was deleted");
+  assert.equal((await sql`SELECT id FROM assignment_questions WHERE assignment_id = ${id}`).length, 3, "no question was removed");
+});
+
+test("a save that keeps the questions still goes through when a submission lands mid-save", async () => {
+  const id = await paper();
+  inTheGap(() => call(submit.POST, { as: "s1", params: { id }, form: answers([{ question: "1", answer: "12" }]) }));
+  const saved = await call(questions.POST, { as: "t1", params: { id }, json: { questions: threeQuestions(["12", "3", "1/2"]) } });
+  assert.equal(saved.status, 200);
+  assert.equal((await marksFor("s1")).length, 3);
+  const [row] = await sql`SELECT expected_answer FROM assignment_questions WHERE assignment_id = ${id} AND label = '2(b)'`;
+  assert.equal(row.expected_answer, "1/2");
+});
+
+test("a submission that lands just after a question was removed is refused cleanly and can be sent again", async () => {
+  const id = await paper();
+  inTheGap(() => call(questions.POST, { as: "t1", params: { id }, json: { questions: threeQuestions(["12", "3", "1/2"]).slice(0, 2) } }));
+  const first = await call(submit.POST, { as: "s1", params: { id }, form: answers([{ question: "1", answer: "12" }]) });
+  assert.equal(first.status, 409);
+  assert.match(first.body.error, /changed this paper's questions/);
+  assert.equal((await sql`SELECT id FROM submissions WHERE student_id = 's1'`).length, 0, "nothing was written");
+  const again = await call(submit.POST, { as: "s1", params: { id }, form: answers([{ question: "1", answer: "12" }]) });
+  assert.equal(again.status, 200);
+  assert.equal((await marksFor("s1")).length, 2, "marked against the new paper");
+});
+
+test("a student's view of the questions carries no part of the answer key", async () => {
+  const id = await paper();
+  const keyed = threeQuestions(["12", "x=3", "0.5"]).map((question) => ({
+    ...question,
+    mark_scheme_notes: "M1 for method",
+    draft_answer: "AI proposal",
+    draft_accepted_answer: "AI accepted",
+    draft_confidence: "high",
+  }));
+  assert.equal((await call(questions.POST, { as: "t1", params: { id }, json: { questions: keyed } })).status, 200);
+  const teacher = (await call(questions.GET, { as: "t1", params: { id } })).body;
+  assert.equal(teacher[0].mark_scheme_notes, "M1 for method", "the key is saved, so its absence below means something");
+  const student = (await call(questions.GET, { as: "s1", params: { id } })).body;
+  assert.equal(student.length, 3);
+  // Exactly these fields, so a column added to the student query later has to
+  // be added here on purpose.
+  const allowed = ["answer_labels", "answer_slots", "crop_height", "crop_width", "crop_x", "crop_y", "extracted_question_text", "id", "label", "marks", "page_number", "position", "response_layout", "response_type", "topic"];
+  for (const question of student) assert.deepEqual(Object.keys(question).sort(), allowed);
+  const text = JSON.stringify(student);
+  for (const secret of ["x=3", "M1 for method", "AI proposal", "AI accepted"]) assert.ok(!text.includes(secret), `the student response contains ${secret}`);
+});
+
 test("before anyone submits, a paper can gain and lose questions", async () => {
   const id = await paper();
   const ids = async () => (await sql`SELECT id FROM assignment_questions WHERE assignment_id = ${id} ORDER BY position`).map((row) => String(row.id));
