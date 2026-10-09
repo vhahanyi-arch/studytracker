@@ -38,3 +38,11 @@ export const accounts = [
   { id: "s3", username: "sol", firstName: null, lastName: null, publicMetadata: { role: "student", teacherId: "t1" } },
   { id: "x", username: "nobody", firstName: null, lastName: null, publicMetadata: {} },
 ];
+
+// A second teacher with a student of their own, for tests of scoping between
+// teachers. Kept out of `accounts`: the app is one teacher per deployment, and
+// most tests assume it.
+export const secondTeacher = [
+  { id: "t2", username: "tom", firstName: "Tom", lastName: "Teacher", publicMetadata: { role: "teacher" } },
+  { id: "s4", username: "sky", firstName: "Sky", lastName: "Student", publicMetadata: { role: "student", teacherId: "t2" } },
+];
