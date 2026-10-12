@@ -8,5 +8,6 @@ node_modules
 *.log
 tsconfig.tsbuildinfo
 
-# Scratch renders and compiled artifacts for the 9702 content harnesses.
-/tmp/9702/
+# Scratch output: content-harness renders and compiled artifacts (tmp/9702/),
+# report checks and other local working files. Never committed.
+/tmp/
