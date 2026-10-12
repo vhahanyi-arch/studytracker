@@ -26,9 +26,10 @@ export type Block =
   | { kind: "table"; head: Inline[][]; rows: Inline[][][] }
   | { kind: "figure"; figure: "circuit-symbols" };
 
-// The syllabus renders its circuit-symbol sheet as two page images. They are
-// Cambridge's printed pages and are not published with this public repo, so
-// both are replaced by one figure the app draws itself.
+// The notes mark the syllabus's circuit-symbol sheet (printed pages 61-62) with
+// two image links. The page images themselves are Cambridge's and are not in
+// this public repo (removed 2026-10-12): the paths are only markers, and both
+// become one figure the app draws itself (components/CircuitSymbols.tsx).
 const FIGURES: Record<string, "circuit-symbols"> = {
   "assets/syllabus-circuit-symbols-61.png": "circuit-symbols",
   "assets/syllabus-circuit-symbols-62.png": "circuit-symbols",

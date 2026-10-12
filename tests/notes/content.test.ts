@@ -8,7 +8,7 @@ import {asPhysicsUnits,igcsePhysicsUnits,stage8Units,stage9Units} from '@/lib/po
 import {framework,objectivesFor} from '@/lib/lower-secondary/framework';
 import {igcsePhysicsSyllabus} from '@/lib/physics-syllabus';
 import {LEVELS,notesByUnit,renderModule} from '../../scripts/generate-revision-notes.mjs';
-import {readFileSync} from 'node:fs';
+import {readFileSync,readdirSync} from 'node:fs';
 import {join} from 'node:path';
 
 const LEVEL_NOTES={as:{notes:asPhysicsNotes,units:asPhysicsUnits},igcse:{notes:igcsePhysicsNotes,units:igcsePhysicsUnits},stage8:{notes:stage8MathsNotes,units:stage8Units},stage9:{notes:stage9MathsNotes,units:stage9Units}} as const;
@@ -146,3 +146,11 @@ for(const [id,markdown] of Object.entries(MATHS_NOTES)){
   assert.ok(headings(markdown,3).filter(h=>h.startsWith('Situation:')).length>=3,`${id} has fewer than three worked situations`);
  });
 }
+
+// Known issues #12: Cambridge's syllabus pages are not published in this public
+// repo. The notes link to the circuit-symbol pages only as markers for the
+// drawn figure, so no image or PDF belongs anywhere under docs/.
+test('no syllabus page images or PDFs are committed under docs/',()=>{
+ const walk=(dir:string):string[]=>readdirSync(dir,{withFileTypes:true}).flatMap(entry=>entry.isDirectory()?walk(join(dir,entry.name)):[join(dir,entry.name)]);
+ assert.deepEqual(walk('docs').filter(file=>/\.(png|jpe?g|gif|webp|pdf)$/i.test(file)),[]);
+});
