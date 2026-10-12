@@ -15,6 +15,8 @@ import * as draft from "@/app/api/assignments/[id]/draft/route";
 import * as queue from "@/app/api/submissions/route";
 import * as review from "@/app/api/submissions/[id]/review/route";
 import * as fullPapers from "@/app/api/lower-secondary/full-papers/route";
+import * as onePaper from "@/app/api/assignments/[id]/route";
+import * as practice from "@/app/api/lower-secondary/practice/route";
 
 async function libraryPaper(stage: 8 | 9 = 8, approve = true) {
   const created = await call(assignments.POST, { as: "t1", form: { title: `Stage ${stage} test`, className: `Stage ${stage} past-paper library`, profile: `lower-secondary-stage${stage}`, paperMode: "structured", library: "true", stage: String(stage), year: "2025", paper: pdf("qp"), scheme: pdf("ms") } });
@@ -152,4 +154,27 @@ test("the draft keeps how the paper is being sat", async () => {
   assert.equal(odd.status, 200);
   const [again] = (await call(fullPapers.GET, { as: "s1", query: "stage=8" })).body.papers;
   assert.equal(again.sitting.timerMinutes, null, "only the offered timer lengths");
+});
+
+// The library's Delete: the dialog warns with the paper's attempt count from
+// this route's teacher view, which is every submission row the delete counts.
+test("deleting a library paper takes its attempts, its full-paper listing and its practice questions", async () => {
+  const id = await libraryPaper(8);
+  await enrol("s1", 8);
+  assert.equal((await setPaper(id)).status, 200);
+  assert.equal((await sit(id, "s1", "practice", good)).status, 200);
+  assert.equal((await sit(id, "s1", "practice", good)).status, 200);
+  const pastPaper = async () => (await call(practice.GET, { as: "s1", query: "stage=8&home=8" })).body.past_paper;
+  assert.deepEqual(await pastPaper(), { "s8-u1": 1, "s8-u2": 1 }, "its typed questions are in practice");
+
+  const [teacherView] = (await call(fullPapers.GET, { as: "t1", query: "stage=8" })).body.papers;
+  assert.equal(teacherView.attempts.length, 2, "two attempts by one student");
+  const stale = await call(onePaper.DELETE, { as: "t1", params: { id }, query: "submissions=1" });
+  assert.deepEqual([stale.status, stale.body.submissions], [409, 2], "counting students instead of attempts is refused");
+
+  assert.equal((await call(onePaper.DELETE, { as: "t1", params: { id }, query: `submissions=${teacherView.attempts.length}` })).status, 200);
+  assert.deepEqual((await call(fullPapers.GET, { as: "t1", query: "stage=8" })).body.papers, []);
+  assert.deepEqual((await call(fullPapers.GET, { as: "s1", query: "stage=8" })).body.papers, []);
+  assert.deepEqual(await pastPaper(), {}, "its questions leave practice");
+  assert.equal((await sql`SELECT COUNT(*)::int AS n FROM submissions WHERE assignment_id = ${id}`)[0].n, 0);
 });

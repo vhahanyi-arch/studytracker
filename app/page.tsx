@@ -34,6 +34,7 @@ import {
   removeCloudAnswerDraft,
 } from '@/lib/answer-drafts';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { DeletePaperDialog } from '@/components/DeletePaperDialog';
 import { matchesPaperSearch } from '@/lib/paper-search';
 import { readReply } from '@/lib/read-reply';
 import { defaultDueDate } from '@/lib/due-date';
@@ -709,11 +710,11 @@ function DashboardEmpty({ text }: { text: string }) {
 type LowerSecondaryStudent = { id:string; name:string; username:string; enrolled:boolean };
 
 function PastPaperLibrary({stage}:{stage:8|9}){
-  const [papers,setPapers]=useState<AssignmentSummary[]>([]),[uploading,setUploading]=useState(false),[showUpload,setShowUpload]=useState(false),[message,setMessage]=useState(""),[setup,setSetup]=useState<AssignmentSummary|null>(null),[reviewing,setReviewing]=useState<AssignmentSummary|null>(null),[fullPapers,setFullPapers]=useState<Record<string,FullPaperInfo>>({});
+  const [papers,setPapers]=useState<AssignmentSummary[]>([]),[uploading,setUploading]=useState(false),[showUpload,setShowUpload]=useState(false),[message,setMessage]=useState(""),[setup,setSetup]=useState<AssignmentSummary|null>(null),[reviewing,setReviewing]=useState<AssignmentSummary|null>(null),[fullPapers,setFullPapers]=useState<Record<string,FullPaperInfo>>({}),[deleting,setDeleting]=useState<AssignmentSummary|null>(null);
   const load=()=>{fetch("/api/assignments").then(response=>readReply(response)).then(rows=>setPapers((Array.isArray(rows)?rows:[]).filter((paper:AssignmentSummary)=>paper.is_practice_library&&paper.lower_secondary_stage===stage)));fetch(`/api/lower-secondary/full-papers?stage=${stage}`).then(response=>readReply(response)).then(result=>setFullPapers(Object.fromEntries((Array.isArray(result?.papers)?result.papers:[]).map((paper:FullPaperInfo)=>[paper.id,paper])))).catch(()=>setFullPapers({}));};
   useEffect(()=>{load();setMessage("");setShowUpload(false);setSetup(null);setReviewing(null);},[stage]);
   const upload=async(event:React.FormEvent<HTMLFormElement>)=>{event.preventDefault();setUploading(true);setMessage("Uploading both PDFs securely…");const data=new FormData(event.currentTarget);data.set("profile",`lower-secondary-stage${stage}`);data.set("paperMode","structured");data.set("className",`Stage ${stage} past-paper library`);data.set("library","true");data.set("stage",String(stage));try{const response=await fetch("/api/assignments",{method:"POST",body:data});const result=await readReply(response);if(!response.ok){setMessage(result.error||"The paper could not be uploaded.");return;}setPapers(current=>[result,...current]);setShowUpload(false);setMessage("Paper saved. Open question setup to detect, match and approve its questions.");}catch(problem){setMessage(problem instanceof Error&&!(problem instanceof TypeError)?problem.message:"The upload did not reach the server. Try again.");}finally{setUploading(false);}};
-  return <section className="panel past-paper-library"><header><div><h3>Stage {stage} past-paper library</h3><p>Upload a question paper with its mark scheme, then approve every detected question before it joins practice.</p></div><button className="primary" onClick={()=>setShowUpload(value=>!value)}>{showUpload?"Cancel":"＋ Upload paper"}</button></header>{message&&<p className="queue-message">{message}</p>}{showUpload&&<form className="past-paper-upload" onSubmit={upload}><label>Paper title<input name="title" placeholder={`Stage ${stage} End-of-year paper`} required/></label><label>Year or session<input name="year" placeholder="2025" required/></label><label>Question paper PDF<input name="paper" type="file" accept="application/pdf,.pdf" required/></label><label>Mark scheme PDF<input name="scheme" type="file" accept="application/pdf,.pdf" required/></label><button className="primary" disabled={uploading}>{uploading?"Uploading…":"Save to library"}</button></form>}<div className="past-paper-grid">{papers.map(paper=><article key={paper.id}><span>PDF</span><div><b>{paper.title}</b><small>Stage {stage} · {paper.source_year||"Year not set"}</small><em className={paper.status==="assigned"?"paper-ready":"paper-paused"}>{paper.status==="assigned"?"Approved for practice":"Teacher setup required"}</em></div><div className="past-paper-actions"><button onClick={()=>setReviewing(paper)}>Review uploaded files</button><button onClick={()=>setSetup(paper)}>{paper.status==="assigned"?"Review questions":"Set up questions"}</button></div><FullPaperControls stage={stage} approved={paper.status==="assigned"} info={fullPapers[paper.id]??{id:paper.id,full_paper_set_at:null,due_date:null,maximum:0,attempts:[]}} changed={next=>setFullPapers(current=>({...current,[paper.id]:{...(current[paper.id]??{id:paper.id,maximum:0,attempts:[]}),...next}}))}/></article>)}{!papers.length&&!showUpload&&<p className="dashboard-empty">No Stage {stage} past papers have been uploaded yet.</p>}</div>{reviewing&&<FileReview assignment={reviewing} close={()=>setReviewing(null)} openSetup={()=>{setSetup(reviewing);setReviewing(null);}} replaced={(status,notice)=>{setPapers(current=>current.map(paper=>paper.id===reviewing.id?{...paper,status}:paper));setReviewing(current=>current?{...current,status}:current);setMessage(notice);}}/>}{setup&&<QuestionSetup assignment={setup} close={()=>setSetup(null)} saved={()=>{setPapers(current=>current.map(paper=>paper.id===setup.id?{...paper,status:"assigned"}:paper));setMessage(`Questions approved. Typed questions with an accepted answer now appear as past-paper practice on their Stage ${stage} unit.`);setSetup(null);}}/>}</section>;
+  return <section className="panel past-paper-library"><header><div><h3>Stage {stage} past-paper library</h3><p>Upload a question paper with its mark scheme, then approve every detected question before it joins practice.</p></div><button className="primary" onClick={()=>setShowUpload(value=>!value)}>{showUpload?"Cancel":"＋ Upload paper"}</button></header>{message&&<p className="queue-message">{message}</p>}{showUpload&&<form className="past-paper-upload" onSubmit={upload}><label>Paper title<input name="title" placeholder={`Stage ${stage} End-of-year paper`} required/></label><label>Year or session<input name="year" placeholder="2025" required/></label><label>Question paper PDF<input name="paper" type="file" accept="application/pdf,.pdf" required/></label><label>Mark scheme PDF<input name="scheme" type="file" accept="application/pdf,.pdf" required/></label><button className="primary" disabled={uploading}>{uploading?"Uploading…":"Save to library"}</button></form>}<div className="past-paper-grid">{papers.map(paper=><article key={paper.id}><span>PDF</span><div><b>{paper.title}</b><small>Stage {stage} · {paper.source_year||"Year not set"}</small><em className={paper.status==="assigned"?"paper-ready":"paper-paused"}>{paper.status==="assigned"?"Approved for practice":"Teacher setup required"}</em></div><div className="past-paper-actions"><button onClick={()=>setReviewing(paper)}>Review uploaded files</button><button onClick={()=>setSetup(paper)}>{paper.status==="assigned"?"Review questions":"Set up questions"}</button><button className="paper-delete" aria-label={`Delete ${paper.title}`} onClick={()=>setDeleting(paper)}>Delete</button></div><FullPaperControls stage={stage} approved={paper.status==="assigned"} info={fullPapers[paper.id]??{id:paper.id,full_paper_set_at:null,due_date:null,maximum:0,attempts:[]}} changed={next=>setFullPapers(current=>({...current,[paper.id]:{...(current[paper.id]??{id:paper.id,maximum:0,attempts:[]}),...next}}))}/></article>)}{!papers.length&&!showUpload&&<p className="dashboard-empty">No Stage {stage} past papers have been uploaded yet.</p>}</div>{deleting&&<DeletePaperDialog paper={deleting} submissions={fullPapers[deleting.id]?.attempts.length??0} consequence={`Its questions leave Stage ${stage} past-paper practice, and a practice set a student has started can no longer show them.`} onDeleted={()=>{setPapers(current=>current.filter(paper=>paper.id!==deleting.id));setFullPapers(current=>{const next={...current};delete next[deleting.id];return next;});setMessage(`“${deleting.title}” was deleted.`);setDeleting(null);}} onCancel={()=>setDeleting(null)}/>}{reviewing&&<FileReview assignment={reviewing} close={()=>setReviewing(null)} openSetup={()=>{setSetup(reviewing);setReviewing(null);}} replaced={(status,notice)=>{setPapers(current=>current.map(paper=>paper.id===reviewing.id?{...paper,status}:paper));setReviewing(current=>current?{...current,status}:current);setMessage(notice);}}/>}{setup&&<QuestionSetup assignment={setup} close={()=>setSetup(null)} saved={()=>{setPapers(current=>current.map(paper=>paper.id===setup.id?{...paper,status:"assigned"}:paper));setMessage(`Questions approved. Typed questions with an accepted answer now appear as past-paper practice on their Stage ${stage} unit.`);setSetup(null);}}/>}</section>;
 }
 
 function PhysicsSyllabusChecklist({ level }:{ level:"igcse"|"as" }) {
@@ -1746,8 +1747,7 @@ function Papers({ upload }: { upload: () => void }) {
   const [studentSearch, setStudentSearch] = useState("");
   const [paperSearch, setPaperSearch] = useState("");
   // The paper being deleted, with the submission count the teacher is warned about.
-  const [deleting, setDeleting] = useState<{ assignment: AssignmentSummary; submissions: number; error?: string } | null>(null);
-  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleting, setDeleting] = useState<{ assignment: AssignmentSummary; submissions: number } | null>(null);
   const [message, setMessage] = useState("");
   const [questionSetup, setQuestionSetup] = useState<{
     id: string;
@@ -1839,29 +1839,6 @@ function Papers({ upload }: { upload: () => void }) {
       assignment,
       submissions: Object.values(assignmentStatus[assignment.id] || {}).filter((status) => status !== "not_started").length,
     });
-  // The server deletes only if the count still matches; when a student has
-  // submitted since, it answers with the new count and the dialog shows it.
-  async function deletePaper() {
-    if (!deleting) return;
-    const { assignment, submissions } = deleting;
-    setDeleteBusy(true);
-    try {
-      const response = await fetch(`/api/assignments/${assignment.id}?submissions=${submissions}`, { method: "DELETE" });
-      const result = await readReply(response);
-      if (response.status === 409 && Number.isInteger(result.submissions)) {
-        setDeleting({ assignment, submissions: result.submissions, error: "A student has submitted since this opened." });
-        return;
-      }
-      if (!response.ok) throw new Error(result.error || "The paper could not be deleted.");
-      setAssignments((current) => current.filter((item) => item.id !== assignment.id));
-      setDeleting(null);
-      setMessage(`“${assignment.title}” was deleted.`);
-    } catch (problem) {
-      setDeleting({ ...deleting, error: problem instanceof Error && !(problem instanceof TypeError) ? problem.message : "The delete did not reach the server. Try again." });
-    } finally {
-      setDeleteBusy(false);
-    }
-  }
   const listedPapers = assignments.filter(
     (assignment) => !assignment.is_practice_library && matchesPaperSearch(assignment, paperSearch),
   );
@@ -1938,18 +1915,15 @@ function Papers({ upload }: { upload: () => void }) {
         ))}
       </section>
       {deleting && (
-        <ConfirmDialog
-          title={`Delete “${deleting.assignment.title}”?`}
-          description={[
-            deleting.error,
-            deleting.submissions
-              ? `${deleting.submissions} student submission${deleting.submissions === 1 ? "" : "s"}, with their marks and uploaded pages, will be deleted too.`
-              : "No student has submitted it.",
-            "Its questions, its PDFs and any answers students have started but not sent are deleted, and it leaves every student's list. This cannot be undone.",
-          ].filter(Boolean).join(" ")}
-          confirmLabel="Delete paper"
-          busy={deleteBusy}
-          onConfirm={deletePaper}
+        <DeletePaperDialog
+          paper={deleting.assignment}
+          submissions={deleting.submissions}
+          consequence="It leaves every student's list."
+          onDeleted={() => {
+            setAssignments((current) => current.filter((item) => item.id !== deleting.assignment.id));
+            setMessage(`“${deleting.assignment.title}” was deleted.`);
+            setDeleting(null);
+          }}
           onCancel={() => setDeleting(null)}
         />
       )}
