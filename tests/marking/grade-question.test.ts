@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { gradeQuestion, normalizeAnswer, parseNumericAnswer } from "../../lib/grade-question";
+import { gradeQuestion, normalizeAcceptedAnswer, normalizeAnswer, parseNumericAnswer } from "../../lib/grade-question";
 
 // The Papers & assignments marker: proposes a mark for each typed answer when a
 // student submits. Multiple-choice and practice sittings publish it at once.
@@ -18,9 +18,10 @@ test("an exact match gets full marks with high confidence", () => {
 
 test("case, spaces and a decimal comma do not matter", () => {
   assert.equal(mark("Kinetic energy", " kinetic ENERGY ").proposed, 2);
-  // Two or more spaces between characters are read as a lost "×" (from mark
-  // schemes read out of PDFs). That applies to the student's answer too.
-  assert.equal(mark("Kinetic energy", "kinetic  energy").proposed, 0);
+  // Known issues #24: extra spaces a student types are only spaces.
+  assert.equal(mark("Kinetic energy", "kinetic  energy").proposed, 2);
+  assert.equal(mark("Kinetic energy", "kinetic 	  energy").proposed, 2);
+  assert.equal(mark("x = 3", "x  =  3").proposed, 2);
   assert.equal(mark("2.5", "2,5").proposed, 2);
 });
 
@@ -80,6 +81,15 @@ test("several answer boxes are joined in order", () => {
 test("marks come from the question, as a number", () => {
   assert.equal(gradeQuestion({ expected_answer: "1", marks: "4" }, { answer: "1" }).maximum, 4);
   assert.equal(gradeQuestion({ expected_answer: "1", marks: null }, { answer: "1" }).maximum, 0);
+});
+
+test("a mark scheme whose × was lost to a double space still marks a typed ×", () => {
+  // Read from a PDF, "3 × 4" can arrive as "3  4"; the student types "3×4".
+  assert.equal(mark("3  4", "3×4").proposed, 2);
+  assert.equal(mark("3  4", "3 × 4").proposed, 2);
+  // A double space in the student's answer does not become ×.
+  assert.equal(normalizeAnswer("3  4"), "34");
+  assert.equal(normalizeAcceptedAnswer("3  4"), "3×4");
 });
 
 test("normalizeAnswer and parseNumericAnswer", () => {

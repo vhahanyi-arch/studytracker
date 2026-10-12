@@ -15,10 +15,17 @@ export type GradableAnswer = {
 export function normalizeAnswer(value: string) {
   return value
     .replace(/□/g, "×")
-    .replace(/(\S)\s{2,}(\S)/g, "$1×$2")
     .toLowerCase()
     .replace(/\s+/g, "")
     .replace(/,/g, ".");
+}
+
+// An accepted answer read from a mark-scheme PDF can lose its "×" and keep
+// only the gap ("3  10^8"), so there a run of two or more spaces between
+// characters stands for ×. Only the accepted answer: a student who types two
+// spaces ("kinetic  energy") means a space, not a multiplication.
+export function normalizeAcceptedAnswer(value: string) {
+  return normalizeAnswer(value.replace(/(\S)\s{2,}(\S)/g, "$1×$2"));
 }
 
 export function parseNumericAnswer(value: string): number {
@@ -64,7 +71,7 @@ export function gradeQuestion(question: GradableQuestion, answer: GradableAnswer
       if (equalsParts.length > 1) options.push(equalsParts[equalsParts.length - 1].trim());
       return options;
     })
-    .map(normalizeAnswer)
+    .map(normalizeAcceptedAnswer)
     // An empty variant ("5 |", or "v =" with nothing after it) would match a
     // blank answer and give it full marks.
     .filter(Boolean);
