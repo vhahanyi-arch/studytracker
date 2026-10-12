@@ -1,7 +1,9 @@
 import { neon } from "@neondatabase/serverless";
 import { SCHEMA_VERSION, needsSchemaApply } from "./schema-version";
+import { databaseUrl } from "./preview-env";
 
-export const sql = neon(process.env.DATABASE_URL!);
+// A preview deployment uses its own database, never the live one (see preview-env).
+export const sql = neon(databaseUrl());
 let schemaPromise: Promise<void> | null = null;
 
 async function initializeSchema() {

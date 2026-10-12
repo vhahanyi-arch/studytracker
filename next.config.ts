@@ -17,6 +17,11 @@ const nextConfig: NextConfig = {
   // lib/physics-exam-extraction.ts -- this class of PDF-processing library
   // has been observed needing both mitigations together on Vercel.
   serverExternalPackages: ["@napi-rs/canvas", "pdfjs-dist"],
+  // Which Vercel environment built this, for the notice previews show
+  // (VERCEL_ENV is set at build time on Vercel; empty elsewhere).
+  env: {
+    NEXT_PUBLIC_DEPLOY_ENV: process.env.VERCEL_ENV ?? "",
+  },
   // Turbopack keeps compiled output in .next/cache between builds, and Vercel
   // carries .next/cache from one deployment to the next. On 2026-09-23 that
   // shipped a production build of be89854 serving the previous deploy's

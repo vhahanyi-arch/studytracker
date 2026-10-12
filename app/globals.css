@@ -987,6 +987,16 @@ label {
   color: var(--fg-amber-60);
   font-size: 15px;
 }
+/* Previews only (Known issues #17): accounts there are the live ones. */
+.preview-notice {
+  margin: 0;
+  padding: 8px 28px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--fg-amber-51);
+  background: var(--bg-amber-97);
+  border-bottom: 1px solid var(--line);
+}
 .portal-top {
   height: 72px;
   background: var(--bg-grey-100);
@@ -2711,6 +2721,9 @@ label {
   }
 }
 @media (max-width: 620px) {
+  .preview-notice {
+    padding: 8px 14px;
+  }
   .portal-top {
     padding: 0 14px;
   }

@@ -280,6 +280,12 @@ function Shell({
   const drawer = useNavDrawer();
   return (
     <>
+      {process.env.NEXT_PUBLIC_DEPLOY_ENV === "preview" && (
+        <p className="preview-notice" role="note">
+          Preview: papers, answers and files here are test copies, but the accounts are real.
+          Do not create students or reset passwords here.
+        </p>
+      )}
       <header className="portal-top" inert={drawer.inertBehind}>
         <button {...drawer.menuButtonProps}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
