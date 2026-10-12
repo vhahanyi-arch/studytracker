@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import type { PaperSitting } from "@/lib/answer-drafts";
 import { SITTING_TIMERS } from "@/lib/sitting-timers";
 import { dueLabel } from "./FullPaperTeacher";
+import { readReply } from "@/lib/read-reply";
 
 // Stage 8/9 full past papers, as the student sees them: the papers their
 // teacher has set, a start screen (practice or for the teacher, with an
@@ -86,7 +87,7 @@ export function FullPaperList({
     let cancelled = false;
     setPapers(null);
     fetch(`/api/lower-secondary/full-papers?stage=${stage}`, { cache: "no-store" })
-      .then((response) => (response.ok ? response.json() : Promise.reject()))
+      .then((response) => (response.ok ? readReply(response) : Promise.reject()))
       .then((result) => !cancelled && setPapers(Array.isArray(result?.papers) ? result.papers : []))
       .catch(() => !cancelled && setError("Your past papers could not be loaded. Check your connection and refresh."));
     return () => {
@@ -187,7 +188,7 @@ export function FullPaperResult({ attemptId, back }: { attemptId: string; back: 
   const [error, setError] = useState("");
   useEffect(() => {
     fetch(`/api/lower-secondary/full-papers?attempt=${encodeURIComponent(attemptId)}`, { cache: "no-store" })
-      .then((response) => (response.ok ? response.json() : Promise.reject()))
+      .then((response) => (response.ok ? readReply(response) : Promise.reject()))
       .then(setDetail)
       .catch(() => setError("This attempt could not be loaded."));
   }, [attemptId]);

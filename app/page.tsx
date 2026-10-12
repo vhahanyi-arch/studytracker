@@ -7,7 +7,7 @@ import {
   UserButton,
   useUser,
 } from "@clerk/nextjs";
-import { igcsePhysicsSyllabus } from "@/lib/physics-syllabus";
+import { checklistFor } from "@/lib/syllabus-checklist";
 import { changeBinder } from "@/lib/binder-change";
 import {
   type TeacherView,
@@ -34,6 +34,9 @@ import {
   removeCloudAnswerDraft,
 } from '@/lib/answer-drafts';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { matchesPaperSearch } from '@/lib/paper-search';
+import { readReply } from '@/lib/read-reply';
+import { defaultDueDate } from '@/lib/due-date';
 import { RevisionNotes } from '@/components/RevisionNotes';
 import { DrawingPad } from '@/components/DrawingPad';
 import { QuestionImage } from '@/components/QuestionImage';
@@ -110,7 +113,7 @@ function FirstPasswordChange() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ password }),
       });
-      const result = await response.json();
+      const result = await readReply(response);
       if (!response.ok) throw new Error(result.error || "The password could not be changed.");
       window.location.reload();
     } catch (problem) {
@@ -175,7 +178,7 @@ function RoleSetup() {
 
   useEffect(() => {
     fetch("/api/setup/claim-teacher")
-      .then((response) => (response.ok ? response.json() : { claimable: false }))
+      .then((response) => (response.ok ? readReply(response) : { claimable: false }))
       .then((result) => setClaimable(Boolean(result.claimable)))
       .catch(() => setClaimable(false));
   }, []);
@@ -185,7 +188,7 @@ function RoleSetup() {
     setError("");
     try {
       const response = await fetch("/api/setup/claim-teacher", { method: "POST" });
-      const result = await response.json();
+      const result = await readReply(response);
       if (!response.ok) throw new Error(result.error || "The role could not be assigned.");
       // Re-read the session so the new role is visible, then re-render.
       window.location.reload();
@@ -407,7 +410,7 @@ function TeacherPortal({ switchRole }: { switchRole: () => void }) {
                   data.delete("scheme");
                 }
                 const response = await fetch("/api/assignments", { method: "POST", body: data });
-                const result = await response.json();
+                const result = await readReply(response);
                 if (!response.ok) throw new Error(result.error || "The assignment could not be saved.");
                 alert(homeworkUpload ? "Homework book saved. Open question setup to review its worksheet pages." : "Assignment and PDFs saved securely.");
                 setModal(false);
@@ -450,7 +453,8 @@ function TeacherPortal({ switchRole }: { switchRole: () => void }) {
               <input
                 key={uploadProfile}
                 name="title"
-                defaultValue={homeworkUpload ? "Complete Mathematics Homework Book 2" : "0580/42 May/June revision"}
+                defaultValue={homeworkUpload ? "Complete Mathematics Homework Book 2" : ""}
+                placeholder="e.g. 0580/42 May/June revision"
                 required
               />
             </label>
@@ -493,7 +497,7 @@ function TeacherPortal({ switchRole }: { switchRole: () => void }) {
               </label>
               <label>
                 Due date
-                <input name="dueDate" type="date" defaultValue="2026-08-31" />
+                <input name="dueDate" type="date" defaultValue={defaultDueDate()} />
               </label>
             </div>
             <button className="primary" disabled={creatingAssignment}>{creatingAssignment ? (homeworkUpload ? "Uploading large homework PDF…" : "Saving assignment…") : "Create assignment"}</button>
@@ -513,7 +517,7 @@ function TeacherDashboard({
 }) {
   const { user } = useUser();
   const [dashboard, setDashboard] = useState<{
-    active_students: number;
+    students: number;
     needs_review: number;
     active_papers: number;
     class_average: number;
@@ -549,7 +553,7 @@ function TeacherDashboard({
   useEffect(() => {
     fetch("/api/dashboard")
       .then(async (response) => {
-        const result = await response.json();
+        const result = await readReply(response);
         if (!response.ok) throw new Error(result.error || "Dashboard could not load.");
         setDashboard(result);
       })
@@ -690,7 +694,7 @@ function TeacherDashboard({
         {dashboardError && <DashboardEmpty text={dashboardError} />}
       </section>
       <dl className="dash-figures">
-        <div><dt>Students</dt><dd>{dashboard?.active_students ?? "—"}</dd></div>
+        <div><dt>Students</dt><dd>{dashboard?.students ?? "—"}</dd></div>
         <div><dt>Papers running</dt><dd>{dashboard?.active_papers ?? "—"}</dd></div>
         <div><dt>Published average</dt><dd>{dashboard ? `${dashboard.class_average}%` : "—"}</dd></div>
       </dl>
@@ -706,21 +710,21 @@ type LowerSecondaryStudent = { id:string; name:string; username:string; enrolled
 
 function PastPaperLibrary({stage}:{stage:8|9}){
   const [papers,setPapers]=useState<AssignmentSummary[]>([]),[uploading,setUploading]=useState(false),[showUpload,setShowUpload]=useState(false),[message,setMessage]=useState(""),[setup,setSetup]=useState<AssignmentSummary|null>(null),[reviewing,setReviewing]=useState<AssignmentSummary|null>(null),[fullPapers,setFullPapers]=useState<Record<string,FullPaperInfo>>({});
-  const load=()=>{fetch("/api/assignments").then(response=>response.json()).then(rows=>setPapers((Array.isArray(rows)?rows:[]).filter((paper:AssignmentSummary)=>paper.is_practice_library&&paper.lower_secondary_stage===stage)));fetch(`/api/lower-secondary/full-papers?stage=${stage}`).then(response=>response.json()).then(result=>setFullPapers(Object.fromEntries((Array.isArray(result?.papers)?result.papers:[]).map((paper:FullPaperInfo)=>[paper.id,paper])))).catch(()=>setFullPapers({}));};
+  const load=()=>{fetch("/api/assignments").then(response=>readReply(response)).then(rows=>setPapers((Array.isArray(rows)?rows:[]).filter((paper:AssignmentSummary)=>paper.is_practice_library&&paper.lower_secondary_stage===stage)));fetch(`/api/lower-secondary/full-papers?stage=${stage}`).then(response=>readReply(response)).then(result=>setFullPapers(Object.fromEntries((Array.isArray(result?.papers)?result.papers:[]).map((paper:FullPaperInfo)=>[paper.id,paper])))).catch(()=>setFullPapers({}));};
   useEffect(()=>{load();setMessage("");setShowUpload(false);setSetup(null);setReviewing(null);},[stage]);
-  const upload=async(event:React.FormEvent<HTMLFormElement>)=>{event.preventDefault();setUploading(true);setMessage("Uploading both PDFs securely…");const data=new FormData(event.currentTarget);data.set("profile",`lower-secondary-stage${stage}`);data.set("paperMode","structured");data.set("className",`Stage ${stage} past-paper library`);data.set("library","true");data.set("stage",String(stage));const response=await fetch("/api/assignments",{method:"POST",body:data});const result=await response.json();setUploading(false);if(!response.ok){setMessage(result.error||"The paper could not be uploaded.");return;}setPapers(current=>[result,...current]);setShowUpload(false);setMessage("Paper saved. Open question setup to detect, match and approve its questions.");};
+  const upload=async(event:React.FormEvent<HTMLFormElement>)=>{event.preventDefault();setUploading(true);setMessage("Uploading both PDFs securely…");const data=new FormData(event.currentTarget);data.set("profile",`lower-secondary-stage${stage}`);data.set("paperMode","structured");data.set("className",`Stage ${stage} past-paper library`);data.set("library","true");data.set("stage",String(stage));try{const response=await fetch("/api/assignments",{method:"POST",body:data});const result=await readReply(response);if(!response.ok){setMessage(result.error||"The paper could not be uploaded.");return;}setPapers(current=>[result,...current]);setShowUpload(false);setMessage("Paper saved. Open question setup to detect, match and approve its questions.");}catch(problem){setMessage(problem instanceof Error&&!(problem instanceof TypeError)?problem.message:"The upload did not reach the server. Try again.");}finally{setUploading(false);}};
   return <section className="panel past-paper-library"><header><div><h3>Stage {stage} past-paper library</h3><p>Upload a question paper with its mark scheme, then approve every detected question before it joins practice.</p></div><button className="primary" onClick={()=>setShowUpload(value=>!value)}>{showUpload?"Cancel":"＋ Upload paper"}</button></header>{message&&<p className="queue-message">{message}</p>}{showUpload&&<form className="past-paper-upload" onSubmit={upload}><label>Paper title<input name="title" placeholder={`Stage ${stage} End-of-year paper`} required/></label><label>Year or session<input name="year" placeholder="2025" required/></label><label>Question paper PDF<input name="paper" type="file" accept="application/pdf,.pdf" required/></label><label>Mark scheme PDF<input name="scheme" type="file" accept="application/pdf,.pdf" required/></label><button className="primary" disabled={uploading}>{uploading?"Uploading…":"Save to library"}</button></form>}<div className="past-paper-grid">{papers.map(paper=><article key={paper.id}><span>PDF</span><div><b>{paper.title}</b><small>Stage {stage} · {paper.source_year||"Year not set"}</small><em className={paper.status==="assigned"?"paper-ready":"paper-paused"}>{paper.status==="assigned"?"Approved for practice":"Teacher setup required"}</em></div><div className="past-paper-actions"><button onClick={()=>setReviewing(paper)}>Review uploaded files</button><button onClick={()=>setSetup(paper)}>{paper.status==="assigned"?"Review questions":"Set up questions"}</button></div><FullPaperControls stage={stage} approved={paper.status==="assigned"} info={fullPapers[paper.id]??{id:paper.id,full_paper_set_at:null,due_date:null,maximum:0,attempts:[]}} changed={next=>setFullPapers(current=>({...current,[paper.id]:{...(current[paper.id]??{id:paper.id,maximum:0,attempts:[]}),...next}}))}/></article>)}{!papers.length&&!showUpload&&<p className="dashboard-empty">No Stage {stage} past papers have been uploaded yet.</p>}</div>{reviewing&&<FileReview assignment={reviewing} close={()=>setReviewing(null)} openSetup={()=>{setSetup(reviewing);setReviewing(null);}} replaced={(status,notice)=>{setPapers(current=>current.map(paper=>paper.id===reviewing.id?{...paper,status}:paper));setReviewing(current=>current?{...current,status}:current);setMessage(notice);}}/>}{setup&&<QuestionSetup assignment={setup} close={()=>setSetup(null)} saved={()=>{setPapers(current=>current.map(paper=>paper.id===setup.id?{...paper,status:"assigned"}:paper));setMessage(`Questions approved. Typed questions with an accepted answer now appear as past-paper practice on their Stage ${stage} unit.`);setSetup(null);}}/>}</section>;
 }
 
 function PhysicsSyllabusChecklist({ level }:{ level:"igcse"|"as" }) {
   const [checked,setChecked]=useState<Set<string>>(new Set());
   const [state,setState]=useState("Loading syllabus checklist…");
-  const syllabus = level==="igcse" ? igcsePhysicsSyllabus : [];
+  const syllabus = checklistFor(level);
   useEffect(()=>{
     setState("Loading syllabus checklist…");
-    fetch(`/api/physics/checklist?level=${level}`).then(response=>response.json()).then(data=>{
+    fetch(`/api/physics/checklist?level=${level}`).then(response=>readReply(response)).then(data=>{
       setChecked(new Set(Array.isArray(data.checked)?data.checked:[]));
-      setState(level==="as"?"AS Level syllabus content is coming soon.":"");
+      setState("");
     }).catch(()=>setState("The checklist could not be loaded."));
   },[level]);
   const toggle=async(objectiveId:string)=>{
@@ -741,7 +745,7 @@ function PhysicsSyllabusChecklist({ level }:{ level:"igcse"|"as" }) {
               <label key={objective.id} className={objective.type}>
                 <input type="checkbox" checked={checked.has(objective.id)} onChange={()=>toggle(objective.id)}/>
                 <span>{objective.text}</span>
-                <em>{objective.type}</em>
+                {objective.type && <em>{objective.type}</em>}
               </label>
             ))}
           </div>
@@ -761,7 +765,7 @@ function PhysicsTeacher({ level }: { level: "igcse" | "as" }) {
   useEffect(()=>{
     if(view!=="progress")return;
     setState("Loading physics practice activity…");
-    fetch(`/api/physics/practice?level=${level}`).then(response=>response.json()).then(data=>{
+    fetch(`/api/physics/practice?level=${level}`).then(response=>readReply(response)).then(data=>{
       setStudents(Array.isArray(data.students)?data.students:[]);
       setState(Array.isArray(data.students)&&!data.students.length ? "No students have practised yet." : "");
     }).catch(()=>setState("Physics practice activity could not be loaded."));
@@ -828,9 +832,9 @@ function Stage89Teacher({ stage }: { stage: 8 | 9 }) {
   useEffect(() => {
     setFocusState("Loading weekly focus…"); setClassState("");
     Promise.all([
-      fetch(`/api/lower-secondary/focus?stage=${stage}`).then(response => response.json()),
-      fetch(`/api/lower-secondary/students?stage=${stage}`).then(response => response.json()),
-      fetch(`/api/lower-secondary/practice?stage=${stage}`).then(response => response.json()),
+      fetch(`/api/lower-secondary/focus?stage=${stage}`).then(response => readReply(response)),
+      fetch(`/api/lower-secondary/students?stage=${stage}`).then(response => readReply(response)),
+      fetch(`/api/lower-secondary/practice?stage=${stage}`).then(response => readReply(response)),
     ]).then(([focusResult, studentResult, progressResult]) => {
       setFocus(Array.isArray(focusResult.chapters) ? focusResult.chapters : []);
       setStudents(Array.isArray(studentResult) ? studentResult : []);
@@ -845,13 +849,13 @@ function Stage89Teacher({ stage }: { stage: 8 | 9 }) {
   const saveFocus = async () => {
     setFocusState("Saving weekly focus…");
     const response = await fetch("/api/lower-secondary/focus", { method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({stage, chapters:focus}) });
-    const result = await response.json();
+    const result = await readReply(response);
     setFocusState(response.ok ? `✓ Stage ${stage} weekly focus saved` : result.error || "The focus could not be saved.");
   };
   const saveClass = async () => {
     setClassState("Saving class…");
     const response = await fetch("/api/lower-secondary/students", { method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({stage, studentIds:students.filter(student=>student.enrolled).map(student=>student.id)}) });
-    const result = await response.json();
+    const result = await readReply(response);
     setClassState(response.ok ? `${result.enrolled} student${result.enrolled===1?"":"s"} saved to Stage ${stage}.` : result.error || "The class could not be saved.");
   };
   const strands = Array.from(new Set(units.map(unit => unit.strand)));
@@ -895,18 +899,6 @@ type CrossStagePracticeUnit = LowerSecondaryUnit & { sourceStage: 7 | 8 | 9 };
 // A route that crashes or times out answers with the host's plain-text error
 // page rather than JSON. Report that as a sentence instead of a parse error
 // such as "Unexpected token 'A'".
-async function readReply(response: Response) {
-  const text = await response.text();
-  try {
-    return JSON.parse(text);
-  } catch {
-    throw new Error(
-      response.status === 504 || /timed? ?out/i.test(text)
-        ? "The server took too long to answer. Try again, or upload fewer pages."
-        : `The server sent an unexpected reply (HTTP ${response.status}). Try again in a moment.`,
-    );
-  }
-}
 
 function startedAgo(iso: string) {
   const minutes = Math.round((Date.now() - Date.parse(iso)) / 60000);
@@ -1334,7 +1326,7 @@ function PhysicsExamStudent({ back }: { back: () => void }) {
     setLoading(true);
     try {
       const response = await fetch("/api/physics-exam");
-      const data = await response.json();
+      const data = await readReply(response);
       if (!response.ok) throw new Error(data.error || "Could not load papers.");
       setPapers(data.papers || []);
     } catch (e) {
@@ -1436,7 +1428,7 @@ function PhysicsStudent({ back, level }:{ back:()=>void; level:"igcse"|"as" }) {
   const units = level==="as" ? asPhysicsUnits : igcsePhysicsUnits;
 
   useEffect(()=>{
-    fetch(`/api/physics/practice?level=${level}&all=1`).then(response=>response.json()).then(data=>{
+    fetch(`/api/physics/practice?level=${level}&all=1`).then(response=>readReply(response)).then(data=>{
       const next:Record<string,any>={};
       (Array.isArray(data.units)?data.units:[]).forEach((item:any)=>next[item.chapter_id]=item);
       setProgress(next);
@@ -1447,7 +1439,7 @@ function PhysicsStudent({ back, level }:{ back:()=>void; level:"igcse"|"as" }) {
     if(!unit.available){setMessage(`${unit.title} is coming soon.`);return;}
     setMessage("Preparing a fresh practice set…");
     const response=await fetch("/api/physics/practice",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"start",level,chapter:unit.id})});
-    const data=await response.json();
+    const data=await readReply(response);
     if(!response.ok){setMessage(data.error||"Practice could not start.");return;}
     setPractice(unit);setSession(data);setAnswers(Array(data.questions.length).fill(""));setHints(Array(data.questions.length).fill(false));setCursor(0);setResult(null);setMessage("");
   };
@@ -1455,7 +1447,7 @@ function PhysicsStudent({ back, level }:{ back:()=>void; level:"igcse"|"as" }) {
     if(!session||!practice)return;
     setMessage("Marking and saving your set…");
     const response=await fetch("/api/physics/practice",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"submit",id:session.id,answers,hints})});
-    const data=await response.json();
+    const data=await readReply(response);
     if(!response.ok){setMessage(data.error||"The set could not be saved.");return;}
     setResult(data);
     setProgress(current=>({...current,[practice.id]:{attempts:(current[practice.id]?.attempts||0)+1,average:data.score,strong_sets:data.strong_sets,mastered:data.mastered}}));
@@ -1580,12 +1572,12 @@ function Stage89Student({ back }:{ back:()=>void }) {
     : (progress["s8-u1"]?.attempts||0)>0&&(progress["s8-u1"]?.average||0)<70?["integers"]:[];
   const recommendations=Array.from(new Set(recommendedIds)).map(id=>allAccessibleUnits.find(unit=>unit.id===id)).filter(Boolean) as CrossStagePracticeUnit[];
 
-  useEffect(()=>{Promise.all([8,9].map(value=>fetch(`/api/lower-secondary/focus?stage=${value}`).then(response=>response.json()))).then(results=>{const next:any={};results.forEach(result=>next[result.stage]={chapters:Array.isArray(result.chapters)?result.chapters:[],enrolled:Boolean(result.enrolled)});setRecords(next);const first=([8,9] as const).find(value=>next[value]?.enrolled);if(first){setHomeStage(first);setSourceStage(first);}setLoaded(true);}).catch(()=>setLoaded(true));},[]);
-  useEffect(()=>{const stages=([7,8,9] as const).filter(value=>value<=homeStage);Promise.all(stages.map(value=>fetch(`/api/lower-secondary/practice?stage=${value}&all=1&home=${homeStage}`).then(response=>response.json()))).then(results=>{const next:Record<string,any>={};const counts:Record<string,number>={};results.forEach(data=>{(Array.isArray(data.units)?data.units:[]).forEach((item:any)=>next[item.chapter_id]=item);Object.assign(counts,data.past_paper||{});});setProgress(next);setPastPaperCounts(counts);});},[homeStage]);
+  useEffect(()=>{Promise.all([8,9].map(value=>fetch(`/api/lower-secondary/focus?stage=${value}`).then(response=>readReply(response)))).then(results=>{const next:any={};results.forEach(result=>next[result.stage]={chapters:Array.isArray(result.chapters)?result.chapters:[],enrolled:Boolean(result.enrolled)});setRecords(next);const first=([8,9] as const).find(value=>next[value]?.enrolled);if(first){setHomeStage(first);setSourceStage(first);}setLoaded(true);}).catch(()=>setLoaded(true));},[]);
+  useEffect(()=>{const stages=([7,8,9] as const).filter(value=>value<=homeStage);Promise.all(stages.map(value=>fetch(`/api/lower-secondary/practice?stage=${value}&all=1&home=${homeStage}`).then(response=>readReply(response)))).then(results=>{const next:Record<string,any>={};const counts:Record<string,number>={};results.forEach(data=>{(Array.isArray(data.units)?data.units:[]).forEach((item:any)=>next[item.chapter_id]=item);Object.assign(counts,data.past_paper||{});});setProgress(next);setPastPaperCounts(counts);});},[homeStage]);
 
   const chooseHomeStage=(value:8|9)=>{setHomeStage(value);setSourceStage(value);setMessage("");};
-  const startPractice=async(unit:LowerSecondaryUnit,origin:7|8|9=sourceForUnit(unit.id),pastPaper=false)=>{setMessage(pastPaper?"Preparing your past-paper questions…":"Preparing a fresh practice set…");const response=await fetch("/api/lower-secondary/practice",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"start",stage:origin,homeStage,chapter:unit.id,...(pastPaper?{mode:"past_paper"}:{})})});const data=await response.json();if(!response.ok){setMessage(data.error||"Practice could not start.");return;}setPractice({...unit,sourceStage:origin});setSession(data);setAnswers(Array(data.questions.length).fill(""));setHints(Array(data.questions.length).fill(false));setCursor(0);setResult(null);setMessage("");};
-  const submitPractice=async()=>{if(!session||!practice)return;setMessage("Marking and saving your set…");const response=await fetch("/api/lower-secondary/practice",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"submit",id:session.id,answers,hints})});const data=await response.json();if(!response.ok){setMessage(data.error||"The set could not be saved.");return;}setResult(data);if(!data.past_paper)setProgress(current=>({...current,[practice.id]:{attempts:(current[practice.id]?.attempts||0)+1,average:data.score,strong_sets:data.strong_sets,mastered:data.mastered}}));setMessage("");};
+  const startPractice=async(unit:LowerSecondaryUnit,origin:7|8|9=sourceForUnit(unit.id),pastPaper=false)=>{setMessage(pastPaper?"Preparing your past-paper questions…":"Preparing a fresh practice set…");const response=await fetch("/api/lower-secondary/practice",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"start",stage:origin,homeStage,chapter:unit.id,...(pastPaper?{mode:"past_paper"}:{})})});const data=await readReply(response);if(!response.ok){setMessage(data.error||"Practice could not start.");return;}setPractice({...unit,sourceStage:origin});setSession(data);setAnswers(Array(data.questions.length).fill(""));setHints(Array(data.questions.length).fill(false));setCursor(0);setResult(null);setMessage("");};
+  const submitPractice=async()=>{if(!session||!practice)return;setMessage("Marking and saving your set…");const response=await fetch("/api/lower-secondary/practice",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"submit",id:session.id,answers,hints})});const data=await readReply(response);if(!response.ok){setMessage(data.error||"The set could not be saved.");return;}setResult(data);if(!data.past_paper)setProgress(current=>({...current,[practice.id]:{attempts:(current[practice.id]?.attempts||0)+1,average:data.score,strong_sets:data.strong_sets,mastered:data.mastered}}));setMessage("");};
   const closePractice=()=>{setPractice(null);setSession(null);setResult(null);setMessage("");};
   // The notes replace the page, so open them at the top.
   const openNotes=(unit:CrossStagePracticeUnit)=>{closePractice();setNotesUnit(unit);window.scrollTo({top:0});};
@@ -1627,11 +1619,11 @@ function Stage7Teacher() {
   const [studentSave, setStudentSave] = useState("");
   useEffect(() => {
     fetch("/api/lower-secondary/focus")
-      .then((response) => response.json())
+      .then((response) => readReply(response))
       .then((result) => { setFocus(Array.isArray(result.chapters) ? result.chapters : []); setSaved("idle"); })
       .catch(() => setSaved("error"));
-    fetch("/api/lower-secondary/practice").then(r=>r.json()).then(result=>setIntegerProgress(Array.isArray(result.students)?result.students:[]));
-    fetch("/api/lower-secondary/students").then(r=>r.json()).then(result=>setStage7Students(Array.isArray(result)?result:[]));
+    fetch("/api/lower-secondary/practice").then(r=>readReply(r)).then(result=>setIntegerProgress(Array.isArray(result.students)?result.students:[]));
+    fetch("/api/lower-secondary/students").then(r=>readReply(r)).then(result=>setStage7Students(Array.isArray(result)?result:[]));
   }, []);
   const toggle = (id: string) => {
     setSaved("idle");
@@ -1653,7 +1645,7 @@ function Stage7Teacher() {
   const saveStage7Students = async () => {
     setStudentSave("Saving class…");
     const response=await fetch("/api/lower-secondary/students",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({studentIds:stage7Students.filter(student=>student.enrolled).map(student=>student.id)})});
-    const result=await response.json(); setStudentSave(response.ok?`${result.enrolled} student${result.enrolled===1?"":"s"} saved to Stage 7.`:result.error||"Class could not be saved.");
+    const result=await readReply(response); setStudentSave(response.ok?`${result.enrolled} student${result.enrolled===1?"":"s"} saved to Stage 7.`:result.error||"Class could not be saved.");
   };
   return (
     <>
@@ -1711,21 +1703,21 @@ function Stage7Student({ back }: { back: () => void }) {
   const [practiceMessage, setPracticeMessage] = useState("");
   useEffect(() => {
     fetch("/api/lower-secondary/focus")
-      .then((response) => response.json())
+      .then((response) => readReply(response))
       .then((result) => setFocus(Array.isArray(result.chapters) ? result.chapters : []));
-    fetch("/api/lower-secondary/practice").then(r=>r.json()).then(data=>setProgress(data));
+    fetch("/api/lower-secondary/practice").then(r=>readReply(r)).then(data=>setProgress(data));
   }, []);
   const startPractice = async (chapter:(typeof stage7Chapters)[number]) => {
     if(chapter.id!=="integers"){ setPracticeMessage("The automatic question engine is currently available for Integers and place value. The other chapter engines are next."); return; }
     setPracticeMessage("Preparing a fresh practice set…");
     const response=await fetch("/api/lower-secondary/practice",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"start",chapter:"integers"})});
-    const data=await response.json(); if(!response.ok){setPracticeMessage(data.error||"Practice could not start.");return;}
+    const data=await readReply(response); if(!response.ok){setPracticeMessage(data.error||"Practice could not start.");return;}
     setPractice(chapter); setSession(data); setAnswers(Array(data.questions.length).fill("")); setHints(Array(data.questions.length).fill(false)); setCursor(0); setResult(null); setPracticeMessage("");
   };
   const submitPractice=async()=>{
     if(!session)return; setPracticeMessage("Marking and saving your set…");
     const response=await fetch("/api/lower-secondary/practice",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"submit",id:session.id,answers,hints})});
-    const data=await response.json(); if(!response.ok){setPracticeMessage(data.error||"The set could not be saved.");return;} setResult(data); setProgress({attempts:progress.attempts+1,average:data.score,strong_sets:data.strong_sets,mastered:data.mastered}); setPracticeMessage("");
+    const data=await readReply(response); if(!response.ok){setPracticeMessage(data.error||"The set could not be saved.");return;} setResult(data); setProgress({attempts:progress.attempts+1,average:data.score,strong_sets:data.strong_sets,mastered:data.mastered}); setPracticeMessage("");
   };
   if (practice && session) {
     const question=session.questions[cursor];
@@ -1752,6 +1744,10 @@ function Papers({ upload }: { upload: () => void }) {
   const [managing, setManaging] = useState<(typeof assignments)[number] | null>(null);
   const [reviewingFiles, setReviewingFiles] = useState<AssignmentSummary | null>(null);
   const [studentSearch, setStudentSearch] = useState("");
+  const [paperSearch, setPaperSearch] = useState("");
+  // The paper being deleted, with the submission count the teacher is warned about.
+  const [deleting, setDeleting] = useState<{ assignment: AssignmentSummary; submissions: number; error?: string } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [questionSetup, setQuestionSetup] = useState<{
     id: string;
@@ -1767,14 +1763,14 @@ function Papers({ upload }: { upload: () => void }) {
   } | null>(null);
   useEffect(() => {
     fetch("/api/assignments")
-      .then((r) => r.json())
+      .then((r) => readReply(r))
       .then(async (rows) => {
         const list = Array.isArray(rows) ? rows : [];
         setAssignments(list);
         const details = await Promise.all(
           list.map(async (assignment: { id: string }) => {
             const response = await fetch(`/api/assignments/${assignment.id}/students`);
-            return [assignment.id, response.ok ? await response.json() : []] as const;
+            return [assignment.id, response.ok ? await readReply(response) : []] as const;
           }),
         );
         setSelected(
@@ -1804,14 +1800,14 @@ function Papers({ upload }: { upload: () => void }) {
         );
       });
     fetch("/api/admin/users")
-      .then((r) => r.json())
+      .then((r) => readReply(r))
       .then(setStudentAccounts);
   }, []);
   async function openStudentManager(assignment: (typeof assignments)[number]) {
     setManaging(assignment);
     setStudentSearch("");
     const response = await fetch(`/api/assignments/${assignment.id}/students`);
-    const rows = response.ok ? await response.json() : [];
+    const rows = response.ok ? await readReply(response) : [];
     const ids = Array.isArray(rows) ? rows.map((row) => String(row.student_id)) : [];
     setSelected((current) => ({ ...current, [assignment.id]: ids }));
     setAssignmentStatus((current) => ({
@@ -1830,7 +1826,7 @@ function Papers({ upload }: { upload: () => void }) {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ studentIds }),
     });
-    const result = await response.json();
+    const result = await readReply(response);
     setMessage(
       response.ok
         ? `Student list saved. ${result.assigned} student${result.assigned === 1 ? "" : "s"} assigned.`
@@ -1838,6 +1834,37 @@ function Papers({ upload }: { upload: () => void }) {
     );
     if (response.ok) setManaging(null);
   }
+  const askToDelete = (assignment: AssignmentSummary) =>
+    setDeleting({
+      assignment,
+      submissions: Object.values(assignmentStatus[assignment.id] || {}).filter((status) => status !== "not_started").length,
+    });
+  // The server deletes only if the count still matches; when a student has
+  // submitted since, it answers with the new count and the dialog shows it.
+  async function deletePaper() {
+    if (!deleting) return;
+    const { assignment, submissions } = deleting;
+    setDeleteBusy(true);
+    try {
+      const response = await fetch(`/api/assignments/${assignment.id}?submissions=${submissions}`, { method: "DELETE" });
+      const result = await readReply(response);
+      if (response.status === 409 && Number.isInteger(result.submissions)) {
+        setDeleting({ assignment, submissions: result.submissions, error: "A student has submitted since this opened." });
+        return;
+      }
+      if (!response.ok) throw new Error(result.error || "The paper could not be deleted.");
+      setAssignments((current) => current.filter((item) => item.id !== assignment.id));
+      setDeleting(null);
+      setMessage(`“${assignment.title}” was deleted.`);
+    } catch (problem) {
+      setDeleting({ ...deleting, error: problem instanceof Error && !(problem instanceof TypeError) ? problem.message : "The delete did not reach the server. Try again." });
+    } finally {
+      setDeleteBusy(false);
+    }
+  }
+  const listedPapers = assignments.filter(
+    (assignment) => !assignment.is_practice_library && matchesPaperSearch(assignment, paperSearch),
+  );
   return (
     <>
       <section className="subject-slab classroom">
@@ -1862,10 +1889,19 @@ function Papers({ upload }: { upload: () => void }) {
             <h3>Cambridge paper library</h3>
             <p>Saved papers and pilot assignments</p>
           </div>
-          <input aria-label="Search papers" placeholder="Search papers…" />
+          <input
+            type="search"
+            aria-label="Search papers"
+            placeholder="Search papers…"
+            value={paperSearch}
+            onChange={(event) => setPaperSearch(event.target.value)}
+          />
         </header>
         {message && <p>{message}</p>}
-        {assignments.filter(assignment=>!assignment.is_practice_library).map((assignment) => (
+        {paperSearch.trim() && !listedPapers.length && (
+          <p>No papers match “{paperSearch.trim()}”.</p>
+        )}
+        {listedPapers.map((assignment) => (
           <article key={assignment.id}>
             <span>PDF</span>
             <div>
@@ -1894,10 +1930,29 @@ function Papers({ upload }: { upload: () => void }) {
               >
                 Set up questions
               </button>
+              <button className="paper-delete" aria-label={`Delete ${assignment.title}`} onClick={() => askToDelete(assignment)}>
+                Delete
+              </button>
             </div>
           </article>
         ))}
       </section>
+      {deleting && (
+        <ConfirmDialog
+          title={`Delete “${deleting.assignment.title}”?`}
+          description={[
+            deleting.error,
+            deleting.submissions
+              ? `${deleting.submissions} student submission${deleting.submissions === 1 ? "" : "s"}, with their marks and uploaded pages, will be deleted too.`
+              : "No student has submitted it.",
+            "Its questions, its PDFs and any answers students have started but not sent are deleted, and it leaves every student's list. This cannot be undone.",
+          ].filter(Boolean).join(" ")}
+          confirmLabel="Delete paper"
+          busy={deleteBusy}
+          onConfirm={deletePaper}
+          onCancel={() => setDeleting(null)}
+        />
+      )}
       {reviewingFiles && (
         <FileReview
           assignment={reviewingFiles}
@@ -2061,7 +2116,7 @@ function FileReview({
         requestBody = form;
       }
       const response = await fetch(endpoint, { method: "PUT", body: requestBody, headers });
-      const result = await response.json().catch(() => ({}));
+      const result = await readReply(response).catch(() => ({}));
       if (!response.ok) {
         setMessage(result.error || "The PDF could not be replaced.");
         return;
@@ -2283,7 +2338,7 @@ function QuestionSetup({
         return pdfjs.getDocument({ data }).promise;
       }),
       fetch(`/api/assignments/${assignment.id}/questions`).then((response) =>
-        response.json(),
+        readReply(response),
       ),
     ])
       .then(([document, saved]) => {
@@ -2507,7 +2562,7 @@ function QuestionSetup({
     try {
       let found: PaperQuestion[] = [];
       const response = await fetch(`/api/assignments/${assignment.id}/analyze`, { method: "POST" }).catch(() => null);
-      const result = response?.ok ? await response.json().catch(() => null) : null;
+      const result = response?.ok ? await readReply(response).catch(() => null) : null;
       if (Array.isArray(result?.questions) && result.questions.length > 1) found = result.questions;
       if (!found.some(hasLabels)) found = (await autoDetectLegacy(true)) || found;
       const byKey = new Map(found.filter(hasLabels).map((question) => [questionKey(question.label), question.answer_labels!]));
@@ -3546,7 +3601,7 @@ function QuestionSetup({
         body: JSON.stringify({ questions: items }),
       },
     );
-    const result = await response.json();
+    const result = await readReply(response);
     if (response.ok) {
       setMessage(`${result.saved} questions saved for students.`);
       saved();
@@ -3563,7 +3618,7 @@ function QuestionSetup({
         `/api/assignments/${assignment.id}/scheme`,
         { method: "PUT", body: form },
       );
-      const result = await response.json();
+      const result = await readReply(response);
       if (!response.ok)
         throw new Error(result.error || "The mark scheme could not be replaced");
       setMessage(
@@ -4442,7 +4497,7 @@ function Students() {
   const [resetMessage, setResetMessage] = useState("");
   const loadAccounts = () =>
     fetch("/api/admin/users")
-      .then((r) => r.json())
+      .then((r) => readReply(r))
       .then(setAccounts);
   useEffect(() => {
     loadAccounts();
@@ -4456,7 +4511,7 @@ function Students() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify(Object.fromEntries(data)),
     });
-    const result = await response.json();
+    const result = await readReply(response);
     if (response.ok) {
       setMessage(`Account created for ${result.username}.`);
       e.currentTarget.reset();
@@ -4471,7 +4526,7 @@ function Students() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ studentId: resetting, password: resetPassword }),
     });
-    const result = await response.json();
+    const result = await readReply(response);
     if (response.ok) {
       setResetMessage(
         `New password set for ${result.username}. They will be asked to choose their own when they next sign in.`,
@@ -4622,7 +4677,7 @@ function Submissions() {
   const [message, setMessage] = useState("Loading submissions…");
   const load = () =>
     fetch("/api/submissions")
-      .then((response) => response.json())
+      .then((response) => readReply(response))
       .then((data) => {
         setSubmissions(Array.isArray(data) ? data : []);
         setMessage(
@@ -4679,7 +4734,7 @@ function Submissions() {
         })),
       }),
     });
-    const result = await response.json();
+    const result = await readReply(response);
     if (response.ok) {
       setMessage(
         publish
@@ -4707,7 +4762,7 @@ function Submissions() {
         marks: [],
       }),
     });
-    const result = await response.json();
+    const result = await readReply(response);
     setQueueAction("");
     if (!response.ok) {
       setMessage(result.error || "The result could not be published.");
@@ -4842,12 +4897,12 @@ function Submissions() {
               try {
                 const response = await fetch(`/api/submissions/${active.id}/remark`, { method: "POST" });
                 if (!response.ok) {
-                  const data = await response.json().catch(() => ({}));
+                  const data = await readReply(response).catch(() => ({}));
                   setMessage(data.error || "Re-marking failed.");
                   return;
                 }
                 await load();
-                const refreshed = await fetch("/api/submissions").then((r) => r.json()).catch(() => []);
+                const refreshed = await fetch("/api/submissions").then((r) => readReply(r)).catch(() => []);
                 const updated = Array.isArray(refreshed) ? refreshed.find((item: any) => item.id === active.id) : null;
                 if (updated) openReview(updated);
                 setMessage("Automatic marking updated. Any marks you've already confirmed were left untouched.");
@@ -5289,7 +5344,7 @@ function AnswerWorkspace({
   useEffect(() => {
     let cancelled = false;
     fetch(`/api/assignments/${assignment.id}/questions`)
-      .then((response) => response.json())
+      .then((response) => readReply(response))
       .then(async (questions) => {
         if (!Array.isArray(questions) || !questions.length) return;
         setPaperQuestions(questions);
@@ -5488,24 +5543,31 @@ function AnswerWorkspace({
       ),
     );
     for (const [key, value] of Object.entries(sittingFields())) form.set(key, value);
-    const response = await fetch(`/api/assignments/${assignment.id}/submit`, {
-      method: "POST",
-      body: form,
-    });
-    const result = await response.json();
-    if (response.ok) {
-      await clearSavedDraft();
-      submitted(String(result.status || "awaiting_review"), result);
-      setReviewingSubmission(false);
+    // A dropped connection or a platform timeout must not leave the button on
+    // "Submitting…": the answers stay saved here, so the student can retry.
+    try {
+      const response = await fetch(`/api/assignments/${assignment.id}/submit`, {
+        method: "POST",
+        body: form,
+      });
+      const result = await readReply(response);
+      if (response.ok) {
+        await clearSavedDraft();
+        submitted(String(result.status || "awaiting_review"), result);
+        setReviewingSubmission(false);
+      }
+      setMessage(
+        response.ok
+          ? result.status === "published"
+            ? `Marked automatically: ${result.total} out of ${result.maximum}. Your final result is published.`
+            : "Your answers were submitted to your teacher."
+          : result.error || "Submission failed.",
+      );
+    } catch (problem) {
+      setMessage(problem instanceof Error && !(problem instanceof TypeError) ? problem.message : "The submission did not reach the server. Your answers are still here; try again.");
+    } finally {
+      setSubmitting(false);
     }
-    setMessage(
-      response.ok
-        ? result.status === "published"
-          ? `Marked automatically: ${result.total} out of ${result.maximum}. Your final result is published.`
-          : "Your answers were submitted to your teacher."
-        : result.error || "Submission failed.",
-    );
-    setSubmitting(false);
   }
   if (mode === "paper")
     return (
@@ -6118,7 +6180,7 @@ function StudentProgress({ back }: { back: () => void }) {
   const [state, setState] = useState("Loading your practice history…");
   useEffect(() => {
     fetch("/api/progress")
-      .then((response) => (response.ok ? response.json() : Promise.reject(new Error("progress"))))
+      .then((response) => (response.ok ? readReply(response) : Promise.reject(new Error("progress"))))
       .then((data) => { setSessions(Array.isArray(data.sessions) ? data.sessions : []); setState(""); })
       .catch(() => setState("Your progress could not be loaded."));
   }, []);
@@ -6219,7 +6281,7 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
     Promise.all(
       ([8, 9] as const).map((value) =>
         fetch(`/api/lower-secondary/focus?stage=${value}`)
-          .then((r) => (r.ok ? r.json() : { enrolled: false }))
+          .then((r) => (r.ok ? readReply(r) : { enrolled: false }))
           .then((result) => ({ stage: value, enrolled: Boolean(result.enrolled) })),
       ),
     )
@@ -6271,10 +6333,10 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
   >([]);
   useEffect(() => {
     fetch("/api/assignments")
-      .then((r) => (r.ok ? r.json() : []))
+      .then((r) => (r.ok ? readReply(r) : []))
       .then(setSavedAssignments);
     fetch("/api/submissions")
-      .then((r) => (r.ok ? r.json() : []))
+      .then((r) => (r.ok ? readReply(r) : []))
       .then(setPublishedResults);
   }, []);
   const latest = savedAssignments[0];
@@ -6354,7 +6416,7 @@ function StudentPortal({ switchRole }: { switchRole: () => void }) {
             );
             if (submissionStatus === "published")
               fetch("/api/submissions")
-                .then((response) => (response.ok ? response.json() : []))
+                .then((response) => (response.ok ? readReply(response) : []))
                 .then(setPublishedResults);
           }}
         />

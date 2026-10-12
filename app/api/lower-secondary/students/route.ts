@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { allStudents, type UserStore } from "@/lib/auth-rules";
+import { assignableStudents, type UserStore } from "@/lib/auth-rules";
 import { ensureSchema, sql } from "@/lib/db";
 import { currentViewer } from "@/lib/session";
 import { displayName } from "@/lib/students";
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
   const stage = requestedStage(request);
   await ensureSchema();
   const [students, enrolled] = await Promise.all([
-    allStudents(viewer.clerk.users as unknown as UserStore),
+    assignableStudents(viewer.clerk.users as unknown as UserStore, viewer.userId),
     sql`SELECT student_id FROM lower_secondary_enrollments WHERE teacher_id=${viewer.userId} AND stage=${stage}`,
   ]);
   const ids = new Set(enrolled.map((row) => String(row.student_id)));
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   if (!body) return unreadableBody();
   const stage = requestedStage(request, body.stage);
   const requested = Array.from(new Set<string>(Array.isArray(body.studentIds) ? body.studentIds.map(String) : []));
-  const valid = new Set((await allStudents(viewer.clerk.users as unknown as UserStore)).map((user) => user.id));
+  const valid = new Set((await assignableStudents(viewer.clerk.users as unknown as UserStore, viewer.userId)).map((user) => user.id));
   const studentIds = requested.filter((id) => valid.has(id));
   await ensureSchema();
   // Replaced as a whole, in one transaction, so a failure keeps the old class.

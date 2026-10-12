@@ -2,6 +2,7 @@ import { currentViewer } from "@/lib/session";
 import { get, put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
+import { removeUnusedFiles } from "@/lib/assignment-files";
 
 export async function GET(
   _request: Request,
@@ -67,7 +68,7 @@ export async function PUT(
   const { id } = await context.params;
   await ensureSchema();
   const assignments = await sql`
-    SELECT question_paper_url FROM assignments
+    SELECT question_paper_url, mark_scheme_url FROM assignments
     WHERE id = ${id} AND teacher_id = ${userId} LIMIT 1
   `;
   if (!assignments.length)
@@ -116,10 +117,27 @@ export async function PUT(
     scheme,
     { access: "private", addRandomSuffix: false },
   );
-  await sql`
-    UPDATE assignments
-    SET mark_scheme_url = ${uploaded.url}, status = 'needs_review'
-    WHERE id = ${id} AND teacher_id = ${userId}
-  `;
+  // As for the question paper: the lock waits for a submission being written,
+  // and the update re-checks with a fresh snapshot, so one that landed during
+  // the upload refuses the replace.
+  const [, updated] = await sql.transaction([
+    sql`SELECT id FROM assignments WHERE id = ${id} FOR UPDATE`,
+    sql`
+      UPDATE assignments
+      SET mark_scheme_url = ${uploaded.url}, status = 'needs_review'
+      WHERE id = ${id} AND teacher_id = ${userId}
+        AND NOT EXISTS (SELECT 1 FROM submissions WHERE assignment_id = ${id})
+      RETURNING id
+    `,
+  ], { isolationLevel: "ReadCommitted" });
+  if (!updated.length) {
+    await removeUnusedFiles(id, [uploaded.url], `assignment ${id} mark scheme replace refused`);
+    return NextResponse.json(
+      { error: "A student submitted this paper just now, so its mark scheme cannot be replaced safely." },
+      { status: 409 },
+    );
+  }
+  // The replaced PDF is no longer this paper's; remove it unless another paper uses it.
+  await removeUnusedFiles(id, [assignments[0].mark_scheme_url], `assignment ${id} mark scheme replaced`);
   return NextResponse.json({ replaced: true });
 }

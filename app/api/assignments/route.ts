@@ -2,6 +2,7 @@ import { currentViewer } from "@/lib/session";
 import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
+import { homeworkUploadUrl } from "@/lib/assignment-files";
 
 async function requireUser() {
   const session = await currentViewer();
@@ -85,15 +86,8 @@ export async function POST(request: Request) {
   const contentEndPage = resourceKind === "homework" && requestedEndPage >= Number(contentStartPage) ? requestedEndPage : null;
   const paper = form.get("paper");
   const scheme = form.get("scheme");
-  const paperUrlValue = String(form.get("paperUrl") ?? "").trim();
-  let paperUrl: string | null = null;
-  if (paperUrlValue) {
-    try {
-      const parsed = new URL(paperUrlValue);
-      if (parsed.protocol === "https:" && parsed.hostname.endsWith("blob.vercel-storage.com")) paperUrl = parsed.toString();
-      // An unparseable URL is simply not accepted; paperUrl keeps its default.
-    } catch {}
-  }
+  // Only a homework book this app's browser uploaded; anything else is ignored.
+  const paperUrl = homeworkUploadUrl(form.get("paperUrl"));
   if (
     !title ||
     !className ||

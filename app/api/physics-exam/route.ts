@@ -11,7 +11,6 @@ import {
   submissionsForPaper, deletePaper,
 } from '@/lib/physics-exam-repository';
 import { addCurrentScreenshots } from '@/lib/exam-paper-screenshots';
-import { demoPaper } from '@/lib/physics-exam-demo';
 import { approvePaper, makeSubmission, overrideGrade, SubmitSchema, checkAnswer, CheckSchema } from '@/lib/physics-exam-workflows';
 import { renderPdf, startExtractionFromImages, checkExtraction, cancelExtraction } from '@/lib/physics-exam-extraction';
 import { stepTimer } from '@/lib/step-timer';
@@ -180,13 +179,6 @@ export async function POST(request: Request) {
         await claimExtractionJob(job.id);
         throw e;
       }
-    }
-
-    if (body.action === 'demo') {
-      if (role !== 'teacher') return NextResponse.json({ error: 'Teacher access is required.' }, { status: 403 });
-      const paper = demoPaper();
-      await insertPaper(userId, paper);
-      return NextResponse.json({ paper });
     }
 
     if (body.action === 'delete-paper') {

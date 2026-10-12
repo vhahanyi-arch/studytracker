@@ -1,8 +1,9 @@
 // physics-exam-demo.ts
 //
-// Generates a small, original (non-Cambridge) synthetic practice paper so a
-// teacher can try the full paper/answer/mark workflow without needing to
-// upload a real past paper first. Relocated from physics-exam-studio's
+// A small, original (non-Cambridge) synthetic paper, now used only as a test
+// fixture for extraction, validation and marking. (It once backed a "demo"
+// action in /api/physics-exam that no screen called; removed 2026-10-12.)
+// Relocated from physics-exam-studio's
 // src/services/demo.ts with the import path updated to StudyTrack's flat
 // lib/ convention; content unchanged and already verified (physics
 // independently checked: x²=0.01 m² for x=0.10m, E=½×200×0.01=1 J).

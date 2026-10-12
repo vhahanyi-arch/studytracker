@@ -52,10 +52,6 @@ export function gradeQuestion(question: GradableQuestion, answer: GradableAnswer
   if (question.response_type === "drawing") {
     return { proposed: null as number | null, confidence: "review", rationale: "Drawing response: inspect the submitted annotation.", maximum };
   }
-  if (!expected) {
-    return { proposed: null as number | null, confidence: "review", rationale: "No accepted answer has been configured for this question.", maximum };
-  }
-
   // Each accepted variant is checked both as written, and as its final result
   // (the text after its last "="), so a mark scheme that shows full working
   // (e.g. "23 × 3.4 ... = (23+160)v ... v = 0.43 m s-1") still matches a
@@ -68,7 +64,13 @@ export function gradeQuestion(question: GradableQuestion, answer: GradableAnswer
       if (equalsParts.length > 1) options.push(equalsParts[equalsParts.length - 1].trim());
       return options;
     })
-    .map(normalizeAnswer);
+    .map(normalizeAnswer)
+    // An empty variant ("5 |", or "v =" with nothing after it) would match a
+    // blank answer and give it full marks.
+    .filter(Boolean);
+  if (!accepted.length) {
+    return { proposed: null as number | null, confidence: "review", rationale: "No accepted answer has been configured for this question.", maximum };
+  }
 
   const normalizedResponse = normalizeAnswer(response);
   const matches = accepted.some((option) => {

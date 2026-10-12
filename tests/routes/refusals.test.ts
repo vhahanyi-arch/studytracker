@@ -62,20 +62,30 @@ test("a Stage class is the teacher's: no one else can read or change it", async 
   assert.deepEqual(await enrolled(), [["t1", "s1"], ["t2", "s4"]]);
 });
 
-// Known issues #1: the roster lists every student account, and a teacher can
-// enrol or assign another teacher's students. One teacher per deployment makes
-// this low priority, so these record the intended behaviour without failing
-// the run. Drop `todo` when #1 is fixed.
-test("a teacher's Stage class lists only their own students", { todo: "Known issues #1" }, async () => {
+// Known issues #1: a teacher sees, enrols and assigns only their own students,
+// never another teacher's. A student no teacher owns (made before teacherId
+// was stamped, or by hand in Clerk) stays available, so no real student drops
+// out of the lists.
+const unowned = { id: "s5", username: "uma", firstName: "Uma", lastName: null, publicMetadata: { role: "student" } };
+
+test("a teacher's Stage class lists only their own students and unowned ones", async () => {
+  setAccounts([...accounts, ...secondTeacher, unowned]);
   const listed = (await call(roster.GET, { as: "t1", query: "stage=8" })).body.map((row: Record<string, unknown>) => row.id);
-  assert.ok(!listed.includes("s4"), "t2's student is not in t1's list");
-  await call(roster.POST, { as: "t1", json: { stage: 8, studentIds: ["s4"] } });
-  assert.deepEqual((await sql`SELECT student_id FROM lower_secondary_enrollments WHERE teacher_id = 't1'`).length, 0, "t1 cannot enrol t2's student");
+  assert.deepEqual([...listed].sort(), ["s1", "s2", "s3", "s5"]);
+  await call(roster.POST, { as: "t1", json: { stage: 8, studentIds: ["s4", "s5"] } });
+  const rows = await sql`SELECT student_id FROM lower_secondary_enrollments WHERE teacher_id = 't1'`;
+  assert.deepEqual(rows.map((row) => row.student_id), ["s5"], "t1 cannot enrol t2's student");
 });
 
-test("a teacher can assign a paper only to their own students", { todo: "Known issues #1" }, async () => {
+test("a teacher can assign a paper only to their own students and unowned ones", async () => {
+  setAccounts([...accounts, ...secondTeacher, unowned]);
   const id = await paper();
-  await call(assigned.POST, { as: "t1", params: { id }, json: { studentIds: ["s1", "s4"] } });
+  const refused = await call(assigned.POST, { as: "t1", params: { id }, json: { studentIds: ["s1", "s4"] } });
+  assert.equal(refused.status, 400);
+  assert.equal(refused.body.error, "Every selected account must be one of your students.");
+  const kept = await sql`SELECT student_id FROM assignment_students WHERE assignment_id = ${id}`;
+  assert.deepEqual(kept.map((row) => row.student_id), ["s1"], "the paper's students are unchanged");
+  assert.equal((await call(assigned.POST, { as: "t1", params: { id }, json: { studentIds: ["s1", "s5"] } })).status, 200);
   const rows = await sql`SELECT student_id FROM assignment_students WHERE assignment_id = ${id} ORDER BY student_id`;
-  assert.deepEqual(rows.map((row) => row.student_id), ["s1"], "t2's student is not assigned");
+  assert.deepEqual(rows.map((row) => row.student_id), ["s1", "s5"]);
 });

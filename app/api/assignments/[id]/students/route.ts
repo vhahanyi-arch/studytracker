@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { currentViewer } from "@/lib/session";
 import { accountsById, type UserLister } from "@/lib/students";
+import { assignableTo } from "@/lib/auth-rules";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
 import { readJsonObject, unreadableBody } from "@/lib/request-body";
@@ -64,9 +65,12 @@ export async function POST(
       { status: 404 },
     );
   const accounts = await accountsById(clerk.users as unknown as UserLister, studentIds);
-  if (studentIds.some((studentId) => accounts.get(studentId)?.publicMetadata?.role !== "student"))
+  if (studentIds.some((studentId) => {
+    const account = accounts.get(studentId);
+    return !account || !assignableTo(account, userId);
+  }))
     return NextResponse.json(
-      { error: "Every selected account must be a student." },
+      { error: "Every selected account must be one of your students." },
       { status: 400 },
     );
   // Replaced as a whole, in one transaction. Each row is stamped a microsecond

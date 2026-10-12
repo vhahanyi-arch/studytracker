@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
 import { readJsonObject, unreadableBody } from "@/lib/request-body";
+import { isChecklistObjective } from "@/lib/syllabus-checklist";
 
 function levelFrom(value: unknown) {
   const level = String(value || "");
@@ -30,6 +31,10 @@ export async function POST(request: Request) {
   const level = levelFrom(body.level);
   const objectiveId = String(body.objectiveId || "");
   if (!objectiveId) return NextResponse.json({ error: "No objective specified." }, { status: 400 });
+  // Only the level's own objectives are stored, so a row is always one a
+  // student can see and untick.
+  if (!isChecklistObjective(level, objectiveId))
+    return NextResponse.json({ error: "That objective is not in this syllabus." }, { status: 400 });
 
   const existing = await sql`
     SELECT 1 FROM physics_syllabus_checklist

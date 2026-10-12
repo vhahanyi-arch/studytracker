@@ -146,12 +146,21 @@ export async function studentsOf(store: UserStore, teacherId: string) {
   return students;
 }
 
-// Every student account on the workspace, whoever created it: the Stage 8/9
-// class picker's list. Paged, so a workspace past 100 accounts loses no one.
-export async function allStudents(store: UserStore) {
+// A student this teacher may enrol or assign: their own, or one with no owning
+// teacher. Accounts made before 2026-09-21, or by hand in Clerk, carry no
+// teacherId, and hiding them would drop real students from the class lists.
+// Another teacher's student is never one.
+export function assignableTo(user: { publicMetadata?: Record<string, unknown> }, teacherId: string) {
+  const owner = user.publicMetadata?.teacherId;
+  return user.publicMetadata?.role === "student" && (!owner || owner === teacherId);
+}
+
+// The Stage class picker's list: every student assignableTo this teacher.
+// Paged, so a workspace past 100 accounts loses no one.
+export async function assignableStudents(store: UserStore, teacherId: string) {
   const students: UserRecord[] = [];
   await eachUser(store, (user) => {
-    if (user.publicMetadata.role === "student") students.push(user);
+    if (assignableTo(user, teacherId)) students.push(user);
   });
   return students;
 }

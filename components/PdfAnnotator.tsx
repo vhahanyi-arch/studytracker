@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ModalScrim } from "@/components/ModalScrim";
 import { beginStroke } from "./inkStroke";
+import { readReply } from "@/lib/read-reply";
 
 export function PdfAnnotator({
   assignment,
@@ -109,19 +110,26 @@ export function PdfAnnotator({
       ),
     );
     for (const [key, value] of Object.entries(extraFields)) form.set(key, value);
-    const response = await fetch(`/api/assignments/${assignment.id}/submit`, {
-      method: "POST",
-      body: form,
-    });
-    const result = await response.json();
-    if (response.ok) await onSubmitted(String(result.status || "awaiting_review"), result);
-    setMessage(
-      response.ok
-        ? "Your annotated paper was submitted to your teacher."
-        : result.error || "Submission failed.",
-    );
-    if (response.ok) setReviewing(false);
-    setSubmitting(false);
+    // A dropped connection or a platform timeout must not leave the button on
+    // "Submitting…": the drawing stays on the page, so the student can retry.
+    try {
+      const response = await fetch(`/api/assignments/${assignment.id}/submit`, {
+        method: "POST",
+        body: form,
+      });
+      const result = await readReply(response);
+      if (response.ok) await onSubmitted(String(result.status || "awaiting_review"), result);
+      setMessage(
+        response.ok
+          ? "Your annotated paper was submitted to your teacher."
+          : result.error || "Submission failed.",
+      );
+      if (response.ok) setReviewing(false);
+    } catch (problem) {
+      setMessage(problem instanceof Error && !(problem instanceof TypeError) ? problem.message : "The submission did not reach the server. Your work is still here; try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
   return (
     <section className="paper-annotator">

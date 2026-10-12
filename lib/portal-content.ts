@@ -12,6 +12,7 @@ export type AssignmentSummary = {
   subject: string;
   syllabus: string;
   paper_mode: "structured" | "multiple_choice";
+  class_name?: string | null;
   due_date: string | null;
   status: string;
   lower_secondary_stage?: number | null;

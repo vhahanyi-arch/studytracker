@@ -21,10 +21,55 @@ type ReportData = {
   overallFeedback?: string;
 };
 
-const clean = (value: string) =>
-  value.replace(/[^\x20-\x7E]/g, " ").replace(/\s+/g, " ").trim();
-const escapePdf = (value: string) =>
-  clean(value).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+// The report uses the PDF's built-in Helvetica in WinAnsiEncoding, which draws
+// Latin-1 plus a few typographic marks: ×, ², ³, µ, ½, °, ±, curly quotes and
+// dashes. Characters outside that set are spelled out (Ω → "ohm", − → "-"),
+// so physics answers keep their meaning instead of losing symbols.
+const WIN_ANSI_EXTRA: Record<string, number> = {
+  "€": 0x80, "‚": 0x82, "ƒ": 0x83, "„": 0x84, "…": 0x85, "†": 0x86, "‡": 0x87, "ˆ": 0x88,
+  "‰": 0x89, "Š": 0x8a, "‹": 0x8b, "Œ": 0x8c, "Ž": 0x8e, "‘": 0x91, "’": 0x92, "“": 0x93,
+  "”": 0x94, "•": 0x95, "–": 0x96, "—": 0x97, "˜": 0x98, "™": 0x99, "š": 0x9a, "›": 0x9b,
+  "œ": 0x9c, "ž": 0x9e, "Ÿ": 0x9f,
+};
+const SPELLED_OUT: Record<string, string> = {
+  "−": "-", "‐": "-", "‑": "-", "∓": "-/+", "⋅": "·", "∙": "·", "√": "sqrt", "∞": "infinity",
+  "≈": "~", "≃": "~", "∼": "~", "≠": "!=", "≤": "<=", "≥": ">=", "≪": "<<", "≫": ">>",
+  "→": "->", "←": "<-", "↔": "<->", "⇒": "=>", "∝": " proportional to ", "Δ": "delta ",
+  "∆": "delta ", "∑": "sum ", "∫": "integral ", "π": "pi", "Ω": "ohm", "μ": "µ",
+  "α": "alpha", "β": "beta", "γ": "gamma", "δ": "delta", "ε": "epsilon", "θ": "theta",
+  "λ": "lambda", "ρ": "rho", "σ": "sigma", "τ": "tau", "φ": "phi", "ω": "omega", "η": "eta",
+  "□": "×", "₀": "0", "₁": "1", "₂": "2", "₃": "3", "₄": "4", "₅": "5", "₆": "6", "₇": "7",
+  "₈": "8", "₉": "9", " ": " ", " ": " ", " ": " ",
+};
+const SUPERSCRIPT: Record<string, string> = {
+  "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4", "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9", "⁺": "+", "⁻": "-",
+};
+// ¹, ² and ³ exist in the font; any other run of superscripts becomes "^…",
+// written in full so "s⁻²" reads "s^-2" and "10¹⁰" reads "10^10".
+const superscripts = (value: string) =>
+  value.replace(/[⁰¹²³⁴-⁹⁺⁻]+/g, (run) => (/^[¹²³]+$/.test(run) ? run : `^${[...run].map((char) => SUPERSCRIPT[char]).join("")}`));
+const winAnsiCode = (char: string) => {
+  const code = char.codePointAt(0) ?? 0;
+  if ((code >= 0x20 && code <= 0x7e) || (code >= 0xa1 && code <= 0xff)) return code;
+  return WIN_ANSI_EXTRA[char];
+};
+// Report text as the font can draw it: every character is one WinAnsi glyph.
+export const clean = (value: string) =>
+  [...superscripts(value.normalize("NFC"))]
+    .map((char) => (winAnsiCode(char) !== undefined ? char : SPELLED_OUT[char] ?? (/\s/.test(char) ? " " : "?")))
+    .join("")
+    .replace(/\s+/g, " ")
+    .trim();
+// A PDF string literal: ASCII is written as is, other glyphs as octal byte
+// escapes, so the file itself stays 7-bit.
+export const escapePdf = (value: string) =>
+  [...clean(value)]
+    .map((char) => {
+      if (char === "\\" || char === "(" || char === ")") return `\\${char}`;
+      const code = winAnsiCode(char)!;
+      return code > 0x7e ? `\\${code.toString(8).padStart(3, "0")}` : char;
+    })
+    .join("");
 const pdfColour = (value: string) =>
   value.split(" ").map((part) => (Number(part) / 255).toFixed(3)).join(" ");
 
@@ -151,8 +196,8 @@ export function buildProgressReportPdf(data: ReportData) {
   const pageRefs = pages.map((_, index) => `${5 + index * 2} 0 R`).join(" ");
   objects.push("<< /Type /Catalog /Pages 2 0 R >>");
   objects.push(`<< /Type /Pages /Kids [${pageRefs}] /Count ${pages.length} >>`);
-  objects.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
-  objects.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>");
+  objects.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
+  objects.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
   pages.forEach((commands, index) => {
     const pageObject = 5 + index * 2;
     const contentObject = pageObject + 1;

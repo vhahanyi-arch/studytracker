@@ -1,5 +1,6 @@
 import { currentViewer } from "@/lib/session";
 import { studentNames, type UserLister } from "@/lib/students";
+import { studentsOf, type UserStore } from "@/lib/auth-rules";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
 
@@ -13,14 +14,11 @@ export async function GET() {
     return NextResponse.json({ error: "Teacher access is required." }, { status: 403 });
 
   await ensureSchema();
-  const [studentRows, reviewRows, paperRows, averageRows, recentRows, assignmentRows, topicRows] =
+  // Students: the teacher's whole roster, as the Students page lists it, not
+  // only those who have been set a paper.
+  const [roster, reviewRows, paperRows, averageRows, recentRows, assignmentRows, topicRows] =
     await Promise.all([
-      sql`
-        SELECT COUNT(DISTINCT ast.student_id)::int AS count
-        FROM assignment_students ast
-        JOIN assignments a ON a.id = ast.assignment_id
-        WHERE a.teacher_id = ${userId}
-      `,
+      studentsOf(clerk.users as unknown as UserStore, userId),
       sql`
         SELECT COUNT(*)::int AS count
         FROM submissions s
@@ -87,7 +85,7 @@ export async function GET() {
   const recentSubmissions = recentRows.map((row) => ({ ...row, student_name: nameOf(row.student_id) }));
 
   return NextResponse.json({
-    active_students: Number(studentRows[0]?.count || 0),
+    students: roster.length,
     needs_review: Number(reviewRows[0]?.count || 0),
     active_papers: Number(paperRows[0]?.count || 0),
     class_average: Number(averageRows[0]?.average || 0),

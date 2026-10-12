@@ -3,6 +3,7 @@ import { get, put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { ensureSchema, sql } from "@/lib/db";
 import { readJsonObject, unreadableBody } from "@/lib/request-body";
+import { homeworkUploadUrl, removeUnusedFiles } from "@/lib/assignment-files";
 
 export async function GET(
   _request: Request,
@@ -36,6 +37,8 @@ export async function GET(
   });
 }
 
+const SUBMITTED_MEANWHILE = "A student submitted this paper just now, so its question paper cannot be replaced safely.";
+
 export async function PUT(
   request: Request,
   context: { params: Promise<{ id: string }> },
@@ -55,15 +58,8 @@ export async function PUT(
   if (isJson && !payload) return unreadableBody();
   const form = isJson ? null : await request.formData();
   const paper = form?.get("paper");
-  const suppliedUrl = String(payload?.paperUrl || "").trim();
-  let directUrl: string | null = null;
-  if (suppliedUrl) {
-    try {
-      const parsed = new URL(suppliedUrl);
-      if (parsed.protocol === "https:" && parsed.hostname.endsWith("blob.vercel-storage.com")) directUrl = parsed.toString();
-      // An unparseable URL is simply not accepted; directUrl keeps its default.
-    } catch {}
-  }
+  // Only a homework book this app's browser uploaded; anything else is refused below.
+  const directUrl = homeworkUploadUrl(payload?.paperUrl);
   if (!directUrl && (!(paper instanceof File) || paper.type !== "application/pdf"))
     return NextResponse.json(
       { error: "Select a PDF question paper." },
@@ -78,7 +74,7 @@ export async function PUT(
   const { id } = await context.params;
   await ensureSchema();
   const assignments = await sql`
-    SELECT mark_scheme_url FROM assignments
+    SELECT question_paper_url, mark_scheme_url FROM assignments
     WHERE id = ${id} AND teacher_id = ${userId} LIMIT 1
   `;
   if (!assignments.length)
@@ -126,11 +122,26 @@ export async function PUT(
     { access: "private", addRandomSuffix: false },
   ) : null;
   const nextUrl = uploaded?.url || directUrl!;
-  await sql`
-    UPDATE assignments
-    SET question_paper_url = ${nextUrl}, status = 'needs_setup'
-    WHERE id = ${id} AND teacher_id = ${userId}
-  `;
-  await sql`DELETE FROM assignment_questions WHERE assignment_id = ${id}`;
+  // The check above ran before the upload, seconds ago. The row lock waits for
+  // any submission being written; each statement then re-checks with a fresh
+  // read-committed snapshot, so a submission that landed meanwhile keeps its
+  // questions and marks, and this replace is refused (as for Known issues #19).
+  const [, updated] = await sql.transaction([
+    sql`SELECT id FROM assignments WHERE id = ${id} FOR UPDATE`,
+    sql`
+      UPDATE assignments
+      SET question_paper_url = ${nextUrl}, status = 'needs_setup'
+      WHERE id = ${id} AND teacher_id = ${userId}
+        AND NOT EXISTS (SELECT 1 FROM submissions WHERE assignment_id = ${id})
+      RETURNING id
+    `,
+    sql`DELETE FROM assignment_questions WHERE assignment_id = ${id} AND NOT EXISTS (SELECT 1 FROM submissions WHERE assignment_id = ${id})`,
+  ], { isolationLevel: "ReadCommitted" });
+  if (!updated.length) {
+    if (uploaded) await removeUnusedFiles(id, [uploaded.url], `assignment ${id} paper replace refused`);
+    return NextResponse.json({ error: SUBMITTED_MEANWHILE }, { status: 409 });
+  }
+  // The replaced PDF is no longer this paper's; remove it unless another paper uses it.
+  await removeUnusedFiles(id, [assignments[0].question_paper_url], `assignment ${id} paper replaced`);
   return NextResponse.json({ replaced: true, resetQuestions: true });
 }
