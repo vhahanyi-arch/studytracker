@@ -2,18 +2,19 @@ import {test} from 'node:test';import assert from 'node:assert/strict';
 import {parseNotes,plainText} from '@/lib/notes-markdown';
 import {asPhysicsNotes} from '@/lib/as-physics-notes.generated';
 import {igcsePhysicsNotes} from '@/lib/igcse-physics-notes.generated';
+import {stage7MathsNotes} from '@/lib/stage-7-maths-notes.generated';
 import {stage8MathsNotes} from '@/lib/stage-8-maths-notes.generated';
 import {stage9MathsNotes} from '@/lib/stage-9-maths-notes.generated';
-import {asPhysicsUnits,igcsePhysicsUnits,stage8Units,stage9Units} from '@/lib/portal-content';
+import {asPhysicsUnits,igcsePhysicsUnits,stage7Chapters,stage8Units,stage9Units} from '@/lib/portal-content';
 import {framework,objectivesFor} from '@/lib/lower-secondary/framework';
 import {igcsePhysicsSyllabus} from '@/lib/physics-syllabus';
 import {LEVELS,notesByUnit,renderModule} from '../../scripts/generate-revision-notes.mjs';
 import {readFileSync,readdirSync} from 'node:fs';
 import {join} from 'node:path';
 
-const LEVEL_NOTES={as:{notes:asPhysicsNotes,units:asPhysicsUnits},igcse:{notes:igcsePhysicsNotes,units:igcsePhysicsUnits},stage8:{notes:stage8MathsNotes,units:stage8Units},stage9:{notes:stage9MathsNotes,units:stage9Units}} as const;
+const LEVEL_NOTES={stage7:{notes:stage7MathsNotes,units:stage7Chapters},as:{notes:asPhysicsNotes,units:asPhysicsUnits},igcse:{notes:igcsePhysicsNotes,units:igcsePhysicsUnits},stage8:{notes:stage8MathsNotes,units:stage8Units},stage9:{notes:stage9MathsNotes,units:stage9Units}} as const;
 const MATHS_NOTES={...stage8MathsNotes,...stage9MathsNotes};
-const ALL_NOTES={...asPhysicsNotes,...igcsePhysicsNotes,...MATHS_NOTES};
+const ALL_NOTES={...asPhysicsNotes,...igcsePhysicsNotes,...stage7MathsNotes,...MATHS_NOTES};
 
 for(const [level,{notes,units}] of Object.entries(LEVEL_NOTES) as Array<[keyof typeof LEVELS,(typeof LEVEL_NOTES)[keyof typeof LEVEL_NOTES]]>){
  // An edit to the markdown notes that is not regenerated would ship stale
@@ -146,6 +147,46 @@ for(const [id,markdown] of Object.entries(MATHS_NOTES)){
   assert.ok(headings(markdown,3).filter(h=>h.startsWith('Situation:')).length>=3,`${id} has fewer than three worked situations`);
  });
 }
+
+// ---- Stage 7 maths --------------------------------------------------------------
+
+// Stage 7 notes are foundations, organised by the app's chapters. The project
+// holds no Stage 7 objective list, so they cite no codes (none may be invented),
+// and instead end by naming the Stage 8 units that build on them.
+const STAGE_8_TITLES=new Set(stage8Units.map(u=>u.title));
+const listItems=(markdown:string,section:string)=>{
+ const blocks=parseNotes(markdown);
+ const start=blocks.findIndex((b:any)=>b.kind==='heading'&&b.level===2&&plainText(b.children)===section);
+ const list=blocks.slice(start+1).find((b:any)=>b.kind==='list') as any;
+ return start<0||!list?[]:list.items.map((item:any)=>plainText(item));
+};
+
+for(const [id,markdown] of Object.entries(stage7MathsNotes)){
+ test(`Stage 7 ${id} has key ideas, formulas, worked situations, mistakes and where it leads`,()=>{
+  const sections=headings(markdown,2);
+  assert.equal(sections[0],'Key ideas');
+  assert.ok(sections.includes('Key facts and formulas'),`${id} has no facts and formulas section`);
+  assert.ok(sections.includes('Using the methods in different situations'),`${id} has no worked situations`);
+  assert.deepEqual(sections.slice(-2),['Common mistakes','Where this leads']);
+  assert.ok(headings(markdown,3).filter(h=>h.startsWith('Situation:')).length>=3,`${id} has fewer than three worked situations`);
+ });
+ test(`Stage 7 ${id} names only real Stage 8 units in "Where this leads"`,()=>{
+  const items=listItems(markdown,'Where this leads');
+  assert.ok(items.length>=1,`${id} names no Stage 8 unit`);
+  for(const item of items){
+   const title=item.match(/^Stage 8 · (.+?): /)?.[1];
+   assert.ok(title&&STAGE_8_TITLES.has(title),`${id}: "${item}" does not name a Stage 8 unit title`);
+  }
+ });
+ test(`Stage 7 ${id} cites no objective codes`,()=>{
+  assert.ok(!/\b\d[A-Z][a-z]\.\d\d\b/.test(markdown),`${id} cites an objective code`);
+ });
+}
+
+test('the Stage 7 notes are titled in chapter order',()=>{
+ const titles=Object.values(stage7MathsNotes).map(md=>plainText((parseNotes(md)[0] as any).children));
+ assert.deepEqual(titles,stage7Chapters.map((c,i)=>`Chapter ${i+1} — ${c.title}`));
+});
 
 // Known issues #12: Cambridge's syllabus pages are not published in this public
 // repo. The notes link to the circuit-symbol pages only as markers for the

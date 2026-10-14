@@ -3,15 +3,22 @@
 import { useEffect, useState } from "react";
 import { parseNotes, plainText, type Block, type Inline } from "@/lib/notes-markdown";
 import { CircuitSymbols } from "@/components/CircuitSymbols";
+import { stage7Chapters } from "@/lib/portal-content";
 
 // Renders one unit's revision notes. The notes themselves live in docs/ (AS
-// and IGCSE physics, Stage 8 and Stage 9 maths) and are large, so each course
+// and IGCSE physics, Stage 7, 8 and 9 maths) and are large, so each course
 // is fetched as its own chunk the first time a student opens any of its
 // units' notes, rather than shipping with every page load.
 
-/** The notes for the course a unit belongs to, from its id: s8-u*, s9-u*, igcse-u* or as-u*. */
+// Stage 7 chapters have word ids ("fractions"), not numbered ones.
+const STAGE_7_CHAPTERS = new Set(stage7Chapters.map((chapter) => chapter.id));
+/** Whether a unit is maths (Stage 7 chapter, s8-u* or s9-u*), for the notes' colour. */
+export const isMathsUnit = (unitId: string) => STAGE_7_CHAPTERS.has(unitId) || /^s[89]-/.test(unitId);
+
+/** The notes for the course a unit belongs to, from its id: a Stage 7 chapter, s8-u*, s9-u*, igcse-u* or as-u*. */
 const notesFor = (unitId: string): Promise<Record<string, string>> =>
-  unitId.startsWith("s8-") ? import("@/lib/stage-8-maths-notes.generated").then((m) => m.stage8MathsNotes)
+  STAGE_7_CHAPTERS.has(unitId) ? import("@/lib/stage-7-maths-notes.generated").then((m) => m.stage7MathsNotes)
+  : unitId.startsWith("s8-") ? import("@/lib/stage-8-maths-notes.generated").then((m) => m.stage8MathsNotes)
   : unitId.startsWith("s9-") ? import("@/lib/stage-9-maths-notes.generated").then((m) => m.stage9MathsNotes)
   : unitId.startsWith("igcse-") ? import("@/lib/igcse-physics-notes.generated").then((m) => m.igcsePhysicsNotes)
   : import("@/lib/as-physics-notes.generated").then((m) => m.asPhysicsNotes);
@@ -89,5 +96,5 @@ export function RevisionNotes({ unitId, showTitle = false }: { unitId: string; s
   if (notes.state === "loading") return <p className="notes-status">Loading revision notes…</p>;
   if (notes.state === "missing") return <p className="notes-status">Revision notes for this topic are not available yet.</p>;
   if (notes.state === "failed") return <p className="notes-status">The revision notes could not be loaded. Check your connection and try again.</p>;
-  return <NotesBody markdown={notes.markdown} showTitle={showTitle} subject={/^s[89]-/.test(unitId) ? "maths" : "physics"} />;
+  return <NotesBody markdown={notes.markdown} showTitle={showTitle} subject={isMathsUnit(unitId) ? "maths" : "physics"} />;
 }

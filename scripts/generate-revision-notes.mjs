@@ -1,6 +1,5 @@
 // Copies the revision notes from docs/ into modules the app can import, one
-// per course (see LEVELS): AS and IGCSE physics, and Stage 8 and Stage 9
-// maths. The markdown stays the single source of truth; this only moves it
+// per course (see LEVELS): AS and IGCSE physics, and Stage 7, 8 and 9 maths. The markdown stays the single source of truth; this only moves it
 // somewhere a Next.js build can reach. Each course is its own module, so a
 // student only downloads the notes for the course they open.
 //
@@ -17,9 +16,13 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 /**
  * Each level's notes folder under docs/, its module under lib/, and the unit
- * ids in portal-content its files map to.
+ * ids in portal-content its files map to. A file's number orders the notes;
+ * the id is prefix + number, or the file's own slug when the level says so.
  */
 export const LEVELS = {
+  // chapter-02-fractions.md -> fractions, matching stage7Chapters. Stage 7's
+  // chapter ids are words, already stored with students' practice sessions.
+  stage7: { folder: "stage-7-maths-notes", file: /^chapter-(\d+)-([a-z]+)\.md$/, idFromSlug: true, module: "stage-7-maths-notes.generated.ts", name: "stage7MathsNotes" },
   // topic-10-dc-circuits.md -> as-u10, matching asPhysicsUnits.
   as: { folder: "as-physics-notes", file: /^topic-(\d+)-.*\.md$/, prefix: "as-u", module: "as-physics-notes.generated.ts", name: "asPhysicsNotes" },
   // unit-18-electromagnetic-effects.md -> igcse-u18, matching igcsePhysicsUnits.
@@ -33,16 +36,19 @@ export const notesDir = (level) => join(ROOT, "docs", LEVELS[level].folder);
 export const outputFile = (level) => join(ROOT, "lib", LEVELS[level].module);
 
 export function notesByUnit(level, dir = notesDir(level)) {
-  const { file, prefix } = LEVELS[level];
-  const notes = {};
+  const { file, prefix, idFromSlug } = LEVELS[level];
+  const notes = [];
   for (const name of readdirSync(dir)) {
     const unit = name.match(file);
     if (!unit) continue;
-    // Normalise line endings so a Windows checkout and CI generate the same file.
-    notes[`${prefix}${Number(unit[1])}`] = readFileSync(join(dir, name), "utf8").replace(/\r\n?/g, "\n");
+    notes.push({
+      order: Number(unit[1]),
+      id: idFromSlug ? unit[2] : `${prefix}${Number(unit[1])}`,
+      // Normalise line endings so a Windows checkout and CI generate the same file.
+      markdown: readFileSync(join(dir, name), "utf8").replace(/\r\n?/g, "\n"),
+    });
   }
-  const order = (id) => Number(id.slice(prefix.length));
-  return Object.fromEntries(Object.entries(notes).sort(([a], [b]) => order(a) - order(b)));
+  return Object.fromEntries(notes.sort((a, b) => a.order - b.order).map(({ id, markdown }) => [id, markdown]));
 }
 
 export function renderModule(level, notes = notesByUnit(level)) {
